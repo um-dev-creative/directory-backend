@@ -46,7 +46,7 @@ class UserApiTest {
         UserCreateResponse response = new UserCreateResponse(UUID.randomUUID(), "john1", "user@domain.ext", LocalDateTime.now(), LocalDateTime.now(), true, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
         when(userService.create(request)).thenReturn(ResponseEntity.ok(response));
 
-        ResponseEntity<UserCreateResponse> result = userApi.post(request);
+        ResponseEntity<UserCreateResponse> result = userApi.createUserPost(request);
 
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals(response, result.getBody());
@@ -56,7 +56,7 @@ class UserApiTest {
     @DisplayName("createUser should return BAD_REQUEST status with null request")
     void createUserShouldReturnBadRequestStatusWithNullRequest() {
         when(userService.create(Mockito.any())).thenReturn(ResponseEntity.badRequest().build());
-        ResponseEntity<UserCreateResponse> result = userApi.post(null);
+        ResponseEntity<UserCreateResponse> result = userApi.createUserPost(null);
 
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
     }
@@ -74,7 +74,7 @@ class UserApiTest {
         );
         when(userService.create(request)).thenReturn(ResponseEntity.badRequest().build());
 
-        ResponseEntity<UserCreateResponse> result = userApi.post(request);
+        ResponseEntity<UserCreateResponse> result = userApi.createUserPost(request);
 
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
     }
@@ -92,7 +92,7 @@ class UserApiTest {
         );
         when(userService.create(request)).thenReturn(ResponseEntity.status(HttpStatus.CONFLICT).build());
 
-        ResponseEntity<UserCreateResponse> result = userApi.post(request);
+        ResponseEntity<UserCreateResponse> result = userApi.createUserPost(request);
 
         assertEquals(HttpStatus.CONFLICT, result.getStatusCode());
     }
