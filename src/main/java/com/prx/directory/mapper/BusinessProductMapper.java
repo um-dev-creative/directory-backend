@@ -1,9 +1,9 @@
 package com.prx.directory.mapper;
 
 
+import com.prx.commons.services.config.mapper.MapperAppConfig;
 import com.prx.directory.api.v1.to.LinkBusinessProductRequest;
 import com.prx.directory.api.v1.to.LinkBusinessProductResponse;
-import com.prx.directory.config.mapper.MapperAppConfig;
 import com.prx.directory.jpa.entity.BusinessEntity;
 import com.prx.directory.jpa.entity.BusinessProductEntity;
 import com.prx.directory.jpa.entity.BusinessProductEntityId;
