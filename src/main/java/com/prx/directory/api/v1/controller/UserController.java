@@ -26,7 +26,7 @@ public class UserController implements UserApi {
     /// @param userCreateRequest the request object containing user details
     /// @return a ResponseEntity containing the UserCreateResponse
     @Override
-    public ResponseEntity<UserCreateResponse> post(UserCreateRequest userCreateRequest) {
+    public ResponseEntity<UserCreateResponse> createUserPost(UserCreateRequest userCreateRequest) {
         return userService.create(userCreateRequest);
     }
 }

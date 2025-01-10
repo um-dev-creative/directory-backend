@@ -1,8 +1,8 @@
 package com.prx.directory.security;
 
 import com.prx.commons.constants.keys.AuthKey;
-import com.prx.security.SessionJwtService;
 import com.prx.security.jwt.JwtConfigProperties;
+import com.prx.security.service.SessionJwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;

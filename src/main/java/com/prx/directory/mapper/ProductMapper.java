@@ -1,8 +1,8 @@
 package com.prx.directory.mapper;
 
+import com.prx.commons.services.config.mapper.MapperAppConfig;
 import com.prx.directory.api.v1.to.ProductCreateRequest;
 import com.prx.directory.api.v1.to.ProductCreateResponse;
-import com.prx.directory.config.mapper.MapperAppConfig;
 import com.prx.directory.jpa.entity.CategoryEntity;
 import com.prx.directory.jpa.entity.ProductEntity;
 import org.mapstruct.Mapper;
@@ -25,6 +25,7 @@ public interface ProductMapper {
     /// @param productTO The ProductTO object to convert.
     /// @return The converted ProductEntity object.
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "active", ignore = true)
     @Mapping(target = "name", source = "name")
     @Mapping(target = "description", source = "description")
     @Mapping(target = "createdDate", expression = "java(java.time.LocalDateTime.now())")

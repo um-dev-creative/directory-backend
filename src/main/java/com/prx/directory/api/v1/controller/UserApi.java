@@ -25,7 +25,7 @@ public interface UserApi {
     /// @param userCreateRequest the request object containing user creation details
     /// @return a ResponseEntity containing the response of the user creation operation
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    default ResponseEntity<UserCreateResponse> post(@RequestBody UserCreateRequest userCreateRequest) {
+    default ResponseEntity<UserCreateResponse> createUserPost(@RequestBody UserCreateRequest userCreateRequest) {
         return this.getService().create(userCreateRequest);
     }
 

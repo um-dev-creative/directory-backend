@@ -1,12 +1,14 @@
 package com.prx.directory.api.v1.service;
 
-import com.prx.commons.pojo.Person;
+import com.prx.commons.general.pojo.Person;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
-import com.prx.directory.client.BackboneClient;
 import com.prx.directory.mapper.UserCreateMapper;
-import com.prx.directory.client.to.BackboneUserCreateRequest;
-import com.prx.directory.client.to.BackboneUserCreateResponse;
+import com.prx.security.client.BackboneClient;
+import com.prx.security.client.to.BackboneUserCreateRequest;
+import com.prx.security.client.to.BackboneUserCreateResponse;
+import feign.FeignException;
+import feign.Request;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,9 +22,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
+import static com.prx.directory.constant.DirectoryAppConstants.MESSAGE_ERROR_HEADER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 
@@ -43,8 +48,8 @@ class UserServiceImplTest {
     }
 
     @Test
-    @DisplayName("Create User Successfully")
-    void createUserSuccessfully() {
+    @DisplayName("Create User")
+    void createUser() {
         UserCreateRequest request = new UserCreateRequest(
                 "abc123",
                 "user@domain.ext",
@@ -81,7 +86,6 @@ class UserServiceImplTest {
                 UUID.randomUUID(),
                 UUID.randomUUID()
         );
-
         UserCreateResponse response = new UserCreateResponse(UUID.randomUUID(),
                 "john1",
                 "user@domain.ext",
@@ -92,22 +96,17 @@ class UserServiceImplTest {
                 UUID.randomUUID(),
                 UUID.randomUUID()
         );
-        when(userCreateMapper.toBackbone(any(), any(), any())).thenReturn(backboneRequest);
+
+        when(backboneClient.checkEmail(anyString(), any())).thenReturn(ResponseEntity.ok().build());
+        when(backboneClient.checkAlias(anyString(), any())).thenReturn(ResponseEntity.ok().build());
+        when(userCreateMapper.toBackbone(any(), any(), any(), any())).thenReturn(backboneRequest);
         when(backboneClient.post(any())).thenReturn(backboneResponse);
         when(userCreateMapper.fromBackbone(any())).thenReturn(response);
 
         ResponseEntity<UserCreateResponse> result = userService.create(request);
-
-        assertEquals(HttpStatus.OK, result.getStatusCode());
-        assertEquals(response, result.getBody());
+        assertEquals(HttpStatus.CREATED, result.getStatusCode());
     }
 
-    @Test
-    @DisplayName("Create User with Null Request")
-    void createUserWithNullRequest() {
-        ResponseEntity<UserCreateResponse> result = userService.create(null);
-        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
-    }
 
     @Test
     @DisplayName("Create User with Invalid Email")
@@ -120,17 +119,20 @@ class UserServiceImplTest {
                 LocalDate.parse("1984-05-12"),
                 "547424"
         );
-        when(userCreateMapper.fromBackbone(any())).thenThrow(new RuntimeException("Invalid email"));
-        when(userCreateMapper.toBackbone(any(), any(), any())).thenThrow(new RuntimeException("Invalid email"));
 
+        when(backboneClient.checkEmail(anyString(), any()))
+                .thenThrow(new FeignException.Conflict("Invalid email",
+                        Request.create(Request.HttpMethod.POST, "url", Map.of(),
+                                null, null, null), null, null));
         ResponseEntity<UserCreateResponse> result = userService.create(request);
 
-        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+        assertEquals(HttpStatus.CONFLICT, result.getStatusCode());
+        assertEquals("Email already exists", result.getHeaders().getFirst(MESSAGE_ERROR_HEADER));
     }
 
     @Test
-    @DisplayName("Create User with Existing Username")
-    void createUserWithExistingUsername() {
+    @DisplayName("Create User with Existing Alias")
+    void createUserWithExistingAlias() {
         UserCreateRequest request = new UserCreateRequest(
                 "abc123",
                 "user@domain.ext",
@@ -139,28 +141,78 @@ class UserServiceImplTest {
                 LocalDate.parse("1984-05-12"),
                 "547424"
         );
-        Person person = new Person();
-        person.setGender("M");
-        person.setFirstName("John");
-        person.setLastName("Connor");
-        person.setBirthdate(LocalDate.parse("1984-05-12"));
-        person.setMiddleName("A");
 
-        BackboneUserCreateRequest backboneRequest = new BackboneUserCreateRequest(
-                UUID.randomUUID(),
-                "alias",
-                "password",
-                "user@domain.ext",
-                true,
-                person,
-                UUID.randomUUID(),
-                UUID.randomUUID()
-        );
-        when(userCreateMapper.toBackbone(any(), any(), any())).thenReturn(backboneRequest);
-        when(backboneClient.post(any())).thenThrow(new RuntimeException("Username already exists"));
+        when(backboneClient.checkEmail(anyString(), any())).thenReturn(ResponseEntity.ok().build());
+        Request requestFeign = Request.create(Request.HttpMethod.POST, "url", Map.of(), null, null, null);
+        when(backboneClient.checkAlias(anyString(), any())).thenThrow(new FeignException.Conflict("Alias already exists", requestFeign, null, null));
 
         ResponseEntity<UserCreateResponse> result = userService.create(request);
 
         assertEquals(HttpStatus.CONFLICT, result.getStatusCode());
+        assertEquals("Error creating user", result.getHeaders().getFirst(MESSAGE_ERROR_HEADER));
+    }
+
+    @Test
+    @DisplayName("Create User with Null Email")
+    void createUserWithNullEmail() {
+        UserCreateRequest request = new UserCreateRequest(
+                "abc123",
+                null,
+                "John",
+                "Connor",
+                LocalDate.parse("1984-05-12"),
+                "547424"
+        );
+
+        when(backboneClient.checkEmail(anyString(), any())).thenReturn(ResponseEntity.status(HttpStatus.CONFLICT).build());
+        Request requestFeign = Request.create(Request.HttpMethod.POST, "url", Map.of(), null, null, null);
+        when(backboneClient.checkAlias(anyString(), any())).thenThrow(new FeignException.BadRequest("Error creating user", requestFeign, null, null));
+        ResponseEntity<UserCreateResponse> result = userService.create(request);
+
+        assertEquals(HttpStatus.CONFLICT, result.getStatusCode());
+        assertEquals("Error creating user", result.getHeaders().getFirst(MESSAGE_ERROR_HEADER));
+    }
+
+    @Test
+    @DisplayName("Create User with Null Alias")
+    void createUserWithNullAlias() {
+        UserCreateRequest request = new UserCreateRequest(
+                null,
+                "user@domain.ext",
+                "John",
+                "Connor",
+                LocalDate.parse("1984-05-12"),
+                "547424"
+        );
+
+        when(backboneClient.checkEmail(anyString(), any())).thenReturn(ResponseEntity.ok().build());
+        Request requestFeign = Request.create(Request.HttpMethod.POST, "url", Map.of(), null, null, null);
+        when(backboneClient.checkAlias(anyString(), any())).thenThrow(new FeignException.BadRequest("Error creating user", requestFeign, null, null));
+
+        ResponseEntity<UserCreateResponse> result = userService.create(request);
+        assertEquals(HttpStatus.CONFLICT, result.getStatusCode());
+        assertEquals("Error creating user", result.getHeaders().getFirst(MESSAGE_ERROR_HEADER));
+    }
+
+    @Test
+    @DisplayName("Create User with Existing Email")
+    void createUserWithExistingEmail() {
+        UserCreateRequest request = new UserCreateRequest(
+                "abc123",
+                "user@domain.ext",
+                "John",
+                "Connor",
+                LocalDate.parse("1984-05-12"),
+                "547424"
+        );
+
+        Request requestFeign = Request.create(Request.HttpMethod.POST, "url", Map.of(), null, null, null);
+
+        when(backboneClient.checkEmail(anyString(), any())).thenThrow(new FeignException.Conflict("Email already exists", requestFeign, null, null));
+
+        ResponseEntity<UserCreateResponse> result = userService.create(request);
+
+        assertEquals(HttpStatus.CONFLICT, result.getStatusCode());
+        assertEquals("Email already exists", result.getHeaders().getFirst(MESSAGE_ERROR_HEADER));
     }
 }

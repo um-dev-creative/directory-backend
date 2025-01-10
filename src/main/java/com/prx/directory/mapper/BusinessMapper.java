@@ -1,9 +1,9 @@
 package com.prx.directory.mapper;
 
+import com.prx.commons.services.config.mapper.MapperAppConfig;
 import com.prx.directory.api.v1.to.BusinessCreateRequest;
 import com.prx.directory.api.v1.to.BusinessCreateResponse;
 import com.prx.directory.api.v1.to.BusinessTO;
-import com.prx.directory.config.mapper.MapperAppConfig;
 import com.prx.directory.jpa.entity.BusinessEntity;
 import com.prx.directory.jpa.entity.CategoryEntity;
 import com.prx.directory.jpa.entity.UserEntity;
@@ -50,15 +50,16 @@ public interface BusinessMapper {
     /// @param businessEntity The BusinessEntity object to convert.
     /// @return The converted BusinessTO object.
     @Mapping(target = "id", source = "id")
+    @Mapping(target = "email", ignore = true)
+    @Mapping(target = "website", ignore = true)
     @Mapping(target = "name", source = "name")
     @Mapping(target = "description", source = "description")
-    @Mapping(target = "email", ignore = true)
     @Mapping(target = "customerServiceEmail", ignore = true)
+    @Mapping(target = "updatedDate", source = "lastUpdate")
+    @Mapping(target = "createdDate", source = "createdDate")
     @Mapping(target = "orderManagementEmail", ignore = true)
     @Mapping(target = "userId", source = "businessEntity.userFk.id")
     @Mapping(target = "categoryId", source = "businessEntity.categoryFk.id")
-    @Mapping(target = "createdDate", source = "createdDate")
-    @Mapping(target = "updatedDate", source = "lastUpdate")
     BusinessTO toBusinessTO(BusinessEntity businessEntity);
 
     /// Converts a BusinessEntity object to a BusinessCreateResponse object.
