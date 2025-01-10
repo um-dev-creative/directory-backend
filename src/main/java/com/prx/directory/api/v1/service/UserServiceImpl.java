@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -77,27 +78,26 @@ public class UserServiceImpl implements UserService {
     private String generateAlias(UserCreateRequest userCreateRequest, boolean afterFirstTime, int time) {
         SecureRandom random = new SecureRandom();
         String alias;
-        StringBuilder aliasTemp = new StringBuilder(userCreateRequest.firstname().substring(0, 1).toLowerCase()
-                .concat(userCreateRequest.lastname().toLowerCase()));
+        StringBuilder aliasTemp = new StringBuilder(userCreateRequest.firstname().substring(0, 1)
+                .concat(userCreateRequest.lastname()));
 
         random.nextBytes(new byte[20]);
         if (afterFirstTime) {
             if(aliasTemp.length() >= MAX_ALIAS_LENGTH) {
-                aliasTemp.delete((MAX_ALIAS_LENGTH-5), MAX_ALIAS_LENGTH);
+                aliasTemp.delete(MAX_ALIAS_LENGTH-5, MAX_ALIAS_LENGTH);
             }
             aliasTemp.append(random.nextInt());
         }
         alias = fixAlias(aliasTemp);
         try {
             backboneClient.checkAlias(alias, UUID.fromString(applicationId));
-            return alias;
+            return alias.toLowerCase(Locale.ROOT);
         } catch (FeignException e) {
             LOGGER.warn(USERNAME_ALREADY_EXISTS, alias);
         }
 
         if(time <= MAX_ALIAS_TRY) {
-            time+=1;
-            return generateAlias(userCreateRequest, false, time);
+            return generateAlias(userCreateRequest, false, time+1);
         }
         throw new StandardException("Alias generation failed", MessageType.DEFAULT_MESSAGE);
     }
