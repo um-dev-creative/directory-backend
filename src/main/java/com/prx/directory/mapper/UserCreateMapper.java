@@ -22,6 +22,7 @@ import java.util.UUID;
 )
 public interface UserCreateMapper {
 
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "active", ignore = true)
     @Mapping(target = "alias", source = "alias")
     @Mapping(target = "roleId", source = "roleId")
