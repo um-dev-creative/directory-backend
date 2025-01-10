@@ -30,7 +30,7 @@ class UserControllerTest {
 
     @Test
     @DisplayName("post should return OK status with valid request")
-    void postShouldReturnOkStatusWithValidRequest() {
+    void createUserPostShouldReturnOkStatusWithValidRequest() {
         UserCreateRequest request = new UserCreateRequest(
                 "abc123",
                 "user@domain.ext",
@@ -52,7 +52,7 @@ class UserControllerTest {
         );
         when(userService.create(request)).thenReturn(ResponseEntity.ok(response));
 
-        ResponseEntity<UserCreateResponse> result = userController.post(request);
+        ResponseEntity<UserCreateResponse> result = userController.createUserPost(request);
 
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals(response, result.getBody());
@@ -60,16 +60,16 @@ class UserControllerTest {
 
     @Test
     @DisplayName("post should return BAD_REQUEST status with null request")
-    void postShouldReturnBadRequestStatusWithNullRequest() {
+    void createUserPostShouldReturnBadRequestStatusWithNullRequest() {
         when(userService.create(null)).thenReturn(ResponseEntity.badRequest().build());
 
-        ResponseEntity<UserCreateResponse> result = userController.post(null);
+        ResponseEntity<UserCreateResponse> result = userController.createUserPost(null);
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
     }
 
     @Test
     @DisplayName("post should return BAD_REQUEST status with invalid email")
-    void postShouldReturnBadRequestStatusWithInvalidEmail() {
+    void createUserPostShouldReturnBadRequestStatusWithInvalidEmail() {
         UserCreateRequest request = new UserCreateRequest(
                 "abc123",
                 "userdomain.ext",
@@ -80,14 +80,14 @@ class UserControllerTest {
         );
         when(userService.create(request)).thenReturn(ResponseEntity.badRequest().build());
 
-        ResponseEntity<UserCreateResponse> result = userController.post(request);
+        ResponseEntity<UserCreateResponse> result = userController.createUserPost(request);
 
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
     }
 
     @Test
     @DisplayName("post should return CONFLICT status with existing username")
-    void postShouldReturnConflictStatusWithExistingUsername() {
+    void createUserPostShouldReturnConflictStatusWithExistingUsername() {
         UserCreateRequest request = new UserCreateRequest(
                 "abc123",
                 "user@domain.ext",
@@ -98,14 +98,14 @@ class UserControllerTest {
         );
         when(userService.create(request)).thenReturn(ResponseEntity.status(HttpStatus.CONFLICT).build());
 
-        ResponseEntity<UserCreateResponse> result = userController.post(request);
+        ResponseEntity<UserCreateResponse> result = userController.createUserPost(request);
 
         assertEquals(HttpStatus.CONFLICT, result.getStatusCode());
     }
 
     @Test
     @DisplayName("post should return BAD_REQUEST status with null password")
-    void postShouldReturnBadRequestStatusWithNullPassword() {
+    void createUserPostShouldReturnBadRequestStatusWithNullPassword() {
         UserCreateRequest request = new UserCreateRequest(
                 null,
                 "user@domain.ext",
@@ -116,7 +116,7 @@ class UserControllerTest {
         );
         when(userService.create(request)).thenReturn(ResponseEntity.badRequest().build());
 
-        ResponseEntity<UserCreateResponse> result = userController.post(request);
+        ResponseEntity<UserCreateResponse> result = userController.createUserPost(request);
 
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
     }

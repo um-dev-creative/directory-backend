@@ -43,7 +43,7 @@
         <maven.plugin.jacoco.version>0.8.12</maven.plugin.jacoco.version>
         <maven.plugin.pmd.version>3.23.0</maven.plugin.pmd.version>
         <maven.plugin.jxr.version>3.0.0</maven.plugin.jxr.version>
-        <maven.surefire.version>3.2.5</maven.surefire.version>
+        <maven.surefire.version>3.5.2</maven.surefire.version>
         <!--        REPOSITORY-->
         <repsy.account.user>${env.REPSY_ACCOUNT_USER}</repsy.account.user>
         <repsy.account.password>${env.REPSY_ACCOUNT_PASSWORD}</repsy.account.password>
@@ -296,9 +296,13 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <argLine>
-                        -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar
-                    </argLine>
+                    <forkCount>3</forkCount>
+                    <reuseForks>false</reuseForks>
+                    <argLine>-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
+                    <systemPropertyVariables>
+                        <databaseSchema>MY_TEST_SCHEMA_${surefire.forkNumber}</databaseSchema>
+                    </systemPropertyVariables>
+                    <workingDirectory>FORK_DIRECTORY_${surefire.forkNumber}</workingDirectory>
                 </configuration>
                 <dependencies>
                     <dependency>
