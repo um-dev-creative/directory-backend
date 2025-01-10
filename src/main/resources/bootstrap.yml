@@ -20,11 +20,6 @@ prx:
     password: ${BACKBONE_PASSWORD}
 app:
   clientRoles: directory-frontend-client
-  # The environments for the application
-  api:
-    excludes: none
-    exclude:
-      methods: accessToken
   # The name of the application
   name: directory-backend
   # The version of the application
