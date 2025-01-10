@@ -22,13 +22,13 @@ import java.util.UUID;
 )
 public interface UserCreateMapper {
 
-    @Mapping(target = "alias", source = "alias")
-    @Mapping(target = "email", source = "userCreateRequest.email")
     @Mapping(target = "active", ignore = true)
-    @Mapping(target = "password", source = "userCreateRequest.password")
-    @Mapping(target = "person", expression = "java(getPerson(userCreateRequest))")
+    @Mapping(target = "alias", source = "alias")
     @Mapping(target = "roleId", source = "roleId")
     @Mapping(target = "applicationId", source = "applicationId")
+    @Mapping(target = "email", source = "userCreateRequest.email")
+    @Mapping(target = "password", source = "userCreateRequest.password")
+    @Mapping(target = "person", expression = "java(getPerson(userCreateRequest))")
     BackboneUserCreateRequest toBackbone(UserCreateRequest userCreateRequest, UUID applicationId, UUID roleId, String alias);
 
     @Mapping(target = "id", source = "id")
