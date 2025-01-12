@@ -364,6 +364,11 @@
                             <goal>report</goal>
                         </goals>
                         <phase>test</phase>
+                        <configuration>
+                            <formats>
+                                <format>XML</format>
+                            </formats>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>jacoco-check</id>
