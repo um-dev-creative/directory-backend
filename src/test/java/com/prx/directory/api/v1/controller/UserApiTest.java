@@ -1,6 +1,7 @@
 package com.prx.directory.api.v1.controller;
 
 import com.prx.directory.api.v1.service.UserService;
+import com.prx.directory.api.v1.to.UseGetResponse;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
 import org.junit.jupiter.api.DisplayName;
@@ -42,7 +43,7 @@ class UserApiTest {
                 "Connor",
                 LocalDate.now(),
                 "5869995852"
-                );
+        );
         UserCreateResponse response = new UserCreateResponse(UUID.randomUUID(), "john1", "user@domain.ext", LocalDateTime.now(), LocalDateTime.now(), true, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
         when(userService.create(request)).thenReturn(ResponseEntity.ok(response));
 
@@ -96,4 +97,56 @@ class UserApiTest {
 
         assertEquals(HttpStatus.CONFLICT, result.getStatusCode());
     }
+
+    @Test
+    @DisplayName("findUser should return OK status with valid ID")
+    void findUserShouldReturnOkStatusWithValidID() {
+        UUID userId = UUID.randomUUID();
+        UseGetResponse response = new UseGetResponse(
+                userId,
+                "John",
+                "john.connor@example.com",
+                "John",
+                "Marcus",
+                "Connor",
+                "M",
+                LocalDate.now(),
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                true,
+                UUID.randomUUID(),
+                UUID.randomUUID()
+                );
+        when(userService.findUser(userId)).thenReturn(ResponseEntity.ok(response));
+
+        ResponseEntity<UseGetResponse> result = userApi.userGet(userId);
+
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(response, result.getBody());
+    }
+
+    @Test
+    @DisplayName("findUser should return NOT_FOUND status with non-existent ID")
+    void findUserShouldReturnNotFoundStatusWithNonExistentID() {
+        UUID userId = UUID.randomUUID();
+        when(userService.findUser(userId)).thenReturn(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+
+        ResponseEntity<UseGetResponse> result = userApi.userGet(userId);
+
+        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
+    }
+
+
+    @Test
+    @DisplayName("findUser should return INTERNAL_SERVER_ERROR status with server error")
+    void findUserShouldReturnInternalServerErrorStatusWithServerError() {
+        UUID userId = UUID.randomUUID();
+        when(userService.findUser(userId)).thenReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
+
+        ResponseEntity<UseGetResponse> result = userApi.userGet(userId);
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+    }
+
+
 }

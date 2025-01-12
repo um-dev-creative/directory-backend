@@ -3,8 +3,8 @@ package com.prx.directory.mapper;
 import com.prx.commons.general.pojo.Person;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
-import com.prx.security.client.to.BackboneUserCreateRequest;
-import com.prx.security.client.to.BackboneUserCreateResponse;
+import com.prx.directory.client.to.BackboneUserCreateRequest;
+import com.prx.directory.client.to.BackboneUserCreateResponse;
 import org.mapstruct.*;
 
 import java.util.UUID;

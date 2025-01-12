@@ -2,10 +2,12 @@ package com.prx.directory.api.v1.service;
 
 import com.prx.commons.constants.types.MessageType;
 import com.prx.commons.exception.StandardException;
+import com.prx.directory.api.v1.to.UseGetResponse;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
+import com.prx.directory.client.BackboneClient;
 import com.prx.directory.mapper.UserCreateMapper;
-import com.prx.security.client.BackboneClient;
+import com.prx.directory.mapper.UserGetMapper;
 import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,20 +42,18 @@ public class UserServiceImpl implements UserService {
 
     private final BackboneClient backboneClient;
     private final UserCreateMapper userCreateMapper;
+    private final UserGetMapper userGetMapper;
 
     /// Constructs a new UserServiceImpl with the specified BackboneClient and UserCreateMapper.
     ///
     /// @param backboneClient   the client used to communicate with the backend
     /// @param userCreateMapper the mapper used to convert between request/response objects and backend objects
-    public UserServiceImpl(BackboneClient backboneClient, UserCreateMapper userCreateMapper) {
+    public UserServiceImpl(BackboneClient backboneClient, UserCreateMapper userCreateMapper, UserGetMapper userGetMapper) {
         this.backboneClient = backboneClient;
         this.userCreateMapper = userCreateMapper;
+        this.userGetMapper = userGetMapper;
     }
 
-    /// Creates a new user based on the provided UserCreateRequest.
-    ///
-    /// @param userCreateRequest the request object containing user details
-    /// @return a ResponseEntity containing the UserCreateResponse
     @Override
     public ResponseEntity<UserCreateResponse> create(UserCreateRequest userCreateRequest) {
         UUID applicationID = UUID.fromString(applicationId);
@@ -75,6 +75,20 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Override
+    public ResponseEntity<UseGetResponse> findUser(UUID id) {
+        try {
+            var result = backboneClient.find(id);
+            return ResponseEntity.ok(userGetMapper.toBackbone(result));
+        } catch (FeignException e) {
+            LOGGER.warn("Error finding user: {}", e.getMessage());
+            if (e.status() == HttpStatus.NOT_FOUND.value()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).header("message-error", "User not found.").build();
+            }
+            return  ResponseEntity.status(e.status()).build();
+        }
+    }
+
     private String generateAlias(UserCreateRequest userCreateRequest, boolean afterFirstTime, int time) {
         SecureRandom random = new SecureRandom();
         String alias;
@@ -83,8 +97,8 @@ public class UserServiceImpl implements UserService {
 
         random.nextBytes(new byte[20]);
         if (afterFirstTime) {
-            if(aliasTemp.length() >= MAX_ALIAS_LENGTH) {
-                aliasTemp.delete(MAX_ALIAS_LENGTH-5, MAX_ALIAS_LENGTH);
+            if (aliasTemp.length() >= MAX_ALIAS_LENGTH) {
+                aliasTemp.delete(MAX_ALIAS_LENGTH - 5, MAX_ALIAS_LENGTH);
             }
             aliasTemp.append(random.nextInt());
         }
@@ -96,15 +110,15 @@ public class UserServiceImpl implements UserService {
             LOGGER.warn(USERNAME_ALREADY_EXISTS, alias);
         }
 
-        if(time <= MAX_ALIAS_TRY) {
-            return generateAlias(userCreateRequest, false, time+1);
+        if (time <= MAX_ALIAS_TRY) {
+            return generateAlias(userCreateRequest, false, time + 1);
         }
         throw new StandardException("Alias generation failed", MessageType.DEFAULT_MESSAGE);
     }
 
     private String fixAlias(StringBuilder alias) {
-        if(alias.length() >= MAX_ALIAS_LENGTH) {
-            return alias.substring(0,MAX_ALIAS_LENGTH-1);
+        if (alias.length() >= MAX_ALIAS_LENGTH) {
+            return alias.substring(0, MAX_ALIAS_LENGTH - 1);
         }
         return alias.toString();
     }
