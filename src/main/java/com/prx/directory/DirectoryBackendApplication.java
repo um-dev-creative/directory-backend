@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
-@EnableFeignClients(basePackages = "com.prx.security.client")
+@EnableFeignClients(basePackages = "com.prx.directory.client")
 @SpringBootApplication(
         scanBasePackages = {
                 "com.prx.commons.services",

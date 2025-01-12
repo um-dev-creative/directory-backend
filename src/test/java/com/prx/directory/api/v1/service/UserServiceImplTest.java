@@ -1,12 +1,17 @@
 package com.prx.directory.api.v1.service;
 
+import com.prx.commons.general.pojo.Application;
 import com.prx.commons.general.pojo.Person;
+import com.prx.commons.general.pojo.Role;
+import com.prx.directory.api.v1.to.UseGetResponse;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
+import com.prx.directory.client.BackboneClient;
+import com.prx.directory.client.to.BackboneUserCreateRequest;
+import com.prx.directory.client.to.BackboneUserCreateResponse;
+import com.prx.directory.client.to.BackboneUserGetResponse;
 import com.prx.directory.mapper.UserCreateMapper;
-import com.prx.security.client.BackboneClient;
-import com.prx.security.client.to.BackboneUserCreateRequest;
-import com.prx.security.client.to.BackboneUserCreateResponse;
+import com.prx.directory.mapper.UserGetMapper;
 import feign.FeignException;
 import feign.Request;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +27,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -38,6 +44,8 @@ class UserServiceImplTest {
     private BackboneClient backboneClient;
     @Mock
     private UserCreateMapper userCreateMapper;
+    @Mock
+    private UserGetMapper userGetMapper;
     @InjectMocks
     private UserServiceImpl userService;
 
@@ -214,5 +222,85 @@ class UserServiceImplTest {
 
         assertEquals(HttpStatus.CONFLICT, result.getStatusCode());
         assertEquals("Email already exists", result.getHeaders().getFirst(MESSAGE_ERROR_HEADER));
+    }
+
+    @Test
+    @DisplayName("Find User Successfully")
+    void findUserSuccessfully() {
+        UUID userId = UUID.randomUUID();
+        Person person = new Person();
+        person.setGender("M");
+        person.setFirstName("John");
+        person.setLastName("Connor");
+        person.setBirthdate(LocalDate.parse("1984-05-12"));
+        person.setMiddleName("Marcus");
+        Application application = new Application();
+        application.setId(UUID.randomUUID());
+        Role role = new Role();
+        role.setId(UUID.randomUUID());
+
+        UseGetResponse expectedResponse = new UseGetResponse(
+                userId,
+                "jconnor",
+                "john.connor@example.com",
+                "John",
+                "Marcus",
+                "Connor",
+                "M",
+                LocalDate.parse("1984-05-12"),
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                true,
+                UUID.randomUUID(),
+                UUID.randomUUID()
+        );
+        BackboneUserGetResponse backboneResponse = new BackboneUserGetResponse(
+                userId,
+                "jconnor",
+                "abcsasa",
+        LocalDateTime.now(),
+                LocalDateTime.now(),
+                true,
+                person,
+                List.of(role),
+                List.of(application)
+        );
+
+
+        when(backboneClient.find(userId)).thenReturn(backboneResponse);
+        when(userGetMapper.toBackbone(backboneResponse)).thenReturn(expectedResponse);
+
+        ResponseEntity<UseGetResponse> response = userService.findUser(userId);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(expectedResponse, response.getBody());
+    }
+
+    @Test
+    @DisplayName("Find User with Nonexistent ID")
+    void findUserWithNonexistentID() {
+        UUID userId = UUID.randomUUID();
+
+        Request requestFeign = Request.create(Request.HttpMethod.GET, "url", Map.of(), null, null, null);
+        when(backboneClient.find(any())).thenThrow(new FeignException.NotFound("User not found", requestFeign, null, null));
+
+        ResponseEntity<UseGetResponse> response = userService.findUser(userId);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals("User not found.", response.getHeaders().getFirst("message-error"));
+    }
+
+    @Test
+    @DisplayName("Find User with FeignException")
+    void findUserWithFeignException() {
+        UUID userId = UUID.randomUUID();
+
+        Request requestFeign = Request.create(Request.HttpMethod.GET, "url", Map.of(), null, null, null);
+        when(backboneClient.find(any())).thenThrow(new FeignException
+                .InternalServerError(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), requestFeign, null, null));
+
+        ResponseEntity<UseGetResponse> response = userService.findUser(userId);
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 }
