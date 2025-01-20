@@ -7,7 +7,7 @@ import org.hibernate.annotations.ColumnDefault;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -64,7 +64,7 @@ public class CategoryEntity implements Serializable {
      */
     @NotNull
     @Column(name = "created_date", nullable = false)
-    private Instant createdDate;
+    private LocalDateTime createdDate;
 
     /**
      * The date when the category was last updated.
@@ -72,7 +72,7 @@ public class CategoryEntity implements Serializable {
      */
     @NotNull
     @Column(name = "last_update", nullable = false)
-    private Instant lastUpdate;
+    private LocalDateTime lastUpdate;
 
     /**
      * Indicates whether the category is active.
@@ -164,7 +164,7 @@ public class CategoryEntity implements Serializable {
      *
      * @return the date when the category was created
      */
-    public Instant getCreatedDate() {
+    public LocalDateTime getCreatedDate() {
         return createdDate;
     }
 
@@ -173,7 +173,7 @@ public class CategoryEntity implements Serializable {
      *
      * @param createDate the date when the category was created
      */
-    public void setCreatedDate(Instant createDate) {
+    public void setCreatedDate(LocalDateTime createDate) {
         this.createdDate = createDate;
     }
 
@@ -182,7 +182,7 @@ public class CategoryEntity implements Serializable {
      *
      * @return the date when the category was last updated
      */
-    public Instant getLastUpdate() {
+    public LocalDateTime getLastUpdate() {
         return lastUpdate;
     }
 
@@ -191,7 +191,7 @@ public class CategoryEntity implements Serializable {
      *
      * @param lastUpdate the date when the category was last updated
      */
-    public void setLastUpdate(Instant lastUpdate) {
+    public void setLastUpdate(LocalDateTime lastUpdate) {
         this.lastUpdate = lastUpdate;
     }
 

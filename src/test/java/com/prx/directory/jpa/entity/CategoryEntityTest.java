@@ -3,7 +3,7 @@ package com.prx.directory.jpa.entity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -65,7 +65,7 @@ class CategoryEntityTest {
     @DisplayName("Get Create Date")
     void getCreateDate() {
         CategoryEntity categoryEntity = new CategoryEntity();
-        Instant createDate = Instant.now();
+        LocalDateTime createDate = LocalDateTime.now();
         categoryEntity.setCreatedDate(createDate);
         assertEquals(createDate, categoryEntity.getCreatedDate());
     }
@@ -82,7 +82,7 @@ class CategoryEntityTest {
     @DisplayName("Get Last Update")
     void getLastUpdate() {
         CategoryEntity categoryEntity = new CategoryEntity();
-        Instant lastUpdate = Instant.now();
+        LocalDateTime lastUpdate = LocalDateTime.now();
         categoryEntity.setLastUpdate(lastUpdate);
         assertEquals(lastUpdate, categoryEntity.getLastUpdate());
     }
