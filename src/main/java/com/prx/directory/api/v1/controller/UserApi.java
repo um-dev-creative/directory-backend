@@ -5,6 +5,8 @@ import com.prx.directory.api.v1.to.UseGetResponse;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,9 +37,11 @@ public interface UserApi {
     /// @return a ResponseEntity containing the response of the user creation operation
     @Operation(summary = "Create a new user", description = "Creates a new user in the system with the provided details.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "User created successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid request"),
-        @ApiResponse(responseCode = "409", description = "Conflict: Alias or email already exists")
+        @ApiResponse(responseCode = "201", description = "User created successfully",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = UserCreateResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content),
+        @ApiResponse(responseCode = "409", description = "Conflict: Alias or email already exists", content = @Content)
     })
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     default ResponseEntity<UserCreateResponse> createUserPost(@RequestBody UserCreateRequest userCreateRequest) {
@@ -57,9 +61,11 @@ public interface UserApi {
     /// @see UserCreateResponse
     @Operation(summary = "Get a user by ID", description = "Retrieves a user in the system with the provided ID.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "User retrieved successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid request"),
-        @ApiResponse(responseCode = "404", description = "User not found")
+        @ApiResponse(responseCode = "200", description = "User retrieved successfully",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = UseGetResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content),
+        @ApiResponse(responseCode = "404", description = "User not found", content = @Content)
     })
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     default ResponseEntity<UseGetResponse> userGet(@NotNull @PathVariable UUID id) {
