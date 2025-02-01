@@ -98,5 +98,59 @@ class BusinessProductEntityIdTest {
         assertNotEquals(entityId1.hashCode(), entityId2.hashCode());
     }
 
+    @Test
+    @DisplayName("BusinessProductEntityId equals method with same object")
+    void businessProductEntityIdEqualsSameObject() {
+        UUID businessId = UUID.randomUUID();
+        UUID productId = UUID.randomUUID();
+        BusinessProductEntityId entityId = new BusinessProductEntityId(businessId, productId);
+
+        assertEquals(entityId, entityId);
+    }
+
+    @Test
+    @DisplayName("BusinessProductEntityId equals method with null")
+    void businessProductEntityIdEqualsNull() {
+        UUID businessId = UUID.randomUUID();
+        UUID productId = UUID.randomUUID();
+        BusinessProductEntityId entityId = new BusinessProductEntityId(businessId, productId);
+
+        assertNotEquals(entityId, null);
+    }
+
+    @Test
+    @DisplayName("BusinessProductEntityId equals method with different class")
+    void businessProductEntityIdEqualsDifferentClass() {
+        UUID businessId = UUID.randomUUID();
+        UUID productId = UUID.randomUUID();
+        BusinessProductEntityId entityId = new BusinessProductEntityId(businessId, productId);
+
+        assertNotEquals(entityId, new Object());
+    }
+
+    @Test
+    @DisplayName("BusinessProductEntityId equals method with different businessId")
+    void businessProductEntityIdEqualsDifferentBusinessId() {
+        UUID businessId1 = UUID.randomUUID();
+        UUID productId = UUID.randomUUID();
+        UUID businessId2 = UUID.randomUUID();
+        BusinessProductEntityId entityId1 = new BusinessProductEntityId(businessId1, productId);
+        BusinessProductEntityId entityId2 = new BusinessProductEntityId(businessId2, productId);
+
+        assertNotEquals(entityId1, entityId2);
+    }
+
+    @Test
+    @DisplayName("BusinessProductEntityId equals method with different productId")
+    void businessProductEntityIdEqualsDifferentProductId() {
+        UUID businessId = UUID.randomUUID();
+        UUID productId1 = UUID.randomUUID();
+        UUID productId2 = UUID.randomUUID();
+        BusinessProductEntityId entityId1 = new BusinessProductEntityId(businessId, productId1);
+        BusinessProductEntityId entityId2 = new BusinessProductEntityId(businessId, productId2);
+
+        assertNotEquals(entityId1, entityId2);
+    }
+
 
 }

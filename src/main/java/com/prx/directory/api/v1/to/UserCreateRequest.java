@@ -28,15 +28,15 @@ public record UserCreateRequest(
         String phoneNumber
 ) {
 
-        @Override
-        public String toString() {
-                return "UserCreateRequest{" +
-                        ", password='" + password + '\'' +
-                        ", email='" + email + '\'' +
-                        ", firstname='" + firstname + '\'' +
-                        ", lastname='" + lastname + '\'' +
-                        ", dateOfBirth=" + dateOfBirth +
-                        ", phoneNumber='" + phoneNumber + '\'' +
-                        '}';
-        }
+    @Override
+    public String toString() {
+        return "UserCreateRequest{" +
+                ", password='" + password + '\'' +
+                ", email='" + email + '\'' +
+                ", firstname='" + firstname + '\'' +
+                ", lastname='" + lastname + '\'' +
+                ", dateOfBirth=" + dateOfBirth +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                '}';
+    }
 }

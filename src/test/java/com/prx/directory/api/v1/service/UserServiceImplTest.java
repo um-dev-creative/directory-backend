@@ -10,6 +10,7 @@ import com.prx.directory.client.BackboneClient;
 import com.prx.directory.client.to.BackboneUserCreateRequest;
 import com.prx.directory.client.to.BackboneUserCreateResponse;
 import com.prx.directory.client.to.BackboneUserGetResponse;
+import com.prx.directory.kafka.producer.EmailMessageProducerService;
 import com.prx.directory.mapper.UserCreateMapper;
 import com.prx.directory.mapper.UserGetMapper;
 import feign.FeignException;
@@ -41,13 +42,15 @@ import static org.mockito.Mockito.when;
 class UserServiceImplTest {
 
     @Mock
-    private BackboneClient backboneClient;
+    BackboneClient backboneClient;
     @Mock
-    private UserCreateMapper userCreateMapper;
+    UserCreateMapper userCreateMapper;
     @Mock
-    private UserGetMapper userGetMapper;
+    UserGetMapper userGetMapper;
+    @Mock
+    EmailMessageProducerService emailMessageProducerService;
     @InjectMocks
-    private UserServiceImpl userService;
+    UserServiceImpl userService;
 
     @BeforeEach
     void setUp() {
