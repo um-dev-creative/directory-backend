@@ -45,7 +45,7 @@ public class EmailMessageProducerServiceImpl implements EmailMessageProducerServ
                 }
             });
         } catch (JsonProcessingException e) {
-            throw new StandardException("Error serializing EmailMessageTO: " + e.getMessage(), MessageType.DEFAULT_MESSAGE);
+            throw new StandardException("Error serializing EmailMessageTO: " + e.getMessage(), MessageType.DEFAULT_MESSAGE, e);
         }
     }
 }
