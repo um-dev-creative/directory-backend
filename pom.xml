@@ -51,6 +51,7 @@
         <!--        OPEN API -->
         <springdoc.version>2.6.0</springdoc.version>
         <!--        SPRING -->
+        <spring-boot.kafka.version>3.3.2</spring-boot.kafka.version>
         <spring-boot.version>3.4.1</spring-boot.version>
         <spring-cloud.version>2024.0.0</spring-cloud.version>
         <spring-security-aouth2-autoconfigure.version>3.3.2</spring-security-aouth2-autoconfigure.version>
@@ -123,6 +124,11 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
             <version>${spring-cloud-dependencies.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+            <version>${spring-boot.kafka.version}</version>
         </dependency>
 
         <dependency>
