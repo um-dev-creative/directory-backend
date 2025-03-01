@@ -1,5 +1,6 @@
 package com.prx.directory.kafka.config;
 
+import io.jsonwebtoken.lang.Objects;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
@@ -22,11 +23,15 @@ public class KafkaProducerConfig {
     @Value("${prx.bootstrap.server.url}")
     private String bootstrapServers;
 
+    @Value("${prx.bootstrap.server.port}")
+    private String bootstrapServerPort;
+
     @Bean
     public ProducerFactory<String, String> producerFactory() {
         logger.info("Creating Producer Factory");
         Map<String, Object> configProps = new HashMap<>();
-        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
+                !Objects.isEmpty(bootstrapServerPort) ? bootstrapServers+":"+bootstrapServerPort : bootstrapServers);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         logger.info("Producer Factory created");
