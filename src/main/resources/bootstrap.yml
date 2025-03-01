@@ -15,11 +15,11 @@ prx:
     scope: ${BACKBONE_SCOPE}
     client-secret: ${BACKBONE_CLIENT_SECRET}
     client-id: ${BACKBONE_CLIENT_ID}
-    redirect-uri: ${AUTH_SERVER_URI}/protocol/openid-connect/token
+    redirect-uri: ${AUTH_SERVER_URI}${AUTH_TOKEN_URI}
     username: ${BACKBONE_USERNAME}
     password: ${BACKBONE_PASSWORD}
 app:
-  clientRoles: directory-frontend-client
+  clientRoles: ${AUTH_ROLE_ID}
   # The name of the application
   name: directory-backend
   # The version of the application
@@ -73,23 +73,23 @@ spring:
   security:
     # Disables the security for the Spring Boot application
     oauth2:
-      clientRegistrationId: backbone-client
+      clientRegistrationId: directory-backend-client
       client:
         registration:
-          keycloak:
-            redirect-uri: ${AUTH_SERVER_URI}
-            authorization-grant-type: password
-            scope: openid
+          external:
+            provider: external
+            client-id:  ${AUTH_CLIENT_ID}
             client-secret: ${AUTH_CLIENT_SECRET}
-            client-id: ${AUTH_CLIENT_ID}
+            scope: profile directory-backend-app-scope openid
+            authorization-grant-type: password
         provider:
-          keycloak:
+          external:
             issuer-uri: ${AUTH_SERVER_URI}
-            jwk-set-uri: ${spring.security.oauth2.client.provider.keycloak.issuer-uri}/protocol/openid-connect/certs
+            jwk-set-uri: ${spring.security.oauth2.client.provider.external.issuer-uri}/protocol/openid-connect/certs
       resourceserver:
         jwt:
           issuer-uri: ${AUTH_SERVER_URI}
-          jwk-set-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}/protocol/openid-connect/certs
+          jwk-set-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}${AUTH_CERT_URI}
   cloud:
     # The Spring Cloud Config specific configurations
     #<><><><><><><><><><><><><><> VAULT <><><><><><><><><><><><><><>

@@ -1,12 +1,15 @@
 package com.prx.directory.security;
 
 import com.prx.commons.constants.keys.AuthKey;
+import com.prx.security.exception.CertificateSecurityException;
 import com.prx.security.jwt.JwtConfigProperties;
 import com.prx.security.service.SessionJwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -24,6 +27,7 @@ import static com.prx.security.constant.ConstantApp.SESSION_TOKEN_KEY;
 @Service
 public class SessionJwtServiceImpl implements SessionJwtService {
 
+    private static final Logger logger = LoggerFactory.getLogger(SessionJwtServiceImpl.class);
     private final JwtConfigProperties jwtConfigProperties;
     private final SecretKey key;
 
@@ -65,8 +69,14 @@ public class SessionJwtServiceImpl implements SessionJwtService {
      * @return the claims contained in the token
      */
     @Override
-    public Claims getTokenClaims(String token) {
-        return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+    public Claims getTokenClaims(String token) throws CertificateSecurityException {
+        Claims claims;
+        try {
+            claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+        } catch (Exception e) {
+            throw new CertificateSecurityException(e.getMessage());
+        }
+        return claims;
     }
 
     /**
