@@ -74,7 +74,7 @@ public class SessionJwtServiceImpl implements SessionJwtService {
         try {
             claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
         } catch (Exception e) {
-            throw new CertificateSecurityException(e.getMessage());
+            throw new CertificateSecurityException(e.getMessage(), e);
         }
         return claims;
     }
