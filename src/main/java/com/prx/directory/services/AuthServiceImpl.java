@@ -1,6 +1,6 @@
 package com.prx.directory.services;
 
-import com.prx.directory.client.BackboneClient;
+import com.prx.directory.client.backbone.BackboneClient;
 import com.prx.security.service.AuthService;
 import com.prx.security.service.SessionJwtService;
 import com.prx.security.to.AuthRequest;

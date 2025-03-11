@@ -5,7 +5,7 @@ import com.prx.commons.exception.StandardException;
 import com.prx.directory.api.v1.to.UseGetResponse;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
-import com.prx.directory.client.BackboneClient;
+import com.prx.directory.client.backbone.BackboneClient;
 import com.prx.directory.kafka.to.EmailMessageTO;
 import com.prx.directory.kafka.to.Recipient;
 import com.prx.directory.kafka.producer.EmailMessageProducerService;

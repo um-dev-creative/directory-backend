@@ -1,4 +1,4 @@
-package com.prx.directory.client.to;
+package com.prx.directory.client.backbone.to;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 

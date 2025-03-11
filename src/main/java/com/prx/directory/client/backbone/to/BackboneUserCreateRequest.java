@@ -1,4 +1,4 @@
-package com.prx.directory.client.to;
+package com.prx.directory.client.backbone.to;
 
 import com.prx.commons.general.pojo.Person;
 import jakarta.validation.constraints.Email;

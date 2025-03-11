@@ -1,5 +1,6 @@
 package com.prx.directory.client.to;
 
+import com.prx.directory.client.backbone.to.BackboneUserCreateResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
