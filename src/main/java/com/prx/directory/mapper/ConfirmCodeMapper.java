@@ -27,7 +27,7 @@ public interface ConfirmCodeMapper {
     /// @see VerificationCodeRequest
     /// @see ConfirmCodeMapper
     @Mapping(target = "userId", source = "confirmCodeRequest.userId")
-    @Mapping(target = "verificationCode", source = "confirmCodeRequest.verificationCode")
+    @Mapping(target = "code", source = "confirmCodeRequest.verificationCode")
     @Mapping(target = "applicationId", source = "applicationId")
     VerificationCodeRequest toVerificationCodeRequest(ConfirmCodeRequest confirmCodeRequest, UUID applicationId);
 

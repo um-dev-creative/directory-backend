@@ -14,7 +14,7 @@ import static com.prx.security.constant.ConstantApp.SESSION_TOKEN_KEY;
 /// Feign client for the Mercury service. This client is used to interact with the Mercury service.
 @FeignClient(name = "mercuryClient", url = "https://prx-qa.backbone.tst/mercury", configuration = {MercuryFeignConfigurer.class})
 public interface MercuryClient {
-    public static final String SESSION_TOKEN_BKD_KEY = "session-token-bkd";
+    String SESSION_TOKEN_BKD_KEY = "session-token-bkd";
 
     /// Sends a verification code to the specified phone number.
     ///
