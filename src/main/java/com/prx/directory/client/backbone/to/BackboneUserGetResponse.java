@@ -1,10 +1,11 @@
-package com.prx.directory.client.to;
+package com.prx.directory.client.backbone.to;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.prx.commons.general.pojo.Application;
 import com.prx.commons.general.pojo.Person;
 import com.prx.commons.general.pojo.Role;
 import com.prx.commons.util.DateUtil;
+import jakarta.validation.constraints.Email;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,6 +17,8 @@ public record BackboneUserGetResponse(
         UUID id,
         String alias,
         String password,
+        @Email
+        String email,
         @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME)
         LocalDateTime createdDate,
         @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME)
@@ -33,6 +36,7 @@ public record BackboneUserGetResponse(
                 "id=" + id +
                 ", alias='" + alias + '\'' +
                 ", password='" + password + '\'' +
+                ", email='" + email + '\'' +
                 ", createdDate=" + createdDate +
                 ", lastUpdate=" + lastUpdate +
                 ", active=" + active +

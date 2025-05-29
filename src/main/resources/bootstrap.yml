@@ -10,14 +10,23 @@ prx:
     secret: ${APP_TOKEN_SECRET}
     expirationMs: ${APP_TOKEN_EXPIRATION}
   auth:
-    id: backbone
-    authorization-grant-type: ${BACKBONE_GRANT_TYPE}
-    scope: ${BACKBONE_SCOPE}
-    client-secret: ${BACKBONE_CLIENT_SECRET}
-    client-id: ${BACKBONE_CLIENT_ID}
-    redirect-uri: ${AUTH_SERVER_URI}${AUTH_TOKEN_URI}
-    username: ${BACKBONE_USERNAME}
-    password: ${BACKBONE_PASSWORD}
+    clients:
+      - id: backbone
+        authorization-grant-type: ${BACKBONE_GRANT_TYPE}
+        scope: ${BACKBONE_SCOPE}
+        client-secret: ${BACKBONE_CLIENT_SECRET}
+        client-id: ${BACKBONE_CLIENT_ID}
+        redirect-uri: ${AUTH_SERVER_URI}${AUTH_TOKEN_URI}
+        username: ${BACKBONE_USERNAME}
+        password: ${BACKBONE_PASSWORD}
+      - id: mercury
+        authorization-grant-type: ${MERCURY_GRANT_TYPE}
+        scope: ${MERCURY_SCOPE}
+        client-secret: ${MERCURY_CLIENT_SECRET}
+        client-id: ${MERCURY_CLIENT_ID}
+        redirect-uri: ${AUTH_SERVER_URI}${AUTH_TOKEN_URI}
+        username: ${MERCURY_USERNAME}
+        password: ${MERCURY_PASSWORD}
 app:
   clientRoles: ${AUTH_ROLE_ID}
   # The name of the application
@@ -78,7 +87,7 @@ spring:
         registration:
           external:
             provider: external
-            client-id:  ${AUTH_CLIENT_ID}
+            client-id: ${AUTH_CLIENT_ID}
             client-secret: ${AUTH_CLIENT_SECRET}
             scope: profile directory-backend-app-scope openid
             authorization-grant-type: password

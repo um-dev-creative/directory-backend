@@ -6,10 +6,10 @@ import com.prx.commons.general.pojo.Role;
 import com.prx.directory.api.v1.to.UseGetResponse;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
-import com.prx.directory.client.BackboneClient;
-import com.prx.directory.client.to.BackboneUserCreateRequest;
-import com.prx.directory.client.to.BackboneUserCreateResponse;
-import com.prx.directory.client.to.BackboneUserGetResponse;
+import com.prx.directory.client.backbone.BackboneClient;
+import com.prx.directory.client.backbone.to.BackboneUserCreateRequest;
+import com.prx.directory.client.backbone.to.BackboneUserCreateResponse;
+import com.prx.directory.client.backbone.to.BackboneUserGetResponse;
 import com.prx.directory.kafka.producer.EmailMessageProducerService;
 import com.prx.directory.mapper.UserCreateMapper;
 import com.prx.directory.mapper.UserGetMapper;
@@ -261,7 +261,8 @@ class UserServiceImplTest {
                 userId,
                 "jconnor",
                 "abcsasa",
-        LocalDateTime.now(),
+                "jconnor@mail.com",
+                LocalDateTime.now(),
                 LocalDateTime.now(),
                 true,
                 person,

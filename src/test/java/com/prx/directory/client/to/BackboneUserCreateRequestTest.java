@@ -1,6 +1,7 @@
 package com.prx.directory.client.to;
 
 import com.prx.commons.general.pojo.Person;
+import com.prx.directory.client.backbone.to.BackboneUserCreateRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

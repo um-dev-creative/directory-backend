@@ -3,7 +3,7 @@ package com.prx.directory.mapper;
 import com.prx.commons.general.pojo.Application;
 import com.prx.commons.general.pojo.Role;
 import com.prx.directory.api.v1.to.UseGetResponse;
-import com.prx.directory.client.to.BackboneUserGetResponse;
+import com.prx.directory.client.backbone.to.BackboneUserGetResponse;
 import org.mapstruct.*;
 
 import java.util.List;
