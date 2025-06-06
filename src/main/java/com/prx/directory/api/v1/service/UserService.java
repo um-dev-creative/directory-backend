@@ -1,5 +1,6 @@
 package com.prx.directory.api.v1.service;
 
+import com.prx.directory.api.v1.to.CheckVerificationCodeResponse;
 import com.prx.directory.api.v1.to.UseGetResponse;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
@@ -40,9 +41,9 @@ public interface UserService {
      * Checks if the verification code for a user is completed.
      *
      * @param userId the user id (UUID) to check
-     * @return true if verification code is done, false otherwise
+     * @return a ResponseEntity containing the CheckVerificationCodeResponse if verification code is done, or false otherwise
      */
-    default ResponseEntity<Boolean> checkVerificationCode(UUID userId) {
+    default ResponseEntity<CheckVerificationCodeResponse> checkVerificationCode(UUID userId) {
         return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
     }
 }

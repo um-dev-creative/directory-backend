@@ -1,6 +1,7 @@
 package com.prx.directory.api.v1.controller;
 
 import com.prx.directory.api.v1.service.UserService;
+import com.prx.directory.api.v1.to.CheckVerificationCodeResponse;
 import com.prx.directory.api.v1.to.UseGetResponse;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
@@ -81,7 +82,7 @@ public interface UserApi {
             @ApiResponse(responseCode = "404", description = "User not found", content = @Content)
     })
     @GetMapping("/verification-code/completed")
-    default ResponseEntity<Boolean> isVerificationCodeCompleted(@RequestParam("userId") UUID userId) {
+    default ResponseEntity<CheckVerificationCodeResponse> isVerificationCodeCompleted(@RequestParam("userId") UUID userId) {
         return this.getService().checkVerificationCode(userId);
     }
 

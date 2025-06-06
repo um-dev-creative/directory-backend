@@ -1,6 +1,7 @@
 package com.prx.directory.api.v1.controller;
 
 import com.prx.directory.api.v1.service.UserService;
+import com.prx.directory.api.v1.to.CheckVerificationCodeResponse;
 import com.prx.directory.api.v1.to.UseGetResponse;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
@@ -49,7 +50,7 @@ public class UserController implements UserApi {
      * @return a ResponseEntity with true if verification code is done, false otherwise
      */
     @Override
-    public ResponseEntity<Boolean> isVerificationCodeCompleted(UUID userId) {
+    public ResponseEntity<CheckVerificationCodeResponse> isVerificationCodeCompleted(UUID userId) {
         return userService.checkVerificationCode(userId);
     }
 }

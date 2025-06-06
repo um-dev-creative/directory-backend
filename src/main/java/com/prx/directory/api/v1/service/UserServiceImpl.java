@@ -2,6 +2,7 @@ package com.prx.directory.api.v1.service;
 
 import com.prx.commons.constants.types.MessageType;
 import com.prx.commons.exception.StandardException;
+import com.prx.directory.api.v1.to.CheckVerificationCodeResponse;
 import com.prx.directory.api.v1.to.UseGetResponse;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
@@ -104,7 +105,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<Boolean> checkVerificationCode(UUID userId) {
+    public ResponseEntity<CheckVerificationCodeResponse> checkVerificationCode(UUID userId) {
         try {
             var userResponse = backboneClient.find(userId);
             BackboneTokenRequest backboneAuthRequest = new BackboneTokenRequest(
@@ -112,11 +113,11 @@ public class UserServiceImpl implements UserService {
             AuthRequest mercuryAuthRequest = new AuthRequest(userResponse.alias(), userResponse.password());
             var backboneToken = backboneClient.token(backboneAuthRequest);
             var mercuryToken = mercuryClient.token(backboneToken.token(), mercuryAuthRequest);
-            var response = mercuryClient.isVerificationCodeDone(mercuryToken.token(), userId.toString());
+            var response = new CheckVerificationCodeResponse(mercuryClient.isVerificationCodeDone(mercuryToken.token(), userId.toString()));
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.warn("Error checking verification code status for user {}: {}", userId, e.getMessage());
-            return ResponseEntity.ok(false);
+            return ResponseEntity.ok(new CheckVerificationCodeResponse(false));
         }
     }
 
