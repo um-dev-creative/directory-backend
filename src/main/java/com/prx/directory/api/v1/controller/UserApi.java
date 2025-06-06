@@ -13,10 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
@@ -70,6 +67,22 @@ public interface UserApi {
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     default ResponseEntity<UseGetResponse> userGet(@NotNull @PathVariable UUID id) {
         return this.getService().findUser(id);
+    }
+
+    @Operation(
+            summary = "Check if verification code is completed",
+            description = "Returns true if the user's verification code process is completed, otherwise false."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Verification code status retrieved successfully",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = Boolean.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid userId parameter", content = @Content),
+            @ApiResponse(responseCode = "404", description = "User not found", content = @Content)
+    })
+    @GetMapping("/verification-code/completed")
+    default ResponseEntity<Boolean> isVerificationCodeCompleted(@RequestParam("userId") UUID userId) {
+        return this.getService().checkVerificationCode(userId);
     }
 
 }

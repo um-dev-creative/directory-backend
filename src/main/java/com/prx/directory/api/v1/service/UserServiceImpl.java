@@ -6,11 +6,14 @@ import com.prx.directory.api.v1.to.UseGetResponse;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
 import com.prx.directory.client.backbone.BackboneClient;
+import com.prx.directory.client.backbone.to.BackboneTokenRequest;
+import com.prx.directory.client.mercury.MercuryClient;
+import com.prx.directory.kafka.producer.EmailMessageProducerService;
 import com.prx.directory.kafka.to.EmailMessageTO;
 import com.prx.directory.kafka.to.Recipient;
-import com.prx.directory.kafka.producer.EmailMessageProducerService;
 import com.prx.directory.mapper.UserCreateMapper;
 import com.prx.directory.mapper.UserGetMapper;
+import com.prx.security.to.AuthRequest;
 import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,16 +50,18 @@ public class UserServiceImpl implements UserService {
     private final UserCreateMapper userCreateMapper;
     private final BackboneClient backboneClient;
     private final UserGetMapper userGetMapper;
+    private final MercuryClient mercuryClient;
 
     /// Constructs a new UserServiceImpl with the specified BackboneClient and UserCreateMapper.
     ///
     /// @param backboneClient   the client used to communicate with the backend
     /// @param userCreateMapper the mapper used to convert between request/response objects and backend objects
-    public UserServiceImpl(BackboneClient backboneClient, EmailMessageProducerService emailMessageProducerService, UserCreateMapper userCreateMapper, UserGetMapper userGetMapper) {
+    public UserServiceImpl(BackboneClient backboneClient, EmailMessageProducerService emailMessageProducerService, UserCreateMapper userCreateMapper, UserGetMapper userGetMapper, MercuryClient mercuryClient) {
         this.emailMessageProducerService = emailMessageProducerService;
         this.userCreateMapper = userCreateMapper;
         this.backboneClient = backboneClient;
         this.userGetMapper = userGetMapper;
+        this.mercuryClient = mercuryClient;
     }
 
     @Override
@@ -94,7 +99,24 @@ public class UserServiceImpl implements UserService {
             if (e.status() == HttpStatus.NOT_FOUND.value()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).header("message-error", "User not found.").build();
             }
-            return  ResponseEntity.status(e.status()).build();
+            return ResponseEntity.status(e.status()).build();
+        }
+    }
+
+    @Override
+    public ResponseEntity<Boolean> checkVerificationCode(UUID userId) {
+        try {
+            var userResponse = backboneClient.find(userId);
+            BackboneTokenRequest backboneAuthRequest = new BackboneTokenRequest(
+                    userResponse.email(), userResponse.password(), userResponse.applications().getFirst().getId());
+            AuthRequest mercuryAuthRequest = new AuthRequest(userResponse.alias(), userResponse.password());
+            var backboneToken = backboneClient.token(backboneAuthRequest);
+            var mercuryToken = mercuryClient.token(backboneToken.token(), mercuryAuthRequest);
+            var response = mercuryClient.isVerificationCodeDone(mercuryToken.token(), userId.toString());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.warn("Error checking verification code status for user {}: {}", userId, e.getMessage());
+            return ResponseEntity.ok(false);
         }
     }
 
@@ -133,7 +155,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private EmailMessageTO toEmailMessageTO(UserCreateRequest userCreateRequest, UserCreateResponse userCreateResponse) {
-        String fullname =userCreateRequest.firstname().concat(" ").concat(userCreateRequest.lastname());
+        String fullname = userCreateRequest.firstname().concat(" ").concat(userCreateRequest.lastname());
         return new EmailMessageTO(verificationCodeTemplateId,
                 userCreateResponse.id(),
                 "support@latinhub.info",
@@ -146,7 +168,7 @@ public class UserServiceImpl implements UserService {
                 "Your verification code format is: ####-####",
                 userCreateResponse.createdDate(),
                 Map.of("vc", generateVerificationCode(), "user_name", fullname)
-                );
+        );
     }
 
     private String generateVerificationCode() {

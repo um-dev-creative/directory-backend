@@ -6,8 +6,10 @@ import com.prx.directory.client.mercury.to.VerificationCodeRequest;
 import com.prx.security.to.AuthRequest;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import static com.prx.security.constant.ConstantApp.SESSION_TOKEN_KEY;
 
@@ -34,5 +36,15 @@ public interface MercuryClient {
     /// @see ResponseEntity
     @PostMapping("/api/v1/auth/token")
     PrxTokenString token(@RequestHeader(SESSION_TOKEN_BKD_KEY) String sessionToken, AuthRequest authRequest);
+
+    /**
+     * Checks the latest verification code status for a user.
+     *
+     * @param sessionToken the session token used to authenticate the request
+     * @param userId the user id (UUID) to check status for
+     * @return true if the verification code is done, false if pending
+     */
+    @GetMapping("/api/v1/verification-code/latest-status")
+    Boolean isVerificationCodeDone(@RequestHeader(SESSION_TOKEN_KEY) String sessionToken, @RequestParam("userId") String userId);
 
 }

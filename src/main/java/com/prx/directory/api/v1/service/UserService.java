@@ -35,4 +35,14 @@ public interface UserService {
     default ResponseEntity<UseGetResponse> findUser(UUID id) {
         return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
     }
+
+    /**
+     * Checks if the verification code for a user is completed.
+     *
+     * @param userId the user id (UUID) to check
+     * @return true if verification code is done, false otherwise
+     */
+    default ResponseEntity<Boolean> checkVerificationCode(UUID userId) {
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+    }
 }

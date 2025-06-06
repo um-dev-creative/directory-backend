@@ -41,4 +41,15 @@ public class UserController implements UserApi {
     public ResponseEntity<UseGetResponse> userGet(UUID id) {
         return userService.findUser(id);
     }
+
+    /**
+     * Endpoint to check if the verification code for a user is completed.
+     *
+     * @param userId the user id (UUID) to check
+     * @return a ResponseEntity with true if verification code is done, false otherwise
+     */
+    @Override
+    public ResponseEntity<Boolean> isVerificationCodeCompleted(UUID userId) {
+        return userService.checkVerificationCode(userId);
+    }
 }
