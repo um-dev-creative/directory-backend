@@ -2,19 +2,16 @@ package com.prx.directory.api.v1.service;
 
 import com.prx.commons.constants.types.MessageType;
 import com.prx.commons.exception.StandardException;
-import com.prx.directory.api.v1.to.CheckVerificationCodeResponse;
 import com.prx.directory.api.v1.to.UseGetResponse;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
 import com.prx.directory.client.backbone.BackboneClient;
-import com.prx.directory.client.backbone.to.BackboneTokenRequest;
 import com.prx.directory.client.mercury.MercuryClient;
 import com.prx.directory.kafka.producer.EmailMessageProducerService;
 import com.prx.directory.kafka.to.EmailMessageTO;
 import com.prx.directory.kafka.to.Recipient;
 import com.prx.directory.mapper.UserCreateMapper;
 import com.prx.directory.mapper.UserGetMapper;
-import com.prx.security.to.AuthRequest;
 import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,23 +98,6 @@ public class UserServiceImpl implements UserService {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).header("message-error", "User not found.").build();
             }
             return ResponseEntity.status(e.status()).build();
-        }
-    }
-
-    @Override
-    public ResponseEntity<CheckVerificationCodeResponse> checkVerificationCode(UUID userId) {
-        try {
-            var userResponse = backboneClient.find(userId);
-            BackboneTokenRequest backboneAuthRequest = new BackboneTokenRequest(
-                    userResponse.email(), userResponse.password(), userResponse.applications().getFirst().getId());
-            AuthRequest mercuryAuthRequest = new AuthRequest(userResponse.alias(), userResponse.password());
-            var backboneToken = backboneClient.token(backboneAuthRequest);
-            var mercuryToken = mercuryClient.token(backboneToken.token(), mercuryAuthRequest);
-            var response = new CheckVerificationCodeResponse(mercuryClient.isVerificationCodeDone(mercuryToken.token(), userId.toString()));
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            logger.warn("Error checking verification code status for user {}: {}", userId, e.getMessage());
-            return ResponseEntity.ok(new CheckVerificationCodeResponse(false));
         }
     }
 
