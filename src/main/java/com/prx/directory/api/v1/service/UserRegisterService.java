@@ -8,10 +8,10 @@ import org.springframework.http.ResponseEntity;
 public interface UserRegisterService {
 
     /// Confirms the verification code for the specified user.
-    ///
+    /// @param sessionTokenBkd The Backbone session token
     /// @param confirmCodeRequest the request object containing the user ID and verification code
     /// @return a ResponseEntity containing the response object and HTTP status
-    default ResponseEntity<Void> confirmCode(ConfirmCodeRequest confirmCodeRequest) {
+    default ResponseEntity<Void> confirmCode(String sessionTokenBkd, ConfirmCodeRequest confirmCodeRequest) {
         return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
     }
 

@@ -152,9 +152,14 @@ public class UserServiceImpl implements UserService {
         );
     }
 
+    public int generateFourDigitNumber() {
+        SecureRandom random = new SecureRandom();
+        return 1000 + random.nextInt(9000); // Generates a number from 1000 to 9999
+    }
+
     private String generateVerificationCode() {
         // Implement your code generation logic here
-        return UUID.randomUUID().toString().substring(0, 4).toUpperCase(Locale.ROOT) +
-                "-" + UUID.randomUUID().toString().substring(0, 4).toUpperCase(Locale.ROOT);
+        return generateFourDigitNumber() +
+                "-" + generateFourDigitNumber();
     }
 }
