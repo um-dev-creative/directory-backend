@@ -6,9 +6,10 @@ import com.prx.directory.api.v1.to.UseGetResponse;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
 import com.prx.directory.client.backbone.BackboneClient;
+import com.prx.directory.client.mercury.MercuryClient;
+import com.prx.directory.kafka.producer.EmailMessageProducerService;
 import com.prx.directory.kafka.to.EmailMessageTO;
 import com.prx.directory.kafka.to.Recipient;
-import com.prx.directory.kafka.producer.EmailMessageProducerService;
 import com.prx.directory.mapper.UserCreateMapper;
 import com.prx.directory.mapper.UserGetMapper;
 import feign.FeignException;
@@ -47,16 +48,18 @@ public class UserServiceImpl implements UserService {
     private final UserCreateMapper userCreateMapper;
     private final BackboneClient backboneClient;
     private final UserGetMapper userGetMapper;
+    private final MercuryClient mercuryClient;
 
     /// Constructs a new UserServiceImpl with the specified BackboneClient and UserCreateMapper.
     ///
     /// @param backboneClient   the client used to communicate with the backend
     /// @param userCreateMapper the mapper used to convert between request/response objects and backend objects
-    public UserServiceImpl(BackboneClient backboneClient, EmailMessageProducerService emailMessageProducerService, UserCreateMapper userCreateMapper, UserGetMapper userGetMapper) {
+    public UserServiceImpl(BackboneClient backboneClient, EmailMessageProducerService emailMessageProducerService, UserCreateMapper userCreateMapper, UserGetMapper userGetMapper, MercuryClient mercuryClient) {
         this.emailMessageProducerService = emailMessageProducerService;
         this.userCreateMapper = userCreateMapper;
         this.backboneClient = backboneClient;
         this.userGetMapper = userGetMapper;
+        this.mercuryClient = mercuryClient;
     }
 
     @Override
@@ -94,7 +97,7 @@ public class UserServiceImpl implements UserService {
             if (e.status() == HttpStatus.NOT_FOUND.value()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).header("message-error", "User not found.").build();
             }
-            return  ResponseEntity.status(e.status()).build();
+            return ResponseEntity.status(e.status()).build();
         }
     }
 
@@ -133,7 +136,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private EmailMessageTO toEmailMessageTO(UserCreateRequest userCreateRequest, UserCreateResponse userCreateResponse) {
-        String fullname =userCreateRequest.firstname().concat(" ").concat(userCreateRequest.lastname());
+        String fullname = userCreateRequest.firstname().concat(" ").concat(userCreateRequest.lastname());
         return new EmailMessageTO(verificationCodeTemplateId,
                 userCreateResponse.id(),
                 "support@latinhub.info",
@@ -146,12 +149,17 @@ public class UserServiceImpl implements UserService {
                 "Your verification code format is: ####-####",
                 userCreateResponse.createdDate(),
                 Map.of("vc", generateVerificationCode(), "user_name", fullname)
-                );
+        );
+    }
+
+    public int generateFourDigitNumber() {
+        SecureRandom random = new SecureRandom();
+        return 1000 + random.nextInt(9000); // Generates a number from 1000 to 9999
     }
 
     private String generateVerificationCode() {
         // Implement your code generation logic here
-        return UUID.randomUUID().toString().substring(0, 4).toUpperCase(Locale.ROOT) +
-                "-" + UUID.randomUUID().toString().substring(0, 4).toUpperCase(Locale.ROOT);
+        return generateFourDigitNumber() +
+                "-" + generateFourDigitNumber();
     }
 }

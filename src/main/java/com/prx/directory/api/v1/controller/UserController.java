@@ -41,4 +41,5 @@ public class UserController implements UserApi {
     public ResponseEntity<UseGetResponse> userGet(UUID id) {
         return userService.findUser(id);
     }
+
 }

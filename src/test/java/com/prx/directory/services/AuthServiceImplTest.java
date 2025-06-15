@@ -1,6 +1,7 @@
 package com.prx.directory.services;
 
 import com.prx.directory.client.backbone.BackboneClient;
+import com.prx.directory.client.mercury.MercuryClient;
 import com.prx.security.service.SessionJwtService;
 import com.prx.security.to.AuthRequest;
 import com.prx.security.to.AuthResponse;
@@ -16,7 +17,8 @@ class AuthServiceImplTest {
 
     private final SessionJwtService sessionJwtService = mock(SessionJwtService.class);
     private final BackboneClient backboneClient = mock(BackboneClient.class);
-    private final AuthServiceImpl authService = new AuthServiceImpl(sessionJwtService, backboneClient);
+    private final MercuryClient mercuryClient = mock(MercuryClient.class);
+    private final AuthServiceImpl authService = new AuthServiceImpl(sessionJwtService, backboneClient, mercuryClient);
 
     @Test
     @DisplayName("token should return OK status with valid alias")

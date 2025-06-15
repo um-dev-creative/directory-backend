@@ -35,4 +35,5 @@ public interface UserService {
     default ResponseEntity<UseGetResponse> findUser(UUID id) {
         return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
     }
+
 }

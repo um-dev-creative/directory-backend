@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 @Tag(name="user-register", description="The user register API")
 public interface UserRegisterApi {
@@ -33,7 +34,7 @@ public interface UserRegisterApi {
     /// @return a ResponseEntity containing the response object and HTTP status
     /// @see ConfirmCodeRequest
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    default ResponseEntity<Void> confirmCode(@RequestBody ConfirmCodeRequest confirmCodeRequest){
-        return getService().confirmCode(confirmCodeRequest);
+    default ResponseEntity<Void> confirmCode(@RequestHeader("session-token-bkd") String sessionTokenBkd, @RequestBody ConfirmCodeRequest confirmCodeRequest){
+        return getService().confirmCode(sessionTokenBkd, confirmCodeRequest);
     }
 }

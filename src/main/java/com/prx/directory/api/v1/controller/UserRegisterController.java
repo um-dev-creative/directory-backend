@@ -17,7 +17,7 @@ public class UserRegisterController implements UserRegisterApi {
     }
 
     @Override
-    public ResponseEntity<Void> confirmCode(ConfirmCodeRequest confirmCodeRequest) {
-        return userRegisterService.confirmCode(confirmCodeRequest);
+    public ResponseEntity<Void> confirmCode(String sessionTokenBkd, ConfirmCodeRequest confirmCodeRequest) {
+        return userRegisterService.confirmCode(sessionTokenBkd, confirmCodeRequest);
     }
 }
