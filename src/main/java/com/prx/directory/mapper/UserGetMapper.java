@@ -1,6 +1,8 @@
 package com.prx.directory.mapper;
 
 import com.prx.commons.general.pojo.Application;
+import com.prx.commons.general.pojo.Contact;
+import com.prx.commons.general.pojo.Person;
 import com.prx.commons.general.pojo.Role;
 import com.prx.directory.api.v1.to.UseGetResponse;
 import com.prx.directory.client.backbone.to.BackboneUserGetResponse;
@@ -32,7 +34,7 @@ public interface UserGetMapper {
     /// @see UserGetMapper
     @Mapping(target = "id", source = "id")
     @Mapping(target = "alias", source = "alias")
-    @Mapping(target = "email", ignore = true)
+    @Mapping(target = "email", source = "email")
     @Mapping(target = "status", source = "active")
     @Mapping(target = "gender", source = "person.gender")
     @Mapping(target = "firstName", source = "person.firstName")
@@ -42,12 +44,13 @@ public interface UserGetMapper {
     @Mapping(target = "createdAt", source = "createdDate")
     @Mapping(target = "dateOfBirth", source = "person.birthdate")
     @Mapping(target = "roleId", expression = "java(getRoleId(backboneUserGetResponse))")
-    @Mapping(target = "applicationId",  expression = "java(getApplicationId(backboneUserGetResponse))")
-    UseGetResponse toBackbone(BackboneUserGetResponse backboneUserGetResponse);
+    @Mapping(target = "applicationId", expression = "java(getApplicationId(backboneUserGetResponse))")
+    @Mapping(target = "phone", expression = "java(getPhone(backboneUserGetResponse.person()))")
+    UseGetResponse fromBackbone(BackboneUserGetResponse backboneUserGetResponse);
 
     default UUID getRoleId(BackboneUserGetResponse backboneUserGetResponse) {
         List<Role> roles = backboneUserGetResponse.roles();
-        if(Objects.nonNull(roles) && !roles.isEmpty()) {
+        if (Objects.nonNull(roles) && !roles.isEmpty()) {
             return roles.stream().map(Role::getId).filter(Objects::nonNull).findFirst().orElse(null);
         }
         return null;
@@ -55,10 +58,17 @@ public interface UserGetMapper {
 
     default UUID getApplicationId(BackboneUserGetResponse backboneUserGetResponse) {
         List<Application> applications = backboneUserGetResponse.applications();
-        if(Objects.nonNull(applications) && !applications.isEmpty()) {
+        if (Objects.nonNull(applications) && !applications.isEmpty()) {
             return applications.stream().map(Application::getId).filter(Objects::nonNull).findFirst().orElse(null);
         }
         return null;
+    }
+
+    default String getPhone(Person person) {
+        if (Objects.nonNull(person)) {
+            return person.getContacts().stream().filter(contact -> contact.getContactType().getName().equalsIgnoreCase("phone")).findFirst().orElse(new Contact()).getContent();
+        }
+        return "";
     }
 
 }

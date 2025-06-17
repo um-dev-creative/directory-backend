@@ -19,11 +19,15 @@ public record BackboneUserGetResponse(
         String password,
         @Email
         String email,
+        String displayName,
         @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME)
         LocalDateTime createdDate,
         @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME)
         LocalDateTime lastUpdate,
         boolean active,
+        boolean notificationEmail,
+        boolean notificationSms,
+        boolean privacyDataOutActive,
         Person person,
         List<Role> roles,
         List<Application> applications
@@ -37,8 +41,12 @@ public record BackboneUserGetResponse(
                 ", alias='" + alias + '\'' +
                 ", password='" + password + '\'' +
                 ", email='" + email + '\'' +
+                ", displayName='" + displayName + '\'' +
                 ", createdDate=" + createdDate +
                 ", lastUpdate=" + lastUpdate +
+                ", notificationEmail=" + notificationEmail +
+                ", notificationSms=" + notificationSms +
+                ", privacyDataOutActive=" + privacyDataOutActive +
                 ", active=" + active +
                 ", person=" + person +
                 ", roles=" + roles +

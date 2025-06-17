@@ -12,9 +12,11 @@ public record UseGetResponse(
         UUID id,
         String alias,
         String email,
+        String phone,
         String firstName,
         String middleName,
         String lastName,
+        String displayName,
         String gender,
         @JsonFormat(pattern = DateUtil.PATTERN_DATE)
         LocalDate dateOfBirth,
@@ -22,6 +24,9 @@ public record UseGetResponse(
         LocalDateTime createdAt,
         @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME)
         LocalDateTime updatedAt,
+        boolean notificationEmail,
+        boolean notificationSms,
+        boolean privacyDataOutActive,
         boolean status,
         UUID roleId,
         UUID applicationId) {
@@ -33,13 +38,18 @@ public record UseGetResponse(
                 "id=" + id +
                 ", alias='" + alias + '\'' +
                 ", email='" + email + '\'' +
+                ", phone='" + phone + '\'' +
                 ", firstName='" + firstName + '\'' +
                 ", middleName='" + middleName + '\'' +
                 ", lastName='" + lastName + '\'' +
+                ", displayName='" + displayName + '\'' +
                 ", gender='" + gender + '\'' +
                 ", dateOfBirth=" + dateOfBirth +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
+                ", notificationEmail=" + notificationEmail +
+                ", notificationSms=" + notificationSms +
+                ", privacyDataOutActive=" + privacyDataOutActive +
                 ", status='" + status + '\'' +
                 ", roleId=" + roleId +
                 ", applicationId=" + applicationId +

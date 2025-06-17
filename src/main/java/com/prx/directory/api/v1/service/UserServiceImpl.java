@@ -91,7 +91,7 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<UseGetResponse> findUser(UUID id) {
         try {
             var result = backboneClient.find(id);
-            return ResponseEntity.ok(userGetMapper.toBackbone(result));
+            return ResponseEntity.ok(userGetMapper.fromBackbone(result));
         } catch (FeignException e) {
             logger.warn("Error finding user: {}", e.getMessage());
             if (e.status() == HttpStatus.NOT_FOUND.value()) {
