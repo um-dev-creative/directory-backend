@@ -246,13 +246,18 @@ class UserServiceImplTest {
                 userId,
                 "jconnor",
                 "john.connor@example.com",
+                "(+1) 4167389402",
                 "John",
                 "Marcus",
                 "Connor",
+                "Marcus",
                 "M",
                 LocalDate.parse("1984-05-12"),
                 LocalDateTime.now(),
                 LocalDateTime.now(),
+                true,
+                true,
+                true,
                 true,
                 UUID.randomUUID(),
                 UUID.randomUUID()
@@ -262,8 +267,12 @@ class UserServiceImplTest {
                 "jconnor",
                 "abcsasa",
                 "jconnor@mail.com",
+                "John",
                 LocalDateTime.now(),
                 LocalDateTime.now(),
+                true,
+                true,
+                true,
                 true,
                 person,
                 List.of(role),
@@ -272,7 +281,7 @@ class UserServiceImplTest {
 
 
         when(backboneClient.find(userId)).thenReturn(backboneResponse);
-        when(userGetMapper.toBackbone(backboneResponse)).thenReturn(expectedResponse);
+        when(userGetMapper.fromBackbone(backboneResponse)).thenReturn(expectedResponse);
 
         ResponseEntity<UseGetResponse> response = userService.findUser(userId);
 
