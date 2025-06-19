@@ -2,14 +2,16 @@ package com.prx.directory.api.v1.service;
 
 import com.prx.commons.constants.types.MessageType;
 import com.prx.commons.exception.StandardException;
+import com.prx.directory.api.v1.to.PatchUserRequest;
 import com.prx.directory.api.v1.to.UseGetResponse;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
 import com.prx.directory.client.backbone.BackboneClient;
-import com.prx.directory.client.mercury.MercuryClient;
+import com.prx.directory.client.backbone.to.BackboneUserUpdateRequest;
 import com.prx.directory.kafka.producer.EmailMessageProducerService;
 import com.prx.directory.kafka.to.EmailMessageTO;
 import com.prx.directory.kafka.to.Recipient;
+import com.prx.directory.mapper.PatchUserMapper;
 import com.prx.directory.mapper.UserCreateMapper;
 import com.prx.directory.mapper.UserGetMapper;
 import feign.FeignException;
@@ -46,20 +48,22 @@ public class UserServiceImpl implements UserService {
 
     private final EmailMessageProducerService emailMessageProducerService;
     private final UserCreateMapper userCreateMapper;
+    private final PatchUserMapper patchUserMapper;
     private final BackboneClient backboneClient;
     private final UserGetMapper userGetMapper;
-    private final MercuryClient mercuryClient;
 
     /// Constructs a new UserServiceImpl with the specified BackboneClient and UserCreateMapper.
     ///
     /// @param backboneClient   the client used to communicate with the backend
     /// @param userCreateMapper the mapper used to convert between request/response objects and backend objects
-    public UserServiceImpl(BackboneClient backboneClient, EmailMessageProducerService emailMessageProducerService, UserCreateMapper userCreateMapper, UserGetMapper userGetMapper, MercuryClient mercuryClient) {
+    public UserServiceImpl(BackboneClient backboneClient, EmailMessageProducerService emailMessageProducerService,
+                           UserCreateMapper userCreateMapper, PatchUserMapper patchUserMapperr,
+                           UserGetMapper userGetMapper) {
         this.emailMessageProducerService = emailMessageProducerService;
         this.userCreateMapper = userCreateMapper;
         this.backboneClient = backboneClient;
+        this.patchUserMapper = patchUserMapperr;
         this.userGetMapper = userGetMapper;
-        this.mercuryClient = mercuryClient;
     }
 
     @Override
@@ -99,6 +103,29 @@ public class UserServiceImpl implements UserService {
             }
             return ResponseEntity.status(e.status()).build();
         }
+    }
+
+    @Override
+    public ResponseEntity<Void> update(UUID userId, PatchUserRequest request) {
+        try {
+            BackboneUserUpdateRequest backboneRequest = patchUserMapper.toBackbone(request);
+            return backboneClient.userPartialUpdate(userId, backboneRequest);
+        } catch (Exception e) {
+            logger.warn("Error updating user: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /// Generates a random four-digit number.
+    ///
+    /// This method uses [SecureRandom] to generate a random integer between 1000 and 9999 (inclusive), ensuring
+    /// that the result is always a four-digit number. This can be used for purposes such as verification codes or temporary PINs.
+    ///
+    ///
+    /// @return a random four-digit integer between 1000 and 9999
+    public int generateFourDigitNumber() {
+        SecureRandom random = new SecureRandom();
+        return 1000 + random.nextInt(9000); // Generates a number from 1000 to 9999
     }
 
     private String generateAlias(UserCreateRequest userCreateRequest, boolean afterFirstTime, int time) {
@@ -150,11 +177,6 @@ public class UserServiceImpl implements UserService {
                 userCreateResponse.createdDate(),
                 Map.of("vc", generateVerificationCode(), "user_name", fullname)
         );
-    }
-
-    public int generateFourDigitNumber() {
-        SecureRandom random = new SecureRandom();
-        return 1000 + random.nextInt(9000); // Generates a number from 1000 to 9999
     }
 
     private String generateVerificationCode() {

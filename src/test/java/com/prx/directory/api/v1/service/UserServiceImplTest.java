@@ -61,59 +61,82 @@ class UserServiceImplTest {
     @Test
     @DisplayName("Create User")
     void createUser() {
+        String password = "abc123";
+        String email = "user@domain.ext";
+        String firstname = "John";
+        String lastname = "Connor";
+        LocalDate dateOfBirth = LocalDate.parse("1984-05-12");
+        String phoneNumber = "547424";
+        String displayName = "John Connor";
+        Boolean notificationSms = true;
+        Boolean notificationEmail = true;
+        Boolean privacyDataOutActive = false;
         UserCreateRequest request = new UserCreateRequest(
-                "abc123",
-                "user@domain.ext",
-                "John",
-                "Connor",
-                LocalDate.parse("1984-05-12"),
-                "547424"
+                password,
+                email,
+                firstname,
+                lastname,
+                dateOfBirth,
+                phoneNumber,
+                displayName,
+                notificationSms,
+                notificationEmail,
+                privacyDataOutActive
         );
         Person person = new Person();
         person.setGender("M");
-        person.setFirstName("John");
-        person.setLastName("Connor");
-        person.setBirthdate(LocalDate.parse("1984-05-12"));
+        person.setFirstName(firstname);
+        person.setLastName(lastname);
+        person.setBirthdate(dateOfBirth);
         person.setMiddleName("A");
-
         BackboneUserCreateRequest backboneRequest = new BackboneUserCreateRequest(
                 UUID.randomUUID(),
                 "alias",
-                "password",
-                "user@domain.ext",
+                password,
+                email,
                 true,
                 person,
                 UUID.randomUUID(),
-                UUID.randomUUID()
+                UUID.randomUUID(),
+                displayName,
+                notificationSms,
+                notificationEmail,
+                privacyDataOutActive
         );
         BackboneUserCreateResponse backboneResponse = new BackboneUserCreateResponse(
                 UUID.randomUUID(),
                 "alias",
-                "user@domain.ext",
+                email,
                 LocalDateTime.now(),
                 LocalDateTime.now(),
                 true,
                 UUID.randomUUID(),
                 UUID.randomUUID(),
-                UUID.randomUUID()
+                UUID.randomUUID(),
+                displayName,
+                notificationSms,
+                notificationEmail,
+                privacyDataOutActive
         );
         UserCreateResponse response = new UserCreateResponse(UUID.randomUUID(),
                 "john1",
-                "user@domain.ext",
+                email,
                 LocalDateTime.now(),
                 LocalDateTime.now(),
                 true,
                 UUID.randomUUID(),
                 UUID.randomUUID(),
-                UUID.randomUUID()
+                UUID.randomUUID(),
+                displayName,
+                notificationSms,
+                notificationEmail,
+                privacyDataOutActive
         );
-
         when(backboneClient.checkEmail(anyString(), any())).thenReturn(ResponseEntity.ok().build());
         when(backboneClient.checkAlias(anyString(), any())).thenReturn(ResponseEntity.ok().build());
         when(userCreateMapper.toBackbone(any(), any(), any(), any())).thenReturn(backboneRequest);
         when(backboneClient.post(any())).thenReturn(backboneResponse);
         when(userCreateMapper.fromBackbone(any())).thenReturn(response);
-
         ResponseEntity<UserCreateResponse> result = userService.create(request);
         assertEquals(HttpStatus.CREATED, result.getStatusCode());
     }
@@ -122,13 +145,27 @@ class UserServiceImplTest {
     @Test
     @DisplayName("Create User with Invalid Email")
     void createUserWithInvalidEmail() {
+        String password = "abc123";
+        String email = "gshdj@gstn.com";
+        String firstname = "John";
+        String lastname = "Connor";
+        LocalDate dateOfBirth = LocalDate.parse("1984-05-12");
+        String phoneNumber = "547424";
+        String displayName = "John Connor";
+        Boolean notificationSms = true;
+        Boolean notificationEmail = true;
+        Boolean privacyDataOutActive = false;
         UserCreateRequest request = new UserCreateRequest(
-                "abc123",
-                "invalid-email",
-                "John",
-                "Connor",
-                LocalDate.parse("1984-05-12"),
-                "547424"
+                password,
+                email,
+                firstname,
+                lastname,
+                dateOfBirth,
+                phoneNumber,
+                displayName,
+                notificationSms,
+                notificationEmail,
+                privacyDataOutActive
         );
 
         when(backboneClient.checkEmail(anyString(), any()))
@@ -144,13 +181,27 @@ class UserServiceImplTest {
     @Test
     @DisplayName("Create User with Existing Alias")
     void createUserWithExistingAlias() {
+        String password = "abc123";
+        String email = "gshdj@gstn.com";
+        String firstname = "John";
+        String lastname = "Connor";
+        LocalDate dateOfBirth = LocalDate.parse("1984-05-12");
+        String phoneNumber = "547424";
+        String displayName = "John Connor";
+        Boolean notificationSms = true;
+        Boolean notificationEmail = true;
+        Boolean privacyDataOutActive = false;
         UserCreateRequest request = new UserCreateRequest(
-                "abc123",
-                "user@domain.ext",
-                "John",
-                "Connor",
-                LocalDate.parse("1984-05-12"),
-                "547424"
+                password,
+                email,
+                firstname,
+                lastname,
+                dateOfBirth,
+                phoneNumber,
+                displayName,
+                notificationSms,
+                notificationEmail,
+                privacyDataOutActive
         );
 
         when(backboneClient.checkEmail(anyString(), any())).thenReturn(ResponseEntity.ok().build());
@@ -166,13 +217,27 @@ class UserServiceImplTest {
     @Test
     @DisplayName("Create User with Null Email")
     void createUserWithNullEmail() {
+        String password = "abc123";
+        String email = "gshdj@gstn.com";
+        String firstname = "John";
+        String lastname = "Connor";
+        LocalDate dateOfBirth = LocalDate.parse("1984-05-12");
+        String phoneNumber = "547424";
+        String displayName = "John Connor";
+        Boolean notificationSms = true;
+        Boolean notificationEmail = true;
+        Boolean privacyDataOutActive = false;
         UserCreateRequest request = new UserCreateRequest(
-                "abc123",
-                null,
-                "John",
-                "Connor",
-                LocalDate.parse("1984-05-12"),
-                "547424"
+                password,
+                email,
+                firstname,
+                lastname,
+                dateOfBirth,
+                phoneNumber,
+                displayName,
+                notificationSms,
+                notificationEmail,
+                privacyDataOutActive
         );
 
         when(backboneClient.checkEmail(anyString(), any())).thenReturn(ResponseEntity.status(HttpStatus.CONFLICT).build());
@@ -187,15 +252,28 @@ class UserServiceImplTest {
     @Test
     @DisplayName("Create User with Null Alias")
     void createUserWithNullAlias() {
+        String password = "abc123";
+        String email = "gshdj@gstn.com";
+        String firstname = "John";
+        String lastname = "Connor";
+        LocalDate dateOfBirth = LocalDate.parse("1984-05-12");
+        String phoneNumber = "547424";
+        String displayName = "John Connor";
+        Boolean notificationSms = true;
+        Boolean notificationEmail = true;
+        Boolean privacyDataOutActive = false;
         UserCreateRequest request = new UserCreateRequest(
-                null,
-                "user@domain.ext",
-                "John",
-                "Connor",
-                LocalDate.parse("1984-05-12"),
-                "547424"
+                password,
+                email,
+                firstname,
+                lastname,
+                dateOfBirth,
+                phoneNumber,
+                displayName,
+                notificationSms,
+                notificationEmail,
+                privacyDataOutActive
         );
-
         when(backboneClient.checkEmail(anyString(), any())).thenReturn(ResponseEntity.ok().build());
         Request requestFeign = Request.create(Request.HttpMethod.POST, "url", Map.of(), null, null, null);
         when(backboneClient.checkAlias(anyString(), any())).thenThrow(new FeignException.BadRequest("Error creating user", requestFeign, null, null));
@@ -208,13 +286,27 @@ class UserServiceImplTest {
     @Test
     @DisplayName("Create User with Existing Email")
     void createUserWithExistingEmail() {
+        String password = "abc123";
+        String email = "gshdj@gstn.com";
+        String firstname = "John";
+        String lastname = "Connor";
+        LocalDate dateOfBirth = LocalDate.parse("1984-05-12");
+        String phoneNumber = "547424";
+        String displayName = "John Connor";
+        Boolean notificationSms = true;
+        Boolean notificationEmail = true;
+        Boolean privacyDataOutActive = false;
         UserCreateRequest request = new UserCreateRequest(
-                "abc123",
-                "user@domain.ext",
-                "John",
-                "Connor",
-                LocalDate.parse("1984-05-12"),
-                "547424"
+                password,
+                email,
+                firstname,
+                lastname,
+                dateOfBirth,
+                phoneNumber,
+                displayName,
+                notificationSms,
+                notificationEmail,
+                privacyDataOutActive
         );
 
         Request requestFeign = Request.create(Request.HttpMethod.POST, "url", Map.of(), null, null, null);

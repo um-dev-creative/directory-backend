@@ -1,6 +1,7 @@
 package com.prx.directory.api.v1.controller;
 
 import com.prx.directory.api.v1.service.UserService;
+import com.prx.directory.api.v1.to.PatchUserRequest;
 import com.prx.directory.api.v1.to.UseGetResponse;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
@@ -40,6 +41,16 @@ public class UserController implements UserApi {
     @Override
     public ResponseEntity<UseGetResponse> userGet(UUID id) {
         return userService.findUser(id);
+    }
+
+    /// Handles the HTTP PATCH request to update an existing user.
+    ///
+    /// @param userId the ID of the user to update
+    /// @param request the request object containing the updated user details
+    /// @return a ResponseEntity containing the PatchUserResponse
+    @Override
+    public ResponseEntity<Void> update(UUID userId, PatchUserRequest request) {
+        return userService.update(userId, request);
     }
 
 }

@@ -1,18 +1,12 @@
 package com.prx.directory.client.backbone;
 
 import com.prx.directory.api.v1.to.PrxTokenString;
-import com.prx.directory.client.backbone.to.BackboneTokenRequest;
-import com.prx.directory.client.backbone.to.BackboneUserCreateRequest;
-import com.prx.directory.client.backbone.to.BackboneUserCreateResponse;
-import com.prx.directory.client.backbone.to.BackboneUserGetResponse;
+import com.prx.directory.client.backbone.to.*;
 import com.prx.directory.client.interceptor.BackboneFeignConfigurer;
-import com.prx.security.to.AuthRequest;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
@@ -32,17 +26,18 @@ public interface BackboneClient {
 
     ///  Generates a session token based on the provided authentication request.
     ///
-    /// @param authRequest the authentication request containing user alias
+    /// @param backboneTokenRequest the authentication request containing user alias
     /// @return a PrxTokenString containing the authentication response with the session token
-    ///
-    /// @see AuthRequest
     /// @see ResponseEntity
     @PostMapping("/api/v1/session/token")
-    PrxTokenString token(BackboneTokenRequest authRequest);
+    PrxTokenString token(BackboneTokenRequest backboneTokenRequest);
 
     @PostMapping("/api/v1/users")
     BackboneUserCreateResponse post(BackboneUserCreateRequest backboneUserCreateRequest);
 
     @GetMapping("/api/v1/users/user/{userId}")
     BackboneUserGetResponse find(@PathVariable UUID userId);
+
+    @PutMapping(value = "/api/v1/users/{userId}", produces = {MediaType.APPLICATION_JSON_VALUE})
+    ResponseEntity<Void> userPartialUpdate(@PathVariable UUID userId, @RequestBody BackboneUserUpdateRequest request);
 }

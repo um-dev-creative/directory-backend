@@ -1,5 +1,6 @@
 package com.prx.directory.api.v1.service;
 
+import com.prx.directory.api.v1.to.PatchUserRequest;
 import com.prx.directory.api.v1.to.UseGetResponse;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
@@ -33,6 +34,15 @@ public interface UserService {
     /// @see HttpStatus
     /// @see UUID
     default ResponseEntity<UseGetResponse> findUser(UUID id) {
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+    }
+
+    /// Updates a user by ID.
+    ///
+    /// @param userId the ID of the user to update
+    /// @param request the patch user request
+    /// @return a ResponseEntity containing the patch user response
+    default ResponseEntity<Void> update(UUID userId, PatchUserRequest request) {
         return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
     }
 

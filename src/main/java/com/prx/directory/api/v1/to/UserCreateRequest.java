@@ -9,9 +9,22 @@ import jakarta.validation.constraints.NotEmpty;
 
 import java.time.LocalDate;
 
-/**
- * A request object for creating a user.
- */
+/// UserCreateRequest record.
+///
+/// Represents a request object for creating a new user in the system. This record encapsulates all the necessary fields required for user registration, including personal information, contact details, and notification preferences.
+///
+///
+///     - **password**: The user's password. Must not be blank.
+///     - **email**: The user's email address. Must not be blank and must be a valid email format.
+///     - **firstname**: The user's first name. Must not be blank.
+///     - **lastname**: The user's last name. Must not be blank.
+///     - **dateOfBirth**: The user's date of birth. Must not be empty and must follow the pattern defined in [#PATTERN_DATE].
+///     - **phoneNumber**: The user's phone number. Must not be blank.
+///     - **displayName**: The display name for the user (optional).
+///     - **notificationSms**: Indicates if SMS notifications are enabled for the user (optional).
+///     - **notificationEmail**: Indicates if email notifications are enabled for the user (optional).
+///     - **privacyDataOutActive**: Indicates if the user's privacy data out is active (optional).
+///
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record UserCreateRequest(
         @NotBlank
@@ -25,7 +38,11 @@ public record UserCreateRequest(
         @NotEmpty @JsonFormat(pattern = DateUtil.PATTERN_DATE)
         LocalDate dateOfBirth,
         @NotBlank
-        String phoneNumber
+        String phoneNumber,
+        String displayName,
+        Boolean notificationSms,
+        Boolean notificationEmail,
+        Boolean privacyDataOutActive
 ) {
 
     @Override
@@ -37,6 +54,10 @@ public record UserCreateRequest(
                 ", lastname='" + lastname + '\'' +
                 ", dateOfBirth=" + dateOfBirth +
                 ", phoneNumber='" + phoneNumber + '\'' +
+                ", displayName='" + displayName + '\'' +
+                ", notificationSms=" + notificationSms +
+                ", notificationEmail=" + notificationEmail +
+                ", privacyDataOutActive=" + privacyDataOutActive +
                 '}';
     }
 }
