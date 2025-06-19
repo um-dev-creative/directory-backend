@@ -7,11 +7,29 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * Response object for user creation.
- */
+/// UserCreateResponse record.
+///
+/// Represents the response object returned after successfully creating a user. This record contains all relevant user information as stored in the system after creation.
+///
+///
+///     - **id**: The unique identifier for the user.
+///     - **alias**: The user's alias or username.
+///     - **email**: The user's email address.
+///     - **createdDate**: The date and time when the user was created.
+///     - **lastUpdate**: The date and time when the user was last updated.
+///     - **active**: Indicates if the user is currently active.
+///     - **personId**: The unique identifier of the associated person entity.
+///     - **roleId**: The unique identifier of the user's role.
+///     - **applicationId**: The unique identifier of the application associated with the user.
+///     - **displayName**: The display name for the user.
+///     - **notificationSms**: Indicates if SMS notifications are enabled for the user.
+///     - **notificationEmail**: Indicates if email notifications are enabled for the user.
+///     - **privacyDataOutActive**: Indicates if the user's privacy data out is active.
+///
 public record UserCreateResponse(
-        UUID id, String alias, String email,
+        UUID id,
+        String alias,
+        String email,
         @NotNull @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_MIL)
         LocalDateTime createdDate,
         @NotNull @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_MIL)
@@ -19,20 +37,28 @@ public record UserCreateResponse(
         boolean active,
         UUID personId,
         UUID roleId,
-        UUID applicationId) {
+        UUID applicationId,
+        String displayName,
+        Boolean notificationSms,
+        Boolean notificationEmail,
+        Boolean privacyDataOutActive) {
 
-        @Override
-        public String toString() {
-                return "UserCreateResponse{" +
-                        "id=" + id +
-                        ", alias='" + alias + '\'' +
-                        ", email='" + email + '\'' +
-                        ", createdDate=" + createdDate +
-                        ", lastUpdate=" + lastUpdate +
-                        ", active=" + active +
-                        ", personId=" + personId +
-                        ", roleId=" + roleId +
-                        ", applicationId=" + applicationId +
-                        '}';
-        }
+    @Override
+    public String toString() {
+        return "UserCreateResponse{" +
+                "id=" + id +
+                ", alias='" + alias + '\'' +
+                ", email='" + email + '\'' +
+                ", createdDate=" + createdDate +
+                ", lastUpdate=" + lastUpdate +
+                ", active=" + active +
+                ", personId=" + personId +
+                ", roleId=" + roleId +
+                ", applicationId=" + applicationId +
+                ", displayName='" + displayName + '\'' +
+                ", notificationSms=" + notificationSms +
+                ", notificationEmail=" + notificationEmail +
+                ", privacyDataOutActive=" + privacyDataOutActive +
+                '}';
+    }
 }

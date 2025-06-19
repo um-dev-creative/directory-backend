@@ -18,15 +18,28 @@ class UserServiceTest {
     @Test
     @DisplayName("Create User Successfully")
     void createUserSuccessfully() {
+        String password = "abc123";
+        String email = "user@domain.ext";
+        String firstname = "John";
+        String lastname = "Connor";
+        LocalDate dateOfBirth = LocalDate.now();
+        String phoneNumber = "5869995852";
+        String displayName = "John C.";
+        Boolean notificationSms = true;
+        Boolean notificationEmail = true;
+        Boolean privacyDataOutActive = false;
         UserCreateRequest request = new UserCreateRequest(
-                "abc123",
-                "user@domain.ext",
-                "John",
-                "Connor",
-                LocalDate.now(),
-                "5869995852"
+                password,
+                email,
+                firstname,
+                lastname,
+                dateOfBirth,
+                phoneNumber,
+                displayName,
+                notificationSms,
+                notificationEmail,
+                privacyDataOutActive
         );
-        // Set necessary fields for request
         ResponseEntity<UserCreateResponse> response = userService.create(request);
         assertEquals(HttpStatus.NOT_IMPLEMENTED, response.getStatusCode());
     }

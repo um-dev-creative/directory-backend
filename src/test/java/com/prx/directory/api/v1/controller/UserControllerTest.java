@@ -31,24 +31,50 @@ class UserControllerTest {
     @Test
     @DisplayName("post should return OK status with valid request")
     void createUserPostShouldReturnOkStatusWithValidRequest() {
+        String password = "abc123";
+        String email = "user@domain.ext";
+        String firstName = "John";
+        String lastName = "Connor";
+        LocalDate birthDate = LocalDate.now();
+        String phone = "5869995852";
+        String displayName = "Jconnor";
+        Boolean notificationSms = true;
+        Boolean notificationEmail = true;
+        Boolean privacyDataOutActive = true;
         UserCreateRequest request = new UserCreateRequest(
-                "abc123",
-                "user@domain.ext",
-                "John",
-                "Connor",
-                LocalDate.now(),
-                "5869995852"
+                password,
+                email,
+                firstName,
+                lastName,
+                birthDate,
+                phone,
+                displayName,
+                notificationSms,
+                notificationEmail,
+                privacyDataOutActive
         );
+        UUID id = UUID.randomUUID();
+        String alias = password;
+        LocalDateTime createdDate = LocalDateTime.now();
+        LocalDateTime lastUpdate = LocalDateTime.now();
+        Boolean active = true;
+        UUID personId = UUID.randomUUID();
+        UUID roleId = UUID.randomUUID();
+        UUID applicationId = UUID.randomUUID();
         UserCreateResponse response = new UserCreateResponse(
-                UUID.randomUUID(),
-                "abc123",
-                "user@domain.ext",
-                LocalDateTime.now(),
-                LocalDateTime.now(),
-                true,
-                UUID.randomUUID(),
-                UUID.randomUUID(),
-                UUID.randomUUID()
+                id,
+                alias,
+                email,
+                createdDate,
+                lastUpdate,
+                active,
+                personId,
+                roleId,
+                applicationId,
+                displayName,
+                notificationSms,
+                notificationEmail,
+                privacyDataOutActive
         );
         when(userService.create(request)).thenReturn(ResponseEntity.ok(response));
 
@@ -70,13 +96,27 @@ class UserControllerTest {
     @Test
     @DisplayName("post should return BAD_REQUEST status with invalid email")
     void createUserPostShouldReturnBadRequestStatusWithInvalidEmail() {
+        String password = "abc123";
+        String email = "user@domain.ext";
+        String firstName = "John";
+        String lastName = "Connor";
+        LocalDate birthDate = LocalDate.now();
+        String phone = "5869995852";
+        String displayName = "Jconnor";
+        Boolean notificationSms = true;
+        Boolean notificationEmail = true;
+        Boolean privacyDataOutActive = true;
         UserCreateRequest request = new UserCreateRequest(
-                "abc123",
-                "userdomain.ext",
-                "John",
-                "Connor",
-                LocalDate.now(),
-                "5869995852"
+                password,
+                email,
+                firstName,
+                lastName,
+                birthDate,
+                phone,
+                displayName,
+                notificationSms,
+                notificationEmail,
+                privacyDataOutActive
         );
         when(userService.create(request)).thenReturn(ResponseEntity.badRequest().build());
 
@@ -88,13 +128,27 @@ class UserControllerTest {
     @Test
     @DisplayName("post should return CONFLICT status with existing username")
     void createUserPostShouldReturnConflictStatusWithExistingUsername() {
+        String password = "abc123";
+        String email = "user@domain.ext";
+        String firstName = "John";
+        String lastName = "Connor";
+        LocalDate birthDate = LocalDate.now();
+        String phone = "5869995852";
+        String displayName = "Jconnor";
+        Boolean notificationSms = true;
+        Boolean notificationEmail = true;
+        Boolean privacyDataOutActive = true;
         UserCreateRequest request = new UserCreateRequest(
-                "abc123",
-                "user@domain.ext",
-                "John",
-                "Connor",
-                LocalDate.now(),
-                "5869995852"
+                password,
+                email,
+                firstName,
+                lastName,
+                birthDate,
+                phone,
+                displayName,
+                notificationSms,
+                notificationEmail,
+                privacyDataOutActive
         );
         when(userService.create(request)).thenReturn(ResponseEntity.status(HttpStatus.CONFLICT).build());
 
@@ -106,14 +160,28 @@ class UserControllerTest {
     @Test
     @DisplayName("post should return BAD_REQUEST status with null password")
     void createUserPostShouldReturnBadRequestStatusWithNullPassword() {
+        String email = "user@domain.ext";
+        String firstName = "John";
+        String lastName = "Connor";
+        LocalDate birthDate = LocalDate.now();
+        String phone = "5869995852";
+        String displayName = "Jconnor";
+        Boolean notificationSms = true;
+        Boolean notificationEmail = true;
+        Boolean privacyDataOutActive = true;
         UserCreateRequest request = new UserCreateRequest(
                 null,
-                "user@domain.ext",
-                "John",
-                "Connor",
-                LocalDate.now(),
-                "5869995852"
+                email,
+                firstName,
+                lastName,
+                birthDate,
+                phone,
+                displayName,
+                notificationSms,
+                notificationEmail,
+                privacyDataOutActive
         );
+
         when(userService.create(request)).thenReturn(ResponseEntity.badRequest().build());
 
         ResponseEntity<UserCreateResponse> result = userController.createUserPost(request);

@@ -36,15 +36,39 @@ class UserApiTest {
     @Test
     @DisplayName("createUser should return OK status with valid request")
     void createUserShouldReturnOkStatusWithValidRequest() {
+        String password = "abc123";
+        String displayName = "Pepeto";
+        String email = "user@domain.ext";
+        String firstName = "John";
+        String lastName = "Connor";
+        LocalDate birthDate = LocalDate.now();
+        String phone = "5869995852";
         UserCreateRequest request = new UserCreateRequest(
-                "abc123",
-                "user@domain.ext",
-                "John",
-                "Connor",
-                LocalDate.now(),
-                "5869995852"
+                password,
+                email,
+                firstName,
+                lastName,
+                birthDate,
+                phone,
+                displayName,
+                true,
+                true,
+                true
         );
-        UserCreateResponse response = new UserCreateResponse(UUID.randomUUID(), "john1", "user@domain.ext", LocalDateTime.now(), LocalDateTime.now(), true, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+        UserCreateResponse response = new UserCreateResponse(UUID.randomUUID(),
+                "john1",
+                email,
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                true,
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                displayName,
+                true,
+                true,
+                true
+                );
         when(userService.create(request)).thenReturn(ResponseEntity.ok(response));
 
         ResponseEntity<UserCreateResponse> result = userApi.createUserPost(request);
@@ -65,14 +89,25 @@ class UserApiTest {
     @Test
     @DisplayName("createUser should return BAD_REQUEST status with invalid email")
     void createUserShouldReturnBadRequestStatusWithInvalidEmail() {
+        String displayName = "Pepeto";
+        String email = "user@domain.ext";
+        String firstName = "John";
+        String lastName = "Connor";
+        LocalDate birthDate = LocalDate.now();
+        String phone = "5869995852";
         UserCreateRequest request = new UserCreateRequest(
-                "abc123",
-                "user@domain.ext",
-                "John",
-                "Connor",
-                LocalDate.now(),
-                "5869995852"
+                null,
+                email,
+                firstName,
+                lastName,
+                birthDate,
+                phone,
+                displayName,
+                true,
+                true,
+                true
         );
+
         when(userService.create(request)).thenReturn(ResponseEntity.badRequest().build());
 
         ResponseEntity<UserCreateResponse> result = userApi.createUserPost(request);
@@ -83,14 +118,26 @@ class UserApiTest {
     @Test
     @DisplayName("createUser should return CONFLICT status with existing username")
     void createUserShouldReturnConflictStatusWithExistingUsername() {
+        String password = "abc123";
+        String displayName = "Pepeto";
+        String email = "user@domain.ext";
+        String firstName = "John";
+        String lastName = "Connor";
+        LocalDate birthDate = LocalDate.now();
+        String phone = "5869995852";
         UserCreateRequest request = new UserCreateRequest(
-                "abc123",
-                "user@domain.ext",
-                "John",
-                "Connor",
-                LocalDate.now(),
-                "5869995852"
+                password,
+                email,
+                firstName,
+                lastName,
+                birthDate,
+                phone,
+                displayName,
+                true,
+                true,
+                true
         );
+
         when(userService.create(request)).thenReturn(ResponseEntity.status(HttpStatus.CONFLICT).build());
 
         ResponseEntity<UserCreateResponse> result = userApi.createUserPost(request);
@@ -121,7 +168,7 @@ class UserApiTest {
                 true,
                 UUID.randomUUID(),
                 UUID.randomUUID()
-                );
+        );
         when(userService.findUser(userId)).thenReturn(ResponseEntity.ok(response));
 
         ResponseEntity<UseGetResponse> result = userApi.userGet(userId);
