@@ -1,8 +1,8 @@
 package com.prx.directory.api.v1.controller;
 
 import com.prx.directory.api.v1.service.UserService;
-import com.prx.directory.api.v1.to.PatchUserRequest;
-import com.prx.directory.api.v1.to.UseGetResponse;
+import com.prx.directory.api.v1.to.PutUserRequest;
+import com.prx.directory.api.v1.to.GetUserResponse;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
 import org.springframework.http.ResponseEntity;
@@ -39,7 +39,7 @@ public class UserController implements UserApi {
     /// @param id the ID of the user to retrieve
     /// @return a ResponseEntity containing the UseGetResponse
     @Override
-    public ResponseEntity<UseGetResponse> userGet(UUID id) {
+    public ResponseEntity<GetUserResponse> userGet(UUID id) {
         return userService.findUser(id);
     }
 
@@ -49,7 +49,7 @@ public class UserController implements UserApi {
     /// @param request the request object containing the updated user details
     /// @return a ResponseEntity containing the PatchUserResponse
     @Override
-    public ResponseEntity<Void> update(UUID userId, PatchUserRequest request) {
+    public ResponseEntity<Void> update(UUID userId, PutUserRequest request) {
         return userService.update(userId, request);
     }
 

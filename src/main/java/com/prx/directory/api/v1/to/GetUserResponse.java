@@ -8,16 +8,16 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /// Represents the response object for a user get operation.
-public record UseGetResponse(
+public record GetUserResponse(
         UUID id,
         String alias,
         String email,
-        String phone,
         String firstName,
         String middleName,
         String lastName,
         String displayName,
-        String gender,
+        UUID phoneId,
+        String phoneNumber,
         @JsonFormat(pattern = DateUtil.PATTERN_DATE)
         LocalDate dateOfBirth,
         @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME)
@@ -38,12 +38,12 @@ public record UseGetResponse(
                 "id=" + id +
                 ", alias='" + alias + '\'' +
                 ", email='" + email + '\'' +
-                ", phone='" + phone + '\'' +
                 ", firstName='" + firstName + '\'' +
                 ", middleName='" + middleName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", displayName='" + displayName + '\'' +
-                ", gender='" + gender + '\'' +
+                ", phoneId=" + phoneId +
+                ", phoneNumber='" + phoneNumber + '\'' +
                 ", dateOfBirth=" + dateOfBirth +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +

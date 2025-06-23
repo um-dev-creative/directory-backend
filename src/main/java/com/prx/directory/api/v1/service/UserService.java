@@ -1,7 +1,7 @@
 package com.prx.directory.api.v1.service;
 
-import com.prx.directory.api.v1.to.PatchUserRequest;
-import com.prx.directory.api.v1.to.UseGetResponse;
+import com.prx.directory.api.v1.to.GetUserResponse;
+import com.prx.directory.api.v1.to.PutUserRequest;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
 import org.springframework.http.HttpStatus;
@@ -29,11 +29,11 @@ public interface UserService {
     ///
     /// @param id the ID of the user to find
     /// @return a ResponseEntity containing the response object and HTTP status
-    /// @see UseGetResponse
+    /// @see GetUserResponse
     /// @see ResponseEntity
     /// @see HttpStatus
     /// @see UUID
-    default ResponseEntity<UseGetResponse> findUser(UUID id) {
+    default ResponseEntity<GetUserResponse> findUser(UUID id) {
         return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
     }
 
@@ -42,7 +42,7 @@ public interface UserService {
     /// @param userId the ID of the user to update
     /// @param request the patch user request
     /// @return a ResponseEntity containing the patch user response
-    default ResponseEntity<Void> update(UUID userId, PatchUserRequest request) {
+    default ResponseEntity<Void> update(UUID userId, PutUserRequest request) {
         return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
     }
 

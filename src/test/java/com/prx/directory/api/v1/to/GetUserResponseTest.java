@@ -10,7 +10,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-class UseGetResponseTest {
+class GetUserResponseTest {
 
     @Test
     @DisplayName("Create UseGetResponse with valid data")
@@ -18,36 +18,40 @@ class UseGetResponseTest {
         UUID id = UUID.randomUUID();
         String alias = "userAlias";
         String email = "user@example.com";
-        String phone = "(+1) 4167489302";
-        String displayName = "Alias Name";
         String firstName = "First";
         String middleName = "Middle";
         String lastName = "Last";
-        String gender = "Male";
+        String displayName = "Alias Name";
+        UUID phoneId = UUID.randomUUID();
+        String phoneNumber = "(+1) 4167489302";
         LocalDate dateOfBirth = LocalDate.now();
         LocalDateTime createdAt = LocalDateTime.now();
         LocalDateTime updatedAt = LocalDateTime.now();
-        boolean status = true;
         boolean notificationEmail = true;
         boolean notificationSms = true;
-        boolean privacy = true;
+        boolean privacyDataOutActive = true;
+        boolean status = true;
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        UseGetResponse response = new UseGetResponse(id, alias, email, phone, firstName, middleName, lastName, displayName,
-                gender, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacy, status, roleId, applicationId);
+        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName,
+                phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         assertEquals(id, response.id());
         assertEquals(alias, response.alias());
         assertEquals(email, response.email());
-        assertEquals(displayName, response.displayName());
         assertEquals(firstName, response.firstName());
         assertEquals(middleName, response.middleName());
         assertEquals(lastName, response.lastName());
-        assertEquals(gender, response.gender());
+        assertEquals(displayName, response.displayName());
+        assertEquals(phoneId, response.phoneId());
+        assertEquals(phoneNumber, response.phoneNumber());
         assertEquals(dateOfBirth, response.dateOfBirth());
         assertEquals(createdAt, response.createdAt());
         assertEquals(updatedAt, response.updatedAt());
+        assertEquals(notificationEmail, response.notificationEmail());
+        assertEquals(notificationSms, response.notificationSms());
+        assertEquals(privacyDataOutActive, response.privacyDataOutActive());
         assertEquals(status, response.status());
         assertEquals(roleId, response.roleId());
         assertEquals(applicationId, response.applicationId());
@@ -58,24 +62,24 @@ class UseGetResponseTest {
     void createUseGetResponseWithNullId() {
         String alias = "userAlias";
         String email = "user@example.com";
-        String phone = "(+1) 4167489302";
         String firstName = "First";
         String middleName = "Middle";
         String lastName = "Last";
         String displayName = "Alias Name";
-        String gender = "Male";
+        UUID phoneId = UUID.randomUUID();
+        String phoneNumber = "(+1) 4167489302";
         LocalDate dateOfBirth = LocalDate.now();
         LocalDateTime createdAt = LocalDateTime.now();
         LocalDateTime updatedAt = LocalDateTime.now();
         boolean notificationEmail = true;
         boolean notificationSms = true;
-        boolean privacy = true;
+        boolean privacyDataOutActive = true;
         boolean status = true;
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        UseGetResponse response = new UseGetResponse(null, alias, email, phone, firstName, middleName, lastName, displayName,
-                gender, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacy, status, roleId, applicationId);
+        GetUserResponse response = new GetUserResponse(null, alias, email, firstName, middleName, lastName, displayName,
+                phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
         assertEquals(alias, response.alias());
@@ -83,10 +87,15 @@ class UseGetResponseTest {
         assertEquals(firstName, response.firstName());
         assertEquals(middleName, response.middleName());
         assertEquals(lastName, response.lastName());
-        assertEquals(gender, response.gender());
+        assertEquals(displayName, response.displayName());
+        assertEquals(phoneId, response.phoneId());
+        assertEquals(phoneNumber, response.phoneNumber());
         assertEquals(dateOfBirth, response.dateOfBirth());
         assertEquals(createdAt, response.createdAt());
         assertEquals(updatedAt, response.updatedAt());
+        assertEquals(notificationEmail, response.notificationEmail());
+        assertEquals(notificationSms, response.notificationSms());
+        assertEquals(privacyDataOutActive, response.privacyDataOutActive());
         assertEquals(status, response.status());
         assertEquals(roleId, response.roleId());
         assertEquals(applicationId, response.applicationId());
@@ -97,24 +106,24 @@ class UseGetResponseTest {
     void createUseGetResponseWithNullAlias() {
         UUID id = UUID.randomUUID();
         String email = "user@example.com";
-        String phone = "(+1) 4167489302";
         String firstName = "First";
         String middleName = "Middle";
         String lastName = "Last";
         String displayName = "Alias Name";
-        String gender = "Male";
+        UUID phoneId = UUID.randomUUID();
+        String phoneNumber = "(+1) 4167489302";
         LocalDate dateOfBirth = LocalDate.now();
         LocalDateTime createdAt = LocalDateTime.now();
         LocalDateTime updatedAt = LocalDateTime.now();
         boolean notificationEmail = true;
         boolean notificationSms = true;
-        boolean privacy = true;
+        boolean privacyDataOutActive = true;
         boolean status = true;
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        UseGetResponse response = new UseGetResponse(id, null, email, phone, firstName, middleName, lastName, displayName,
-                gender, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacy, status, roleId, applicationId);
+        GetUserResponse response = new GetUserResponse(id, null, email, firstName, middleName, lastName, displayName,
+                phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
         assertEquals(id, response.id());
@@ -122,10 +131,15 @@ class UseGetResponseTest {
         assertEquals(firstName, response.firstName());
         assertEquals(middleName, response.middleName());
         assertEquals(lastName, response.lastName());
-        assertEquals(gender, response.gender());
+        assertEquals(displayName, response.displayName());
+        assertEquals(phoneId, response.phoneId());
+        assertEquals(phoneNumber, response.phoneNumber());
         assertEquals(dateOfBirth, response.dateOfBirth());
         assertEquals(createdAt, response.createdAt());
         assertEquals(updatedAt, response.updatedAt());
+        assertEquals(notificationEmail, response.notificationEmail());
+        assertEquals(notificationSms, response.notificationSms());
+        assertEquals(privacyDataOutActive, response.privacyDataOutActive());
         assertEquals(status, response.status());
         assertEquals(roleId, response.roleId());
         assertEquals(applicationId, response.applicationId());
@@ -136,24 +150,24 @@ class UseGetResponseTest {
     void createUseGetResponseWithNullEmail() {
         UUID id = UUID.randomUUID();
         String alias = "userAlias";
-        String phone = "(+1) 4167489302";
         String firstName = "First";
         String middleName = "Middle";
         String lastName = "Last";
         String displayName = "Alias Name";
-        String gender = "Male";
+        UUID phoneId = UUID.randomUUID();
+        String phoneNumber = "(+1) 4167489302";
         LocalDate dateOfBirth = LocalDate.now();
         LocalDateTime createdAt = LocalDateTime.now();
         LocalDateTime updatedAt = LocalDateTime.now();
         boolean notificationEmail = true;
         boolean notificationSms = true;
-        boolean privacy = true;
+        boolean privacyDataOutActive = true;
         boolean status = true;
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        UseGetResponse response = new UseGetResponse(id, alias, null, phone, firstName, middleName, lastName, displayName,
-                gender, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacy, status, roleId, applicationId);
+        GetUserResponse response = new GetUserResponse(id, alias, null, firstName, middleName, lastName, displayName,
+                phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
         assertEquals(id, response.id());
@@ -161,10 +175,15 @@ class UseGetResponseTest {
         assertEquals(firstName, response.firstName());
         assertEquals(middleName, response.middleName());
         assertEquals(lastName, response.lastName());
-        assertEquals(gender, response.gender());
+        assertEquals(displayName, response.displayName());
+        assertEquals(phoneId, response.phoneId());
+        assertEquals(phoneNumber, response.phoneNumber());
         assertEquals(dateOfBirth, response.dateOfBirth());
         assertEquals(createdAt, response.createdAt());
         assertEquals(updatedAt, response.updatedAt());
+        assertEquals(notificationEmail, response.notificationEmail());
+        assertEquals(notificationSms, response.notificationSms());
+        assertEquals(privacyDataOutActive, response.privacyDataOutActive());
         assertEquals(status, response.status());
         assertEquals(roleId, response.roleId());
         assertEquals(applicationId, response.applicationId());
@@ -173,17 +192,17 @@ class UseGetResponseTest {
     @Test
     @DisplayName("Create UseGetResponse with null firstName")
     void createUseGetResponseWithNullFirstName() {
-        String phone = "(+1) 4167489302";
+        String phoneNumber = "(+1) 4167489302";
+        UUID phoneId = UUID.randomUUID();
         String displayName = "Alias Name";
         boolean notificationEmail = true;
         boolean notificationSms = true;
-        boolean privacy = true;
+        boolean privacyDataOutActive = true;
         UUID id = UUID.randomUUID();
         String alias = "userAlias";
         String email = "user@example.com";
         String middleName = "Middle";
         String lastName = "Last";
-        String gender = "Male";
         LocalDate dateOfBirth = LocalDate.now();
         LocalDateTime createdAt = LocalDateTime.now();
         LocalDateTime updatedAt = LocalDateTime.now();
@@ -191,8 +210,8 @@ class UseGetResponseTest {
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        UseGetResponse response = new UseGetResponse(id, alias, email, phone, null, middleName, lastName, displayName,
-                gender, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacy, status, roleId, applicationId);
+        GetUserResponse response = new GetUserResponse(id, alias, email, null, middleName, lastName, displayName,
+                phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
         assertEquals(id, response.id());
@@ -200,10 +219,15 @@ class UseGetResponseTest {
         assertEquals(email, response.email());
         assertEquals(middleName, response.middleName());
         assertEquals(lastName, response.lastName());
-        assertEquals(gender, response.gender());
+        assertEquals(displayName, response.displayName());
+        assertEquals(phoneId, response.phoneId());
+        assertEquals(phoneNumber, response.phoneNumber());
         assertEquals(dateOfBirth, response.dateOfBirth());
         assertEquals(createdAt, response.createdAt());
         assertEquals(updatedAt, response.updatedAt());
+        assertEquals(notificationEmail, response.notificationEmail());
+        assertEquals(notificationSms, response.notificationSms());
+        assertEquals(privacyDataOutActive, response.privacyDataOutActive());
         assertEquals(status, response.status());
         assertEquals(roleId, response.roleId());
         assertEquals(applicationId, response.applicationId());
@@ -212,17 +236,17 @@ class UseGetResponseTest {
     @Test
     @DisplayName("Create UseGetResponse with null middleName")
     void createUseGetResponseWithNullMiddleName() {
-        String phone = "(+1) 4167489302";
+        String phoneNumber = "(+1) 4167489302";
+        UUID phoneId = UUID.randomUUID();
         String displayName = "Alias Name";
         boolean notificationEmail = true;
         boolean notificationSms = true;
-        boolean privacy = true;
+        boolean privacyDataOutActive = true;
         UUID id = UUID.randomUUID();
         String alias = "userAlias";
         String email = "user@example.com";
         String firstName = "First";
         String lastName = "Last";
-        String gender = "Male";
         LocalDate dateOfBirth = LocalDate.now();
         LocalDateTime createdAt = LocalDateTime.now();
         LocalDateTime updatedAt = LocalDateTime.now();
@@ -230,8 +254,8 @@ class UseGetResponseTest {
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        UseGetResponse response = new UseGetResponse(id, alias, email, phone, firstName, null, lastName, displayName,
-                gender, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacy, status, roleId, applicationId);
+        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, null, lastName, displayName,
+                phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
         assertEquals(id, response.id());
@@ -239,10 +263,15 @@ class UseGetResponseTest {
         assertEquals(email, response.email());
         assertEquals(firstName, response.firstName());
         assertEquals(lastName, response.lastName());
-        assertEquals(gender, response.gender());
+        assertEquals(displayName, response.displayName());
+        assertEquals(phoneId, response.phoneId());
+        assertEquals(phoneNumber, response.phoneNumber());
         assertEquals(dateOfBirth, response.dateOfBirth());
         assertEquals(createdAt, response.createdAt());
         assertEquals(updatedAt, response.updatedAt());
+        assertEquals(notificationEmail, response.notificationEmail());
+        assertEquals(notificationSms, response.notificationSms());
+        assertEquals(privacyDataOutActive, response.privacyDataOutActive());
         assertEquals(status, response.status());
         assertEquals(roleId, response.roleId());
         assertEquals(applicationId, response.applicationId());
@@ -251,17 +280,17 @@ class UseGetResponseTest {
     @Test
     @DisplayName("Create UseGetResponse with null lastName")
     void createUseGetResponseWithNullLastName() {
-        String phone = "(+1) 4167489302";
+        String phoneNumber = "(+1) 4167489302";
+        UUID phoneId = UUID.randomUUID();
         String displayName = "Alias Name";
         boolean notificationEmail = true;
         boolean notificationSms = true;
-        boolean privacy = true;
+        boolean privacyDataOutActive = true;
         UUID id = UUID.randomUUID();
         String alias = "userAlias";
         String email = "user@example.com";
         String firstName = "First";
         String middleName = "Middle";
-        String gender = "Male";
         LocalDate dateOfBirth = LocalDate.now();
         LocalDateTime createdAt = LocalDateTime.now();
         LocalDateTime updatedAt = LocalDateTime.now();
@@ -269,8 +298,8 @@ class UseGetResponseTest {
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        UseGetResponse response = new UseGetResponse(id, alias, email, phone, firstName, middleName, null, displayName,
-                gender, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacy, status, roleId, applicationId);
+        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, null, displayName,
+                phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
         assertEquals(id, response.id());
@@ -278,23 +307,28 @@ class UseGetResponseTest {
         assertEquals(email, response.email());
         assertEquals(firstName, response.firstName());
         assertEquals(middleName, response.middleName());
-        assertEquals(gender, response.gender());
+        assertEquals(displayName, response.displayName());
+        assertEquals(phoneId, response.phoneId());
+        assertEquals(phoneNumber, response.phoneNumber());
         assertEquals(dateOfBirth, response.dateOfBirth());
         assertEquals(createdAt, response.createdAt());
         assertEquals(updatedAt, response.updatedAt());
+        assertEquals(notificationEmail, response.notificationEmail());
+        assertEquals(notificationSms, response.notificationSms());
+        assertEquals(privacyDataOutActive, response.privacyDataOutActive());
         assertEquals(status, response.status());
         assertEquals(roleId, response.roleId());
         assertEquals(applicationId, response.applicationId());
     }
 
     @Test
-    @DisplayName("Create UseGetResponse with null gender")
-    void createUseGetResponseWithNullGender() {
-        String phone = "(+1) 4167489302";
+    @DisplayName("Create UseGetResponse with null phoneId")
+    void createUseGetResponseWithNullPhoneId() {
+        String phoneNumber = "(+1) 4167489302";
         String displayName = "Alias Name";
         boolean notificationEmail = true;
         boolean notificationSms = true;
-        boolean privacy = true;
+        boolean privacyDataOutActive = true;
         UUID id = UUID.randomUUID();
         String alias = "userAlias";
         String email = "user@example.com";
@@ -308,8 +342,8 @@ class UseGetResponseTest {
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        UseGetResponse response = new UseGetResponse(id, alias, email, phone, firstName, middleName, lastName, displayName,
-                null, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacy, status, roleId, applicationId);
+        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName,
+                null, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
         assertEquals(id, response.id());
@@ -318,9 +352,58 @@ class UseGetResponseTest {
         assertEquals(firstName, response.firstName());
         assertEquals(middleName, response.middleName());
         assertEquals(lastName, response.lastName());
+        assertEquals(displayName, response.displayName());
+        assertEquals(phoneNumber, response.phoneNumber());
         assertEquals(dateOfBirth, response.dateOfBirth());
         assertEquals(createdAt, response.createdAt());
         assertEquals(updatedAt, response.updatedAt());
+        assertEquals(notificationEmail, response.notificationEmail());
+        assertEquals(notificationSms, response.notificationSms());
+        assertEquals(privacyDataOutActive, response.privacyDataOutActive());
+        assertEquals(status, response.status());
+        assertEquals(roleId, response.roleId());
+        assertEquals(applicationId, response.applicationId());
+    }
+
+    @Test
+    @DisplayName("Create UseGetResponse with null phoneNumber")
+    void createUseGetResponseWithNullPhoneNumber() {
+        UUID phoneId = UUID.randomUUID();
+        String displayName = "Alias Name";
+        boolean notificationEmail = true;
+        boolean notificationSms = true;
+        boolean privacyDataOutActive = true;
+        UUID id = UUID.randomUUID();
+        String alias = "userAlias";
+        String email = "user@example.com";
+        String firstName = "First";
+        String middleName = "Middle";
+        String lastName = "Last";
+        LocalDate dateOfBirth = LocalDate.now();
+        LocalDateTime createdAt = LocalDateTime.now();
+        LocalDateTime updatedAt = LocalDateTime.now();
+        boolean status = true;
+        UUID roleId = UUID.randomUUID();
+        UUID applicationId = UUID.randomUUID();
+
+        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName,
+                phoneId, null, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
+
+        assertNotNull(response);
+        assertEquals(id, response.id());
+        assertEquals(alias, response.alias());
+        assertEquals(email, response.email());
+        assertEquals(firstName, response.firstName());
+        assertEquals(middleName, response.middleName());
+        assertEquals(lastName, response.lastName());
+        assertEquals(displayName, response.displayName());
+        assertEquals(phoneId, response.phoneId());
+        assertEquals(dateOfBirth, response.dateOfBirth());
+        assertEquals(createdAt, response.createdAt());
+        assertEquals(updatedAt, response.updatedAt());
+        assertEquals(notificationEmail, response.notificationEmail());
+        assertEquals(notificationSms, response.notificationSms());
+        assertEquals(privacyDataOutActive, response.privacyDataOutActive());
         assertEquals(status, response.status());
         assertEquals(roleId, response.roleId());
         assertEquals(applicationId, response.applicationId());
@@ -329,26 +412,26 @@ class UseGetResponseTest {
     @Test
     @DisplayName("Create UseGetResponse with null dateOfBirth")
     void createUseGetResponseWithNullDateOfBirth() {
-        String phone = "(+1) 4167489302";
+        String phoneNumber = "(+1) 4167489302";
+        UUID phoneId = UUID.randomUUID();
         String displayName = "Alias Name";
         boolean notificationEmail = true;
         boolean notificationSms = true;
-        boolean privacy = true;
+        boolean privacyDataOutActive = true;
         UUID id = UUID.randomUUID();
         String alias = "userAlias";
         String email = "user@example.com";
         String firstName = "First";
         String middleName = "Middle";
         String lastName = "Last";
-        String gender = "Male";
         LocalDateTime createdAt = LocalDateTime.now();
         LocalDateTime updatedAt = LocalDateTime.now();
         boolean status = true;
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        UseGetResponse response = new UseGetResponse(id, alias, email, phone, firstName, middleName, lastName, displayName,
-                gender, null, createdAt, updatedAt, notificationEmail, notificationSms, privacy, status, roleId, applicationId);
+        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName,
+                phoneId, phoneNumber, null, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
         assertEquals(id, response.id());
@@ -357,9 +440,14 @@ class UseGetResponseTest {
         assertEquals(firstName, response.firstName());
         assertEquals(middleName, response.middleName());
         assertEquals(lastName, response.lastName());
-        assertEquals(gender, response.gender());
+        assertEquals(displayName, response.displayName());
+        assertEquals(phoneId, response.phoneId());
+        assertEquals(phoneNumber, response.phoneNumber());
         assertEquals(createdAt, response.createdAt());
         assertEquals(updatedAt, response.updatedAt());
+        assertEquals(notificationEmail, response.notificationEmail());
+        assertEquals(notificationSms, response.notificationSms());
+        assertEquals(privacyDataOutActive, response.privacyDataOutActive());
         assertEquals(status, response.status());
         assertEquals(roleId, response.roleId());
         assertEquals(applicationId, response.applicationId());
@@ -368,26 +456,25 @@ class UseGetResponseTest {
     @Test
     @DisplayName("Create UseGetResponse with null createdAt")
     void createUseGetResponseWithNullCreatedAt() {
-        String phone = "(+1) 4167489302";
+        String phoneNumber = "(+1) 4167489302";
+        UUID phoneId = UUID.randomUUID();
         String displayName = "Alias Name";
         boolean notificationEmail = true;
-        boolean notificationSms = true;
-        boolean privacy = true;
+        boolean privacyDataOutActive = true;
         UUID id = UUID.randomUUID();
         String alias = "userAlias";
         String email = "user@example.com";
         String firstName = "First";
         String middleName = "Middle";
         String lastName = "Last";
-        String gender = "Male";
         LocalDate dateOfBirth = LocalDate.now();
         LocalDateTime updatedAt = LocalDateTime.now();
         boolean status = true;
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        UseGetResponse response = new UseGetResponse(id, alias, email, phone, firstName, middleName, lastName, displayName,
-                gender, dateOfBirth, null, updatedAt, notificationEmail, notificationEmail, privacy, status, roleId, applicationId);
+        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName,
+                phoneId, phoneNumber, dateOfBirth, null, updatedAt, notificationEmail, notificationEmail, privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
         assertEquals(id, response.id());
@@ -396,7 +483,9 @@ class UseGetResponseTest {
         assertEquals(firstName, response.firstName());
         assertEquals(middleName, response.middleName());
         assertEquals(lastName, response.lastName());
-        assertEquals(gender, response.gender());
+        assertEquals(displayName, response.displayName());
+        assertEquals(phoneId, response.phoneId());
+        assertEquals(phoneNumber, response.phoneNumber());
         assertEquals(dateOfBirth, response.dateOfBirth());
         assertEquals(updatedAt, response.updatedAt());
         assertEquals(status, response.status());
@@ -407,26 +496,26 @@ class UseGetResponseTest {
     @Test
     @DisplayName("Create UseGetResponse with null updatedAt")
     void createUseGetResponseWithNullUpdatedAt() {
-        String phone = "(+1) 4167489302";
+        String phoneNumber = "(+1) 4167489302";
+        UUID phoneId = UUID.randomUUID();
         String displayName = "Alias Name";
         boolean notificationEmail = true;
         boolean notificationSms = true;
-        boolean privacy = true;
+        boolean privacyDataOutActive = true;
         UUID id = UUID.randomUUID();
         String alias = "userAlias";
         String email = "user@example.com";
         String firstName = "First";
         String middleName = "Middle";
         String lastName = "Last";
-        String gender = "Male";
         LocalDate dateOfBirth = LocalDate.now();
         LocalDateTime createdAt = LocalDateTime.now();
         boolean status = true;
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        UseGetResponse response = new UseGetResponse(id, alias, email, phone, firstName, middleName, lastName, displayName,
-                gender, dateOfBirth, createdAt, null, notificationEmail, notificationSms, privacy, status, roleId, applicationId);
+        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName,
+                phoneId, phoneNumber, dateOfBirth, createdAt, null, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
         assertEquals(id, response.id());
@@ -435,7 +524,9 @@ class UseGetResponseTest {
         assertEquals(firstName, response.firstName());
         assertEquals(middleName, response.middleName());
         assertEquals(lastName, response.lastName());
-        assertEquals(gender, response.gender());
+        assertEquals(displayName, response.displayName());
+        assertEquals(phoneId, response.phoneId());
+        assertEquals(phoneNumber, response.phoneNumber());
         assertEquals(dateOfBirth, response.dateOfBirth());
         assertEquals(createdAt, response.createdAt());
         assertEquals(status, response.status());
@@ -446,18 +537,18 @@ class UseGetResponseTest {
     @Test
     @DisplayName("UseGetResponse toString method")
     void useGetResponseToString() {
-        String phone = "(+1) 4167489302";
+        String phoneNumber = "(+1) 4167489302";
+        UUID phoneId = UUID.randomUUID();
         String displayName = "Alias Name";
         boolean notificationEmail = true;
         boolean notificationSms = true;
-        boolean privacy = true;
+        boolean privacyDataOutActive = true;
         UUID id = UUID.randomUUID();
         String alias = "userAlias";
         String email = "user@example.com";
         String firstName = "First";
         String middleName = "Middle";
         String lastName = "Last";
-        String gender = "Male";
         LocalDate dateOfBirth = LocalDate.now();
         LocalDateTime createdAt = LocalDateTime.now();
         LocalDateTime updatedAt = LocalDateTime.now();
@@ -465,25 +556,25 @@ class UseGetResponseTest {
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        UseGetResponse response = new UseGetResponse(id, alias, email, phone, firstName, middleName, lastName, displayName,
-                gender, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacy, status, roleId, applicationId);
+        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName,
+                phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         String expectedString = "UseGetResponse{" +
                 "id=" + id +
                 ", alias='" + alias + '\'' +
                 ", email='" + email + '\'' +
-                ", phone='" + phone + '\'' +
                 ", firstName='" + firstName + '\'' +
                 ", middleName='" + middleName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", displayName='" + displayName + '\'' +
-                ", gender='" + gender + '\'' +
+                ", phoneId=" + phoneId +
+                ", phoneNumber='" + phoneNumber + '\'' +
                 ", dateOfBirth=" + dateOfBirth +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
                 ", notificationEmail=" + notificationEmail +
                 ", notificationSms=" + notificationSms +
-                ", privacyDataOutActive=" + privacy +
+                ", privacyDataOutActive=" + privacyDataOutActive +
                 ", status='" + status + '\'' +
                 ", roleId=" + roleId +
                 ", applicationId=" + applicationId +
