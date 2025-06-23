@@ -3,7 +3,7 @@ package com.prx.directory.api.v1.service;
 import com.prx.commons.general.pojo.Application;
 import com.prx.commons.general.pojo.Person;
 import com.prx.commons.general.pojo.Role;
-import com.prx.directory.api.v1.to.UseGetResponse;
+import com.prx.directory.api.v1.to.GetUserResponse;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
 import com.prx.directory.client.backbone.BackboneClient;
@@ -11,8 +11,8 @@ import com.prx.directory.client.backbone.to.BackboneUserCreateRequest;
 import com.prx.directory.client.backbone.to.BackboneUserCreateResponse;
 import com.prx.directory.client.backbone.to.BackboneUserGetResponse;
 import com.prx.directory.kafka.producer.EmailMessageProducerService;
+import com.prx.directory.mapper.GetUserMapper;
 import com.prx.directory.mapper.UserCreateMapper;
-import com.prx.directory.mapper.UserGetMapper;
 import feign.FeignException;
 import feign.Request;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,7 +46,7 @@ class UserServiceImplTest {
     @Mock
     UserCreateMapper userCreateMapper;
     @Mock
-    UserGetMapper userGetMapper;
+    GetUserMapper getUserMapper;
     @Mock
     EmailMessageProducerService emailMessageProducerService;
     @InjectMocks
@@ -334,16 +334,16 @@ class UserServiceImplTest {
         Role role = new Role();
         role.setId(UUID.randomUUID());
 
-        UseGetResponse expectedResponse = new UseGetResponse(
+        GetUserResponse expectedResponse = new GetUserResponse(
                 userId,
                 "jconnor",
                 "john.connor@example.com",
-                "(+1) 4167389402",
                 "John",
                 "Marcus",
                 "Connor",
-                "Marcus",
                 "M",
+                UUID.randomUUID(),
+                "(+1) 4167389402",
                 LocalDate.parse("1984-05-12"),
                 LocalDateTime.now(),
                 LocalDateTime.now(),
@@ -373,9 +373,9 @@ class UserServiceImplTest {
 
 
         when(backboneClient.find(userId)).thenReturn(backboneResponse);
-        when(userGetMapper.fromBackbone(backboneResponse)).thenReturn(expectedResponse);
+        when(getUserMapper.fromBackbone(backboneResponse)).thenReturn(expectedResponse);
 
-        ResponseEntity<UseGetResponse> response = userService.findUser(userId);
+        ResponseEntity<GetUserResponse> response = userService.findUser(userId);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(expectedResponse, response.getBody());
@@ -389,7 +389,7 @@ class UserServiceImplTest {
         Request requestFeign = Request.create(Request.HttpMethod.GET, "url", Map.of(), null, null, null);
         when(backboneClient.find(any())).thenThrow(new FeignException.NotFound("User not found", requestFeign, null, null));
 
-        ResponseEntity<UseGetResponse> response = userService.findUser(userId);
+        ResponseEntity<GetUserResponse> response = userService.findUser(userId);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertEquals("User not found.", response.getHeaders().getFirst("message-error"));
@@ -404,7 +404,7 @@ class UserServiceImplTest {
         when(backboneClient.find(any())).thenThrow(new FeignException
                 .InternalServerError(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), requestFeign, null, null));
 
-        ResponseEntity<UseGetResponse> response = userService.findUser(userId);
+        ResponseEntity<GetUserResponse> response = userService.findUser(userId);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }

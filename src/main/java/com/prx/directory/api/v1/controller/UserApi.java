@@ -47,7 +47,7 @@ public interface UserApi {
     ///
     /// @param id the ID of the user to retrieve
     /// @return a ResponseEntity containing the response of the user retrieval operation
-    /// @see UseGetResponse
+    /// @see GetUserResponse
     /// @see ResponseEntity
     /// @see UUID
     /// @see UserService
@@ -58,12 +58,12 @@ public interface UserApi {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "User retrieved successfully",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                schema = @Schema(implementation = UseGetResponse.class))),
+                schema = @Schema(implementation = GetUserResponse.class))),
         @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content),
         @ApiResponse(responseCode = "404", description = "User not found", content = @Content)
     })
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    default ResponseEntity<UseGetResponse> userGet(@NotNull @PathVariable UUID id) {
+    default ResponseEntity<GetUserResponse> userGet(@NotNull @PathVariable UUID id) {
         return this.getService().findUser(id);
     }
 
@@ -83,7 +83,7 @@ public interface UserApi {
     @PutMapping(value = "/{userId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     default ResponseEntity<Void> update(
             @PathVariable("userId") UUID userId,
-            @RequestBody PatchUserRequest request) {
+            @RequestBody PutUserRequest request) {
         return this.getService().update(userId, request);
     }
 

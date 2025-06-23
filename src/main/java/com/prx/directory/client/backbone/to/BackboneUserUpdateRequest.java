@@ -41,11 +41,11 @@ public record BackboneUserUpdateRequest(
 ) {
     /// Contact sub-record for person.
     ///
-    /// Represents contact information for the user, such as phone number or address.
+    /// Represents contact information for the user, such as phoneNumber number or address.
     ///
     ///
     /// @param id Unique identifier for the contact.
-    /// @param content The contact content (e.g., phone number or address).
+    /// @param content The contact content (e.g., phoneNumber number or address).
     /// @param contactType The type of contact (see [ContactType]).
     /// @param active Indicates if the contact is currently active.
     public record Contact(
@@ -58,7 +58,7 @@ public record BackboneUserUpdateRequest(
     /**
      * ContactType sub-record for contact.
      * <p>
-     * Represents the type of contact (e.g., phone, email).
+     * Represents the type of contact (e.g., phoneNumber, email).
      * </p>
      *
      * @param id Unique identifier for the contact type.

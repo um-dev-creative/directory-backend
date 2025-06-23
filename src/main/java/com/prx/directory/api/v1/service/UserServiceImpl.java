@@ -2,8 +2,8 @@ package com.prx.directory.api.v1.service;
 
 import com.prx.commons.constants.types.MessageType;
 import com.prx.commons.exception.StandardException;
-import com.prx.directory.api.v1.to.PatchUserRequest;
-import com.prx.directory.api.v1.to.UseGetResponse;
+import com.prx.directory.api.v1.to.GetUserResponse;
+import com.prx.directory.api.v1.to.PutUserRequest;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
 import com.prx.directory.client.backbone.BackboneClient;
@@ -11,9 +11,9 @@ import com.prx.directory.client.backbone.to.BackboneUserUpdateRequest;
 import com.prx.directory.kafka.producer.EmailMessageProducerService;
 import com.prx.directory.kafka.to.EmailMessageTO;
 import com.prx.directory.kafka.to.Recipient;
-import com.prx.directory.mapper.PatchUserMapper;
+import com.prx.directory.mapper.GetUserMapper;
+import com.prx.directory.mapper.PutUserMapper;
 import com.prx.directory.mapper.UserCreateMapper;
-import com.prx.directory.mapper.UserGetMapper;
 import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,22 +48,22 @@ public class UserServiceImpl implements UserService {
 
     private final EmailMessageProducerService emailMessageProducerService;
     private final UserCreateMapper userCreateMapper;
-    private final PatchUserMapper patchUserMapper;
+    private final PutUserMapper putUserMapper;
     private final BackboneClient backboneClient;
-    private final UserGetMapper userGetMapper;
+    private final GetUserMapper getUserMapper;
 
     /// Constructs a new UserServiceImpl with the specified BackboneClient and UserCreateMapper.
     ///
     /// @param backboneClient   the client used to communicate with the backend
     /// @param userCreateMapper the mapper used to convert between request/response objects and backend objects
     public UserServiceImpl(BackboneClient backboneClient, EmailMessageProducerService emailMessageProducerService,
-                           UserCreateMapper userCreateMapper, PatchUserMapper patchUserMapperr,
-                           UserGetMapper userGetMapper) {
+                           UserCreateMapper userCreateMapper, PutUserMapper putUserMapper,
+                           GetUserMapper getUserMapper) {
         this.emailMessageProducerService = emailMessageProducerService;
         this.userCreateMapper = userCreateMapper;
         this.backboneClient = backboneClient;
-        this.patchUserMapper = patchUserMapperr;
-        this.userGetMapper = userGetMapper;
+        this.putUserMapper = putUserMapper;
+        this.getUserMapper = getUserMapper;
     }
 
     @Override
@@ -92,10 +92,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<UseGetResponse> findUser(UUID id) {
+    public ResponseEntity<GetUserResponse> findUser(UUID id) {
         try {
             var result = backboneClient.find(id);
-            return ResponseEntity.ok(userGetMapper.fromBackbone(result));
+            return ResponseEntity.ok(getUserMapper.fromBackbone(result));
         } catch (FeignException e) {
             logger.warn("Error finding user: {}", e.getMessage());
             if (e.status() == HttpStatus.NOT_FOUND.value()) {
@@ -106,9 +106,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<Void> update(UUID userId, PatchUserRequest request) {
+    public ResponseEntity<Void> update(UUID userId, PutUserRequest request) {
         try {
-            BackboneUserUpdateRequest backboneRequest = patchUserMapper.toBackbone(request);
+            BackboneUserUpdateRequest backboneRequest = putUserMapper.toBackbone(request);
+            logger.info("Updating user: {}", backboneRequest);
             return backboneClient.userPartialUpdate(userId, backboneRequest);
         } catch (Exception e) {
             logger.warn("Error updating user: {}", e.getMessage());

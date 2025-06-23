@@ -18,10 +18,10 @@ import static com.prx.security.constant.ConstantApp.SESSION_TOKEN_KEY;
 public interface MercuryClient {
     String SESSION_TOKEN_BKD_KEY = "session-token-bkd";
 
-    /// Sends a verification code to the specified phone number.
+    /// Sends a verification code to the specified phoneNumber number.
     ///
     /// @param sessionToken the session token used to authenticate the request
-    /// @param verificationCodeRequest the request object containing the phone number
+    /// @param verificationCodeRequest the request object containing the phoneNumber number
     /// @return a ResponseEntity containing the response of the verification code operation
     @PostMapping("/api/v1/verification-code")
     ResponseEntity<Void> confirmCode(@RequestHeader(SESSION_TOKEN_KEY) String sessionToken, VerificationCodeRequest verificationCodeRequest);

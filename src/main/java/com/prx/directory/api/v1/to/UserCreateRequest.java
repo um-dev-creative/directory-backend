@@ -19,7 +19,7 @@ import java.time.LocalDate;
 ///     - **firstname**: The user's first name. Must not be blank.
 ///     - **lastname**: The user's last name. Must not be blank.
 ///     - **dateOfBirth**: The user's date of birth. Must not be empty and must follow the pattern defined in [#PATTERN_DATE].
-///     - **phoneNumber**: The user's phone number. Must not be blank.
+///     - **phoneNumber**: The user's phoneNumber number. Must not be blank.
 ///     - **displayName**: The display name for the user (optional).
 ///     - **notificationSms**: Indicates if SMS notifications are enabled for the user (optional).
 ///     - **notificationEmail**: Indicates if email notifications are enabled for the user (optional).

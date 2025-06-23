@@ -1,7 +1,7 @@
 package com.prx.directory.mapper;
 
 import com.prx.commons.services.config.mapper.MapperAppConfig;
-import com.prx.directory.api.v1.to.PatchUserRequest;
+import com.prx.directory.api.v1.to.PutUserRequest;
 import com.prx.directory.client.backbone.to.BackboneUserUpdateRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -16,24 +16,23 @@ import java.util.UUID;
         // Specifies the configuration class to use for this mapper.
         config = MapperAppConfig.class
 )
-public interface PatchUserMapper {
+public interface PutUserMapper {
 
     @Mapping(target = "displayName", source = "displayName")
-    @Mapping(target = "password", source = "password")
     @Mapping(target = "notificationEmail", source = "notificationEmail")
     @Mapping(target = "notificationSms", source = "notificationSms")
     @Mapping(target = "privacyDataOutActive", source = "privacyDataOutActive")
     @Mapping(target = "active", source = "active")
     @Mapping(target = "contacts", expression = "java(mapContacts(request))")
-    BackboneUserUpdateRequest toBackbone(PatchUserRequest request);
+    BackboneUserUpdateRequest toBackbone(PutUserRequest request);
 
     /**
      * Helper method to map person fields from PatchUserRequest to BackboneUserUpdateRequest.Person.
      */
-    default List<BackboneUserUpdateRequest.Contact> mapContacts(PatchUserRequest request) {
+    default List<BackboneUserUpdateRequest.Contact> mapContacts(PutUserRequest request) {
         return List.of(new BackboneUserUpdateRequest.Contact(
-                request.contact().id(),
-                request.contact().content(),
+                request.phoneId(),
+                request.phoneNumber(),
                 new BackboneUserUpdateRequest.ContactType(UUID.fromString("61ed9501-bee2-4391-8376-91307ae02a48")),
                 true
         ));
