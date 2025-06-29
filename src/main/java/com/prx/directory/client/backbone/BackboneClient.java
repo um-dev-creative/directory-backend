@@ -1,5 +1,6 @@
 package com.prx.directory.client.backbone;
 
+import com.prx.commons.general.pojo.Role;
 import com.prx.directory.api.v1.to.PrxTokenString;
 import com.prx.directory.client.backbone.to.*;
 import com.prx.directory.client.interceptor.BackboneFeignConfigurer;
@@ -36,8 +37,11 @@ public interface BackboneClient {
     BackboneUserCreateResponse post(BackboneUserCreateRequest backboneUserCreateRequest);
 
     @GetMapping("/api/v1/users/user/{userId}")
-    BackboneUserGetResponse find(@PathVariable UUID userId);
+    BackboneUserGetResponse findUserById(@PathVariable UUID userId);
 
     @PutMapping(value = "/api/v1/users/{userId}", produces = {MediaType.APPLICATION_JSON_VALUE})
     ResponseEntity<Void> userPartialUpdate(@PathVariable UUID userId, @RequestBody BackboneUserUpdateRequest request);
+
+    @PutMapping(value = "/api/v1/roles/find/{roleId}", produces = {MediaType.APPLICATION_JSON_VALUE})
+    ResponseEntity<Role> findRoleById(@PathVariable UUID roleId);
 }

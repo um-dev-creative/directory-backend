@@ -21,11 +21,13 @@ import java.util.UUID;
 ///     - **birthdate**: The user's birthdate.
 ///     - **active**: Indicates if the user is currently active.
 ///     - **contacts**: List of contact information for the user (see [Contact]).
+///     - **roleIds**: The collection of role IDs assigned to the user.
 ///
 ///
 /// The [Contact] sub-record represents contact information for the user, and the [ContactType] sub-record represents the type of contact.
 ///
 public record BackboneUserUpdateRequest(
+        UUID application,
         String displayName,
         String password,
         Boolean notificationEmail,
@@ -37,8 +39,19 @@ public record BackboneUserUpdateRequest(
         String gender,
         LocalDate birthdate,
         Boolean active,
-        List<Contact> contacts
+        List<Contact> contacts,
+        List<UUID> roleIds
 ) {
+
+    public BackboneUserUpdateRequest(UUID applicationId, Boolean notificationEmail, Boolean notificationSms, Boolean privacyDataOutActive, List<UUID> roleIds) {
+        this(applicationId, null, null, notificationEmail, notificationSms, privacyDataOutActive, null, null, null, null, null, true, null, roleIds);
+    }
+
+    // Backward compatibility constructor for single role
+    public BackboneUserUpdateRequest(UUID applicationId, Boolean notificationEmail, Boolean notificationSms, Boolean privacyDataOutActive, UUID roleId) {
+        this(applicationId, null, null, notificationEmail, notificationSms, privacyDataOutActive, null, null, null, null, null, true, null, roleId != null ? List.of(roleId) : null);
+    }
+
     /// Contact sub-record for person.
     ///
     /// Represents contact information for the user, such as phoneNumber number or address.

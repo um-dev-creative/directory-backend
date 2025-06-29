@@ -18,7 +18,9 @@ public record BusinessCreateRequest(
         UUID userId,
         @NotNull @NotEmpty @Email
         String email,
+        @Email
         String customerServiceEmail,
+        @Email
         String orderManagementEmail,
         String website
 ) {

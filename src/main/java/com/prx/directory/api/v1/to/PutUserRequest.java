@@ -1,5 +1,6 @@
 package com.prx.directory.api.v1.to;
 
+import java.util.List;
 import java.util.UUID;
 
 /// PutUserRequest record.
@@ -15,7 +16,7 @@ import java.util.UUID;
 ///   - **privacyDataOutActive**: Whether the user's privacy data out is active.
 ///   - **phoneId**: The unique identifier for the user's phoneNumber.
 ///   - **phoneNumber**: The user's phoneNumber number.
-///   - **roleId**: The unique identifier for the user's role.
+///   - **roleIds**: The collection of unique identifiers for the user's roles.
 ///   - **active**: Whether the user is currently active.
 ///
 public record PutUserRequest(
@@ -27,7 +28,7 @@ public record PutUserRequest(
         Boolean privacyDataOutActive,
         UUID phoneId,
         String phoneNumber,
-        UUID roleId,
+        List<UUID> roleIds,
         Boolean active
 ) {
 }

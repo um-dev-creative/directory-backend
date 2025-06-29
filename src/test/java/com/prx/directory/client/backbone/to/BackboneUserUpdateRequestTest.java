@@ -15,8 +15,11 @@ class BackboneUserUpdateRequestTest {
         BackboneUserUpdateRequest.ContactType contactType = new BackboneUserUpdateRequest.ContactType(contactTypeId);
         BackboneUserUpdateRequest.Contact contact = new BackboneUserUpdateRequest.Contact(contactId, "1234567890", contactType, true);
         List<BackboneUserUpdateRequest.Contact> contacts = List.of(contact);
+        UUID roleId = UUID.randomUUID();
+        var roleIds = List.of(roleId);
 
         BackboneUserUpdateRequest request = new BackboneUserUpdateRequest(
+                UUID.randomUUID(),
                 "Display Name",
                 "password123",
                 true,
@@ -28,7 +31,8 @@ class BackboneUserUpdateRequestTest {
                 "Male",
                 LocalDate.of(1990, 1, 1),
                 true,
-                contacts
+                contacts,
+                roleIds
         );
 
         assertEquals("Display Name", request.displayName());
@@ -69,9 +73,13 @@ class BackboneUserUpdateRequestTest {
     void testToString() {
         UUID contactId = UUID.randomUUID();
         UUID contactTypeId = UUID.randomUUID();
+        UUID applicationId = UUID.randomUUID();
+        UUID roleId = UUID.randomUUID();
+        var roleIds = List.of(roleId);
         BackboneUserUpdateRequest.ContactType contactType = new BackboneUserUpdateRequest.ContactType(contactTypeId);
         BackboneUserUpdateRequest.Contact contact = new BackboneUserUpdateRequest.Contact(contactId, "1234567890", contactType, true);
         BackboneUserUpdateRequest request = new BackboneUserUpdateRequest(
+                applicationId,
                 "Display Name",
                 "password123",
                 true,
@@ -83,7 +91,8 @@ class BackboneUserUpdateRequestTest {
                 "Male",
                 LocalDate.of(1990, 1, 1),
                 true,
-                List.of(contact)
+                List.of(contact),
+                roleIds
         );
         assertTrue(request.toString().contains("Display Name"));
         assertTrue(contact.toString().contains("1234567890"));
