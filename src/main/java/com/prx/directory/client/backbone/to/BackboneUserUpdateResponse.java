@@ -21,7 +21,7 @@ import java.util.UUID;
 ///     - **active**: Indicates if the user is currently active.
 ///     - **personId**: Unique identifier of the associated person entity.
 ///     - **roleId**: Unique identifier of the user's role.
-///     - **applicationId**: Unique identifier of the application associated with the user.
+///     - **application**: Unique identifier of the application associated with the user.
 ///
 public record BackboneUserUpdateResponse(
     UUID id,

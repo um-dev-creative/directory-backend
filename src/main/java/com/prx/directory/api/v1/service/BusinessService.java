@@ -31,6 +31,14 @@ public interface BusinessService {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
+    /// Finds a business by its name.
+    ///
+    /// @param name the name of the business
+    /// @return a ResponseEntity containing the business transfer object and HTTP status
+    default ResponseEntity<BusinessTO> findByName(@NotNull String name) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    }
+
     /// Finds businesses by user ID.
     ///
     /// @param userId the UUID of the user

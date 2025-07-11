@@ -48,7 +48,7 @@ public class UserRegisterServiceImpl implements UserRegisterService {
     /// @return a ResponseEntity containing the response object and HTTP status
     @Override
     public ResponseEntity<Void> confirmCode(String sessionTokenBkd, ConfirmCodeRequest confirmCodeRequest) {
-        var userResponse = backboneClient.find(confirmCodeRequest.userId());
+        var userResponse = backboneClient.findUserById(confirmCodeRequest.userId());
         AuthRequest mercuryAuthRequest = new AuthRequest(userResponse.alias(), userResponse.password());
         try {
             var mercuryToken = mercuryClient.token(sessionTokenBkd, mercuryAuthRequest);

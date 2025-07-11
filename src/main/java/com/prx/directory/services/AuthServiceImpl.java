@@ -30,7 +30,7 @@ public class AuthServiceImpl implements AuthService {
     private final SessionJwtService sessionJwtService;
     private final BackboneClient backboneClient;
     private final MercuryClient mercuryClient;
-    private static final int maxLength = 2;
+    private static final int MAX_LENGTH = 2;
 
     /**
      * Constructor for AuthServiceImpl.
@@ -117,7 +117,7 @@ public class AuthServiceImpl implements AuthService {
         }
         try {
             String[] parts = token.split("\\.");
-            if (parts.length < maxLength) {
+            if (parts.length < MAX_LENGTH) {
                 return null;
             }
             String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));

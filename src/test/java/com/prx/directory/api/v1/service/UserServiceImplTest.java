@@ -332,6 +332,9 @@ class UserServiceImplTest {
         Application application = new Application();
         application.setId(UUID.randomUUID());
         Role role = new Role();
+        role.setName("Role Name");
+        role.setDescription("Role Description");
+        role.setActive(true);
         role.setId(UUID.randomUUID());
 
         GetUserResponse expectedResponse = new GetUserResponse(
@@ -372,7 +375,7 @@ class UserServiceImplTest {
         );
 
 
-        when(backboneClient.find(userId)).thenReturn(backboneResponse);
+        when(backboneClient.findUserById(userId)).thenReturn(backboneResponse);
         when(getUserMapper.fromBackbone(backboneResponse)).thenReturn(expectedResponse);
 
         ResponseEntity<GetUserResponse> response = userService.findUser(userId);
@@ -387,7 +390,7 @@ class UserServiceImplTest {
         UUID userId = UUID.randomUUID();
 
         Request requestFeign = Request.create(Request.HttpMethod.GET, "url", Map.of(), null, null, null);
-        when(backboneClient.find(any())).thenThrow(new FeignException.NotFound("User not found", requestFeign, null, null));
+        when(backboneClient.findUserById(any())).thenThrow(new FeignException.NotFound("User not found", requestFeign, null, null));
 
         ResponseEntity<GetUserResponse> response = userService.findUser(userId);
 
@@ -401,7 +404,7 @@ class UserServiceImplTest {
         UUID userId = UUID.randomUUID();
 
         Request requestFeign = Request.create(Request.HttpMethod.GET, "url", Map.of(), null, null, null);
-        when(backboneClient.find(any())).thenThrow(new FeignException
+        when(backboneClient.findUserById(any())).thenThrow(new FeignException
                 .InternalServerError(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), requestFeign, null, null));
 
         ResponseEntity<GetUserResponse> response = userService.findUser(userId);

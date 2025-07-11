@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -17,4 +18,6 @@ import java.util.UUID;
 public interface BusinessRepository extends JpaRepository<BusinessEntity, UUID> {
 
     Page<BusinessEntity> findByUserEntityFk(@NotNull UserEntity userEntityFk, Pageable pageable);
+
+    Optional<BusinessEntity> findByName(@NotNull String name);
 }

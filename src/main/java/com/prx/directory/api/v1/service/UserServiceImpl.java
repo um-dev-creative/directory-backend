@@ -25,7 +25,7 @@ import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import java.util.*;
 
-import static com.prx.directory.constant.DirectoryAppConstants.MESSAGE_ERROR_HEADER;
+import static com.prx.directory.constant.DirectoryAppConstants.*;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 /// Service implementation for user-related operations.
@@ -94,12 +94,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<GetUserResponse> findUser(UUID id) {
         try {
-            var result = backboneClient.find(id);
+            var result = backboneClient.findUserById(id);
             return ResponseEntity.ok(getUserMapper.fromBackbone(result));
         } catch (FeignException e) {
             logger.warn("Error finding user: {}", e.getMessage());
             if (e.status() == HttpStatus.NOT_FOUND.value()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).header("message-error", "User not found.").build();
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).header("message-error", USER_NOT_FOUND_MESSAGE).build();
             }
             return ResponseEntity.status(e.status()).build();
         }
@@ -108,13 +108,116 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<Void> update(UUID userId, PutUserRequest request) {
         try {
+            // Validate request object
+            if (Objects.isNull(request)) {
+                logger.warn("Update request is null for user: {}", userId);
+                return ResponseEntity.status(BAD_REQUEST)
+                        .header(MESSAGE_HEADER, "Request body is missing.")
+                        .build();
+            }
+
+            // Validate user ID
+            if (Objects.isNull(userId)) {
+                logger.warn("User ID is null");
+                return ResponseEntity.status(BAD_REQUEST)
+                        .header(MESSAGE_HEADER, "User ID is required.")
+                        .build();
+            }
+
+            // Validate role IDs if provided
+            if (request.roleIds() != null) {
+                ResponseEntity<Void> roleValidation = validateRoleIds(request.roleIds());
+                if (roleValidation != null) {
+                    return roleValidation;
+                }
+            }
+
+            // Check if user exists before updating
+            try {
+                var existingUser = backboneClient.findUserById(userId);
+                if (existingUser == null) {
+                    logger.warn("User not found: {}", userId);
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .header(MESSAGE_HEADER, USER_NOT_FOUND_MESSAGE)
+                            .build();
+                }
+            } catch (FeignException e) {
+                if (e.status() == HttpStatus.NOT_FOUND.value()) {
+                    logger.warn("User not found: {}", userId);
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .header(MESSAGE_HEADER, USER_NOT_FOUND_MESSAGE)
+                            .build();
+                }
+                throw e;
+            }
+
             BackboneUserUpdateRequest backboneRequest = putUserMapper.toBackbone(request);
-            logger.info("Updating user: {}", backboneRequest);
+            logger.info("Updating user: {} with request: {}", userId, backboneRequest);
             return backboneClient.userPartialUpdate(userId, backboneRequest);
+        } catch (FeignException e) {
+            logger.warn("Feign exception while updating user {}: {}", userId, e.getMessage());
+            if (e.status() == HttpStatus.NOT_FOUND.value()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .header(MESSAGE_HEADER, USER_NOT_FOUND_MESSAGE)
+                        .build();
+            } else if (e.status() == BAD_REQUEST.value()) {
+                return ResponseEntity.status(BAD_REQUEST)
+                        .header(MESSAGE_HEADER, "Invalid request data.")
+                        .build();
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .header(MESSAGE_HEADER, "Error updating user.")
+                    .build();
         } catch (Exception e) {
-            logger.warn("Error updating user: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            logger.error("Unexpected error updating user {}: {}", userId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .header(MESSAGE_HEADER, "An unexpected error occurred while updating the user.")
+                    .build();
         }
+    }
+
+    /**
+     * Validates role IDs for edge cases.
+     *
+     * @param roleIds the collection of role IDs to validate
+     * @return ResponseEntity with error details if validation fails, null if validation passes
+     */
+    private ResponseEntity<Void> validateRoleIds(List<UUID> roleIds) {
+        // Check for empty collection (removing all roles)
+        if (roleIds.isEmpty()) {
+            logger.warn("Attempting to remove all roles from user");
+            return ResponseEntity.status(BAD_REQUEST)
+                    .header(MESSAGE_HEADER, "Cannot remove all roles from user. At least one role is required.")
+                    .build();
+        }
+
+        // Check for null role IDs
+        if (roleIds.stream().anyMatch(Objects::isNull)) {
+            logger.warn("Role collection contains null values");
+            return ResponseEntity.status(BAD_REQUEST)
+                    .header(MESSAGE_HEADER, "Role collection contains invalid null values.")
+                    .build();
+        }
+
+        // Check for duplicate role IDs
+        if (roleIds.size() != roleIds.stream().distinct().count()) {
+            logger.warn("Role collection contains duplicate values");
+            return ResponseEntity.status(BAD_REQUEST)
+                    .header(MESSAGE_HEADER, "Role collection contains duplicate values.")
+                    .build();
+        }
+
+        // Check for invalid/empty UUIDs
+        for (UUID roleId : roleIds) {
+            if (roleId.toString().equals("00000000-0000-0000-0000-000000000000")) {
+                logger.warn("Role collection contains invalid UUID: {}", roleId);
+                return ResponseEntity.status(BAD_REQUEST)
+                        .header(MESSAGE_HEADER, "Role collection contains invalid role ID.")
+                        .build();
+            }
+        }
+
+        return null; // Validation passed
     }
 
     /// Generates a random four-digit number.
