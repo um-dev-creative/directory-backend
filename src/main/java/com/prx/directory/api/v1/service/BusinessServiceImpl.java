@@ -61,7 +61,6 @@ public class BusinessServiceImpl implements BusinessService {
 
         try {
             var backboneUserGetResponse = backboneClient.findUserById(businessCreateRequest.userId());
-//            var backboneUserGetResponse = userService.findUser(businessCreateRequest.userId());
             if (Objects.nonNull(backboneUserGetResponse)) {
                 var business = businessMapper.toSource(businessCreateRequest);
                 var savedBusiness = businessRepository.save(business);
