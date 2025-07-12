@@ -31,6 +31,7 @@ class UserControllerTest {
     @Test
     @DisplayName("post should return OK status with valid request")
     void createUserPostShouldReturnOkStatusWithValidRequest() {
+        String alias = "jconnor";
         String password = "abc123";
         String email = "user@domain.ext";
         String firstName = "John";
@@ -54,10 +55,9 @@ class UserControllerTest {
                 privacyDataOutActive
         );
         UUID id = UUID.randomUUID();
-        String alias = password;
         LocalDateTime createdDate = LocalDateTime.now();
         LocalDateTime lastUpdate = LocalDateTime.now();
-        Boolean active = true;
+        boolean active = true;
         UUID personId = UUID.randomUUID();
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();

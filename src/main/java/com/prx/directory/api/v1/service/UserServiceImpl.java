@@ -42,7 +42,7 @@ public class UserServiceImpl implements UserService {
     @Value("${prx.verification.code.template.id}")
     private UUID verificationCodeTemplateId;
     @Value("${prx.directory.application-id}")
-    private String applicationId;
+    private String applicationIdString;
     @Value("${prx.directory.role-id}")
     private String initialRoleId;
 
@@ -69,7 +69,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<UserCreateResponse> create(UserCreateRequest userCreateRequest) {
         logger.debug("Creating user: {}", userCreateRequest);
-        UUID applicationID = UUID.fromString(applicationId);
+        UUID applicationID = UUID.fromString(applicationIdString);
         try {
             if (Objects.isNull(userCreateRequest)) {
                 logger.warn("Content null invalid");
@@ -177,6 +177,48 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
+     * Deletes a user by user ID and application ID using the BackboneClient.
+     *
+     * @param userId the ID of the user to delete
+     * @return a ResponseEntity with appropriate status
+     */
+    @Override
+    public ResponseEntity<Void> deleteUserByUserAndApplication(UUID userId) {
+        var applicationId = UUID.fromString(applicationIdString);
+        logger.info("Attempting to delete user with ID: {} for application: {}", userId, applicationId);
+
+        try {
+            // Call the BackboneClient to delete the user
+            ResponseEntity<Void> response = backboneClient.deleteUserByUserIdAndApplicationId(applicationId, userId);
+
+            if (response.getStatusCode().equals(HttpStatus.NO_CONTENT)) {
+                logger.info("Successfully deleted user with ID: {} for application: {}", userId, applicationId);
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }
+        } catch (FeignException e) {
+            if (e.status() == HttpStatus.NOT_FOUND.value()) {
+                logger.warn("User with ID {} not found for deletion in application: {}", userId, applicationId);
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+            if (e.status() == HttpStatus.FORBIDDEN.value()) {
+                logger.warn("Access denied for deleting user with ID: {} in application: {}", userId, applicationId);
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
+            if (e.status() == BAD_REQUEST.value()) {
+                logger.warn("Invalid request data for deletion in application: {}", applicationId);
+                return new ResponseEntity<>(BAD_REQUEST);
+            }
+            logger.error("Unexpected response status: {} when deleting user with ID: {} for application: {}",
+                    e.status(), userId, applicationId);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (Exception e) {
+            logger.warn("Error deleting user with ID: {} for application: {}", userId, applicationId, e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
+    }
+
+    /**
      * Validates role IDs for edge cases.
      *
      * @param roleIds the collection of role IDs to validate
@@ -247,7 +289,7 @@ public class UserServiceImpl implements UserService {
         }
         alias = fixAlias(aliasTemp);
         try {
-            backboneClient.checkAlias(alias, UUID.fromString(applicationId));
+            backboneClient.checkAlias(alias, UUID.fromString(applicationIdString));
             return alias.toLowerCase(Locale.ROOT);
         } catch (FeignException e) {
             logger.warn(USERNAME_ALREADY_EXISTS, alias);
