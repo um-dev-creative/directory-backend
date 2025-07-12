@@ -46,4 +46,14 @@ public interface UserService {
         return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
     }
 
+    /// Deletes a user by user ID and application ID.
+    ///
+    /// @param userId the ID of the user to delete
+    /// @return a ResponseEntity with appropriate status
+    /// @see ResponseEntity
+    /// @see UUID
+    default ResponseEntity<Void> deleteUserByUserAndApplication(UUID userId) {
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+    }
+
 }

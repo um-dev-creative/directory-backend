@@ -87,4 +87,20 @@ public interface UserApi {
         return this.getService().update(userId, request);
     }
 
+    /// Deletes a user by user ID and application ID.
+    ///
+    /// @param userId the ID of the user to delete
+    /// @return a ResponseEntity with appropriate status
+    @Operation(summary = "Delete a user by ID", description = "Deletes a user from the system with the provided user ID. Requires admin or appropriate authorization.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "User deleted successfully", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Forbidden: Access denied", content = @Content),
+        @ApiResponse(responseCode = "404", description = "User not found", content = @Content),
+        @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
+    @DeleteMapping(value = "/{userId}")
+    default ResponseEntity<Void> deleteUserByUserId(@NotNull @PathVariable UUID userId) {
+        return this.getService().deleteUserByUserAndApplication(userId);
+    }
+
 }

@@ -53,4 +53,13 @@ public class UserController implements UserApi {
         return userService.update(userId, request);
     }
 
+    /// Handles the HTTP DELETE request to delete a user by user ID and application ID.
+    ///
+    /// @param userId the ID of the user to delete
+    /// @return a ResponseEntity with appropriate status
+    @Override
+    public ResponseEntity<Void> deleteUserByUserId(UUID userId) {
+        return userService.deleteUserByUserAndApplication(userId);
+    }
+
 }

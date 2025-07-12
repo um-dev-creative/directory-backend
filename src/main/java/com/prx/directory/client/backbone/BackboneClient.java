@@ -44,4 +44,7 @@ public interface BackboneClient {
 
     @PutMapping(value = "/api/v1/roles/find/{roleId}", produces = {MediaType.APPLICATION_JSON_VALUE})
     ResponseEntity<Role> findRoleById(@PathVariable UUID roleId);
+
+    @DeleteMapping("/api/v1/users/application/{applicationId}/user/{userId}")
+    ResponseEntity<Void> deleteUserByUserIdAndApplicationId(@PathVariable UUID applicationId, @PathVariable UUID userId);
 }
