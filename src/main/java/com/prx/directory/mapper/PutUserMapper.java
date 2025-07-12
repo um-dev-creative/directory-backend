@@ -18,13 +18,15 @@ import java.util.UUID;
 )
 public interface PutUserMapper {
 
-    @Mapping(target = "displayName", source = "displayName")
-    @Mapping(target = "notificationEmail", source = "notificationEmail")
-    @Mapping(target = "notificationSms", source = "notificationSms")
-    @Mapping(target = "privacyDataOutActive", source = "privacyDataOutActive")
-    @Mapping(target = "active", source = "active")
+    @Mapping(target = "application", source = "applicationId")
+    @Mapping(target = "active", source = "request.active")
+    @Mapping(target = "roleIds", source = "request.roleIds")
+    @Mapping(target = "displayName", source = "request.displayName")
+    @Mapping(target = "notificationSms", source = "request.notificationSms")
+    @Mapping(target = "notificationEmail", source = "request.notificationEmail")
+    @Mapping(target = "privacyDataOutActive", source = "request.privacyDataOutActive")
     @Mapping(target = "contacts", expression = "java(mapContacts(request))")
-    BackboneUserUpdateRequest toBackbone(PutUserRequest request);
+    BackboneUserUpdateRequest toBackbone(UUID applicationId, PutUserRequest request);
 
     /**
      * Helper method to map person fields from PatchUserRequest to BackboneUserUpdateRequest.Person.

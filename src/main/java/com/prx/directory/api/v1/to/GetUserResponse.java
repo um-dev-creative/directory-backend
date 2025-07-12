@@ -51,7 +51,7 @@ public record GetUserResponse(
                 ", notificationSms=" + notificationSms +
                 ", privacyDataOutActive=" + privacyDataOutActive +
                 ", status='" + status + '\'' +
-                ", roleId=" + roleId +
+                ", roleIds=" + roleId +
                 ", applicationId=" + applicationId +
                 '}';
     }
