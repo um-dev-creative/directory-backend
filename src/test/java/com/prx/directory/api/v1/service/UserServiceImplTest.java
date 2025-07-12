@@ -566,27 +566,7 @@ class UserServiceImplTest {
         assertEquals(HttpStatus.NOT_MODIFIED, response.getStatusCode());
         verify(backboneClient).deleteUserByUserIdAndApplicationId(applicationId, userId);
     }
-//
-//    @Test
-//    @DisplayName("deleteUserByUserAndApplication should handle CONFLICT status from BackboneClient")
-//    void deleteUserByUserAndApplicationShouldHandleConflictStatusFromBackboneClient() {
-//        // Arrange
-////        ResponseEntity<Void> backboneResponse = new ResponseEntity<>(HttpStatus.CONFLICT);
-//        Request requestFeign = Request.create(Request.HttpMethod.DELETE, "url", Map.of(), null, null, null);
-//        when(backboneClient.deleteUserByUserIdAndApplicationId(any(UUID.class), any(UUID.class))).thenThrow(new FeignException
-//                .Conflict(HttpStatus.CONFLICT.getReasonPhrase(), requestFeign, null, null));
 
-    /// /        when(backboneClient.deleteUserByUserIdAndApplicationId(any(UUID.class), any(UUID.class)))
-    /// /                .thenReturn(backboneResponse);
-//
-//        // Act
-//        ResponseEntity<Void> response = userService.deleteUserByUserAndApplication(userId);
-//
-//        // Assert
-//        assertNotNull(response);
-//        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-//        verify(backboneClient).deleteUserByUserIdAndApplicationId(applicationId, userId);
-//    }
     @Test
     @DisplayName("deleteUserByUserAndApplication should handle null userId gracefully")
     void deleteUserByUserAndApplicationShouldHandleNullUserIdGracefully() {
