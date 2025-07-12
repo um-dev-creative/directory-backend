@@ -20,7 +20,7 @@ import java.util.UUID;
 ///     - **privacyDataOutActive**: Indicates if the user's privacy data out is active.
 ///     - **active**: Indicates if the user is currently active.
 ///     - **personId**: Unique identifier of the associated person entity.
-///     - **roleId**: Unique identifier of the user's role.
+///     - **roleIds**: Unique identifier of the user's role.
 ///     - **application**: Unique identifier of the application associated with the user.
 ///
 public record BackboneUserUpdateResponse(

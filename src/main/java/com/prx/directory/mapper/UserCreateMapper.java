@@ -1,12 +1,16 @@
 package com.prx.directory.mapper;
 
+import com.prx.commons.general.pojo.Contact;
+import com.prx.commons.general.pojo.ContactType;
 import com.prx.commons.general.pojo.Person;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
 import com.prx.directory.client.backbone.to.BackboneUserCreateRequest;
 import com.prx.directory.client.backbone.to.BackboneUserCreateResponse;
 import org.mapstruct.*;
+import org.springframework.cloud.config.client.ConfigClientProperties;
 
+import java.util.List;
 import java.util.UUID;
 
 @Mapper(
@@ -25,7 +29,6 @@ public interface UserCreateMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "active", ignore = true)
     @Mapping(target = "alias", source = "alias")
-    @Mapping(target = "roleId", source = "roleId")
     @Mapping(target = "applicationId", source = "applicationId")
     @Mapping(target = "email", source = "userCreateRequest.email")
     @Mapping(target = "password", source = "userCreateRequest.password")
@@ -48,6 +51,16 @@ public interface UserCreateMapper {
         person.setBirthdate(userCreateRequest.dateOfBirth());
         person.setGender("N");
         person.setMiddleName("");
+
+        if(!userCreateRequest.phoneNumber().isBlank()) {
+            var contact  = new Contact();
+            var contactType = new ContactType();
+            contactType.setId(UUID.fromString("61ed9501-bee2-4391-8376-91307ae02a48"));
+            contact.setContent(userCreateRequest.phoneNumber());
+            contact.setActive(true);
+            contact.setContactType(contactType);
+            person.setContacts(List.of(contact));
+        }
 
         return person;
     }

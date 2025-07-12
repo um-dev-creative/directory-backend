@@ -16,7 +16,7 @@ import java.util.UUID;
 ///     - **lastUpdate**: The date and time when the user was last updated.
 ///     - **active**: The active status of the user.
 ///     - **personId**: The unique identifier of the associated person.
-///     - **roleId**: The unique identifier of the associated role.
+///     - **roleIds**: The unique identifier of the associated role.
 ///     - **applicationId**: The unique identifier of the associated application.
 ///     - **displayName**: The display name of the user.
 ///     - **notificationSms**: The notification SMS preference of the user.

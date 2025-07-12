@@ -576,7 +576,7 @@ class GetUserResponseTest {
                 ", notificationSms=" + notificationSms +
                 ", privacyDataOutActive=" + privacyDataOutActive +
                 ", status='" + status + '\'' +
-                ", roleId=" + roleId +
+                ", roleIds=" + roleId +
                 ", applicationId=" + applicationId +
                 '}';
         assertEquals(expectedString, response.toString());

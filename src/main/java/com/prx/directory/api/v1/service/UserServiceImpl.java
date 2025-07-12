@@ -151,7 +151,7 @@ public class UserServiceImpl implements UserService {
                 throw e;
             }
 
-            BackboneUserUpdateRequest backboneRequest = putUserMapper.toBackbone(request);
+            BackboneUserUpdateRequest backboneRequest = putUserMapper.toBackbone(UUID.fromString(applicationIdString), request);
             logger.info("Updating user: {} with request: {}", userId, backboneRequest);
             return backboneClient.userPartialUpdate(userId, backboneRequest);
         } catch (FeignException e) {

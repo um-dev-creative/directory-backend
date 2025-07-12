@@ -19,7 +19,7 @@ import java.util.UUID;
 ///     - **lastUpdate**: The date and time when the user was last updated.
 ///     - **active**: Indicates if the user is currently active.
 ///     - **personId**: The unique identifier of the associated person entity.
-///     - **roleId**: The unique identifier of the user's role.
+///     - **roleIds**: The unique identifier of the user's role.
 ///     - **applicationId**: The unique identifier of the application associated with the user.
 ///     - **displayName**: The display name for the user.
 ///     - **notificationSms**: Indicates if SMS notifications are enabled for the user.
@@ -53,7 +53,7 @@ public record UserCreateResponse(
                 ", lastUpdate=" + lastUpdate +
                 ", active=" + active +
                 ", personId=" + personId +
-                ", roleId=" + roleId +
+                ", roleIds=" + roleId +
                 ", applicationId=" + applicationId +
                 ", displayName='" + displayName + '\'' +
                 ", notificationSms=" + notificationSms +

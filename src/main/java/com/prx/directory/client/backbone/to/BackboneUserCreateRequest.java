@@ -19,7 +19,7 @@ import java.util.UUID;
  *   <li><b>password</b>: The password for the user.</li>
  *   <li><b>email</b>: The email for the user.</li>
  *   <li><b>active</b>: Indicates if the user is active.</li>
- *   <li><b>roleId</b>: The roles assigned to the user.</li>
+ *   <li><b>roleIds</b>: The roles assigned to the user.</li>
  *   <li><b>applicationId</b>: The application identifier for the user.</li>
  *   <li><b>displayName</b>: The display name for the user.</li>
  *   <li><b>notificationSms</b>: Indicates if the user wants to receive notifications via SMS.</li>
