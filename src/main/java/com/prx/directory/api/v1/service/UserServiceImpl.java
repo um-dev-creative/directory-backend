@@ -204,6 +204,10 @@ public class UserServiceImpl implements UserService {
                 logger.warn("Access denied for deleting user with ID: {} in application: {}", userId, applicationId);
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
+            if (e.status() == BAD_REQUEST.value()) {
+                logger.warn("Invalid request data for deletion in application: {}", applicationId);
+                return new ResponseEntity<>(BAD_REQUEST);
+            }
             logger.error("Unexpected response status: {} when deleting user with ID: {} for application: {}",
                     e.status(), userId, applicationId);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);

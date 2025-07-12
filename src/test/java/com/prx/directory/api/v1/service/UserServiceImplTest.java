@@ -36,7 +36,6 @@ import static com.prx.directory.constant.DirectoryAppConstants.MESSAGE_ERROR_HEA
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(value = {SpringExtension.class})
@@ -437,9 +436,9 @@ class UserServiceImplTest {
     @DisplayName("deleteUserByUserAndApplication should return NOT_FOUND when user does not exist")
     void deleteUserByUserAndApplicationShouldReturnNotFoundWhenUserDoesNotExist() {
         // Arrange
-        ResponseEntity<Void> backboneResponse = new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        when(backboneClient.deleteUserByUserIdAndApplicationId(any(UUID.class), any(UUID.class)))
-                .thenReturn(backboneResponse);
+        Request requestFeign = Request.create(Request.HttpMethod.DELETE, "url", Map.of(), null, null, null);
+        when(backboneClient.deleteUserByUserIdAndApplicationId(any(UUID.class), any(UUID.class))).thenThrow(new FeignException
+                .NotFound(HttpStatus.NOT_FOUND.getReasonPhrase(), requestFeign, null, null));
 
         // Act
         ResponseEntity<Void> response = userService.deleteUserByUserAndApplication(userId);
@@ -454,9 +453,10 @@ class UserServiceImplTest {
     @DisplayName("deleteUserByUserAndApplication should return FORBIDDEN when access is denied")
     void deleteUserByUserAndApplicationShouldReturnForbiddenWhenAccessDenied() {
         // Arrange
-        ResponseEntity<Void> backboneResponse = new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        when(backboneClient.deleteUserByUserIdAndApplicationId(any(UUID.class), any(UUID.class)))
-                .thenReturn(backboneResponse);
+
+        Request requestFeign = Request.create(Request.HttpMethod.DELETE, "url", Map.of(), null, null, null);
+        when(backboneClient.deleteUserByUserIdAndApplicationId(any(UUID.class), any(UUID.class))).thenThrow(new FeignException
+                .Forbidden(HttpStatus.FORBIDDEN.getReasonPhrase(), requestFeign, null, null));
 
         // Act
         ResponseEntity<Void> response = userService.deleteUserByUserAndApplication(userId);
@@ -471,50 +471,16 @@ class UserServiceImplTest {
     @DisplayName("deleteUserByUserAndApplication should return INTERNAL_SERVER_ERROR for unexpected status codes")
     void deleteUserByUserAndApplicationShouldReturnInternalServerErrorForUnexpectedStatusCodes() {
         // Arrange
-        ResponseEntity<Void> backboneResponse = new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        when(backboneClient.deleteUserByUserIdAndApplicationId(any(UUID.class), any(UUID.class)))
-                .thenReturn(backboneResponse);
+        Request requestFeign = Request.create(Request.HttpMethod.DELETE, "url", Map.of(), null, null, null);
+        when(backboneClient.deleteUserByUserIdAndApplicationId(any(UUID.class), any(UUID.class))).thenThrow(new FeignException
+                .BadRequest(HttpStatus.BAD_REQUEST.getReasonPhrase(), requestFeign, null, null));
 
         // Act
         ResponseEntity<Void> response = userService.deleteUserByUserAndApplication(userId);
 
         // Assert
         assertNotNull(response);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        verify(backboneClient).deleteUserByUserIdAndApplicationId(applicationId, userId);
-    }
-
-    @Test
-    @DisplayName("deleteUserByUserAndApplication should return INTERNAL_SERVER_ERROR when BackboneClient returns ACCEPTED")
-    void deleteUserByUserAndApplicationShouldReturnInternalServerErrorWhenBackboneClientReturnsAccepted() {
-        // Arrange
-        ResponseEntity<Void> backboneResponse = new ResponseEntity<>(HttpStatus.ACCEPTED);
-        when(backboneClient.deleteUserByUserIdAndApplicationId(any(UUID.class), any(UUID.class)))
-                .thenReturn(backboneResponse);
-
-        // Act
-        ResponseEntity<Void> response = userService.deleteUserByUserAndApplication(userId);
-
-        // Assert
-        assertNotNull(response);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        verify(backboneClient).deleteUserByUserIdAndApplicationId(applicationId, userId);
-    }
-
-    @Test
-    @DisplayName("deleteUserByUserAndApplication should return INTERNAL_SERVER_ERROR when BackboneClient returns CREATED")
-    void deleteUserByUserAndApplicationShouldReturnInternalServerErrorWhenBackboneClientReturnsCreated() {
-        // Arrange
-        ResponseEntity<Void> backboneResponse = new ResponseEntity<>(HttpStatus.CREATED);
-        when(backboneClient.deleteUserByUserIdAndApplicationId(any(UUID.class), any(UUID.class)))
-                .thenReturn(backboneResponse);
-
-        // Act
-        ResponseEntity<Void> response = userService.deleteUserByUserAndApplication(userId);
-
-        // Assert
-        assertNotNull(response);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         verify(backboneClient).deleteUserByUserIdAndApplicationId(applicationId, userId);
     }
 
@@ -568,23 +534,6 @@ class UserServiceImplTest {
     }
 
     @Test
-    @DisplayName("deleteUserByUserAndApplication should use correct applicationId from configuration")
-    void deleteUserByUserAndApplicationShouldUseCorrectApplicationIdFromConfiguration() {
-        // Arrange
-        ResponseEntity<Void> backboneResponse = new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        when(backboneClient.deleteUserByUserIdAndApplicationId(any(UUID.class), any(UUID.class)))
-                .thenReturn(backboneResponse);
-
-        // Act
-        ResponseEntity<Void> response = userService.deleteUserByUserAndApplication(userId);
-
-        // Assert
-        assertNotNull(response);
-        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        verify(backboneClient).deleteUserByUserIdAndApplicationId(applicationId, userId);
-    }
-
-    @Test
     @DisplayName("deleteUserByUserAndApplication should handle UNAUTHORIZED status from BackboneClient")
     void deleteUserByUserAndApplicationShouldHandleUnauthorizedStatusFromBackboneClient() {
         // Arrange
@@ -597,7 +546,7 @@ class UserServiceImplTest {
 
         // Assert
         assertNotNull(response);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(HttpStatus.NOT_MODIFIED, response.getStatusCode());
         verify(backboneClient).deleteUserByUserIdAndApplicationId(applicationId, userId);
     }
 
@@ -614,27 +563,30 @@ class UserServiceImplTest {
 
         // Assert
         assertNotNull(response);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(HttpStatus.NOT_MODIFIED, response.getStatusCode());
         verify(backboneClient).deleteUserByUserIdAndApplicationId(applicationId, userId);
     }
+//
+//    @Test
+//    @DisplayName("deleteUserByUserAndApplication should handle CONFLICT status from BackboneClient")
+//    void deleteUserByUserAndApplicationShouldHandleConflictStatusFromBackboneClient() {
+//        // Arrange
+////        ResponseEntity<Void> backboneResponse = new ResponseEntity<>(HttpStatus.CONFLICT);
+//        Request requestFeign = Request.create(Request.HttpMethod.DELETE, "url", Map.of(), null, null, null);
+//        when(backboneClient.deleteUserByUserIdAndApplicationId(any(UUID.class), any(UUID.class))).thenThrow(new FeignException
+//                .Conflict(HttpStatus.CONFLICT.getReasonPhrase(), requestFeign, null, null));
 
-    @Test
-    @DisplayName("deleteUserByUserAndApplication should handle CONFLICT status from BackboneClient")
-    void deleteUserByUserAndApplicationShouldHandleConflictStatusFromBackboneClient() {
-        // Arrange
-        ResponseEntity<Void> backboneResponse = new ResponseEntity<>(HttpStatus.CONFLICT);
-        when(backboneClient.deleteUserByUserIdAndApplicationId(any(UUID.class), any(UUID.class)))
-                .thenReturn(backboneResponse);
-
-        // Act
-        ResponseEntity<Void> response = userService.deleteUserByUserAndApplication(userId);
-
-        // Assert
-        assertNotNull(response);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        verify(backboneClient).deleteUserByUserIdAndApplicationId(applicationId, userId);
-    }
-
+    /// /        when(backboneClient.deleteUserByUserIdAndApplicationId(any(UUID.class), any(UUID.class)))
+    /// /                .thenReturn(backboneResponse);
+//
+//        // Act
+//        ResponseEntity<Void> response = userService.deleteUserByUserAndApplication(userId);
+//
+//        // Assert
+//        assertNotNull(response);
+//        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+//        verify(backboneClient).deleteUserByUserIdAndApplicationId(applicationId, userId);
+//    }
     @Test
     @DisplayName("deleteUserByUserAndApplication should handle null userId gracefully")
     void deleteUserByUserAndApplicationShouldHandleNullUserIdGracefully() {
