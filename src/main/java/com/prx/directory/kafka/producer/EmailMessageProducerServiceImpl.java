@@ -2,7 +2,7 @@ package com.prx.directory.kafka.producer;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.prx.commons.constants.types.MessageType;
+import com.prx.commons.constants.httpstatus.type.MessageType;
 import com.prx.commons.exception.StandardException;
 import com.prx.directory.kafka.to.EmailMessageTO;
 import org.slf4j.Logger;

@@ -36,4 +36,10 @@ public class BusinessController implements BusinessApi {
     public ResponseEntity<Page<BusinessTO>> findByUserId(UUID userId, Pageable pageable) {
         return businessService.findByUserId(userId, pageable);
     }
+
+    @Override
+    public ResponseEntity<Void> deleteBusiness(UUID businessId, String sessionToken) {
+
+        return businessService.deleteBusiness(businessId, sessionToken);
+    }
 }

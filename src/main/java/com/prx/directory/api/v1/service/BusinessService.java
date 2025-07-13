@@ -52,4 +52,15 @@ public interface BusinessService {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
+    /**
+     * Deletes a business by its ID and user ID (owner validation required).
+     *
+     * @param businessId the UUID of the business to delete
+     * @param token the UUID of the user attempting the deletion
+     * @return a ResponseEntity indicating the result of the delete operation
+     */
+    default ResponseEntity<Void> deleteBusiness(@NotNull UUID businessId, @NotNull String token) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    }
+
 }

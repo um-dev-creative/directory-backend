@@ -1,5 +1,6 @@
 package com.prx.directory.api.v1.controller;
 
+import com.prx.commons.util.HttpStatusUtil;
 import com.prx.directory.api.v1.service.BusinessService;
 import com.prx.directory.api.v1.to.BusinessCreateRequest;
 import com.prx.directory.api.v1.to.BusinessCreateResponse;
@@ -17,6 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+
+import static com.prx.security.constant.ConstantApp.SESSION_TOKEN_KEY;
 
 /// REST controller for business-related operations.
 @Tag(name = "businesses", description = "The Business API")
@@ -79,6 +82,28 @@ public interface BusinessApi {
     @GetMapping(path = "/user/{userId}")
     default ResponseEntity<Page<BusinessTO>> findByUserId(@PathVariable UUID userId, Pageable pageable) {
         return this.getService().findByUserId(userId, pageable);
+    }
+
+    /**
+     * Deletes a business by its ID. The user must be the owner of the business.
+     *
+     * @param businessId the UUID of the business to delete
+     * @param sessionToken the session token from the request header
+     * @return a ResponseEntity indicating the result of the delete operation
+     */
+    @Operation(summary = "Delete business by ID", description = "Deletes a business by its ID. Only the owner can delete their business.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = HttpStatusUtil.OK_STR, description = "Business deleted successfully", content = @Content),
+        @ApiResponse(responseCode = HttpStatusUtil.FORBIDDEN_STR, description = "User is not the owner of the business", content = @Content),
+        @ApiResponse(responseCode = HttpStatusUtil.NOT_FOUND_STR, description = "Business not found", content = @Content),
+        @ApiResponse(responseCode = HttpStatusUtil.UNAUTHORIZED_STR, description = "Unauthorized", content = @Content),
+        @ApiResponse(responseCode = HttpStatusUtil.INTERNAL_SERVER_ERROR_STR, description = "", content = @Content)
+    })
+    @DeleteMapping(path = "/{businessId}")
+    default ResponseEntity<Void> deleteBusiness(
+            @PathVariable("businessId") UUID businessId,
+            @RequestHeader(SESSION_TOKEN_KEY) String sessionToken) {
+        return getService().deleteBusiness(businessId, sessionToken);
     }
 
 }
