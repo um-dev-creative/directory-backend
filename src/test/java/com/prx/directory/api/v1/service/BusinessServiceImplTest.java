@@ -3,9 +3,7 @@ package com.prx.directory.api.v1.service;
 import com.prx.commons.general.pojo.Application;
 import com.prx.commons.general.pojo.Person;
 import com.prx.commons.general.pojo.Role;
-import com.prx.directory.api.v1.to.BusinessCreateRequest;
-import com.prx.directory.api.v1.to.BusinessCreateResponse;
-import com.prx.directory.api.v1.to.BusinessTO;
+import com.prx.directory.api.v1.to.*;
 import com.prx.directory.client.backbone.BackboneClient;
 import com.prx.directory.client.backbone.to.BackboneUserGetResponse;
 import com.prx.directory.jpa.entity.BusinessEntity;
@@ -13,11 +11,15 @@ import com.prx.directory.jpa.entity.CategoryEntity;
 import com.prx.directory.jpa.entity.UserEntity;
 import com.prx.directory.jpa.repository.BusinessRepository;
 import com.prx.directory.mapper.BusinessMapper;
+import com.prx.directory.util.JwtUtil;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -25,6 +27,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -35,10 +38,14 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(value = {SpringExtension.class})
 class BusinessServiceImplTest {
+
+    @Mock
+    UserService userService;
 
     @Mock
     private BusinessRepository businessRepository;
@@ -50,7 +57,14 @@ class BusinessServiceImplTest {
     BackboneClient backboneClient;
 
     @InjectMocks
-    private BusinessServiceImpl businessService;
+    BusinessServiceImpl businessService;
+
+    private static final String T_VALUE = "Consistently relief adidas vessel ranks rica myanmar.";
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(businessService, "initialRoleId", "123e4567-e89b-12d3-a456-426614174001");
+    }
 
     @Test
     @DisplayName("Create business successfully")
@@ -262,5 +276,95 @@ class BusinessServiceImplTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(0, response.getBody().getTotalElements());
+    }
+
+    @Test
+    @DisplayName("Delete business successfully as owner")
+    void deleteBusinessSuccessfullyAsOwner() {
+        UUID businessId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        BusinessEntity businessEntity = new BusinessEntity();
+        UserEntity userEntity = new UserEntity();
+        userEntity.setId(userId);
+        businessEntity.setId(businessId);
+        businessEntity.setUserFk(userEntity);
+        try (MockedStatic<JwtUtil> mockedStatic = Mockito.mockStatic(JwtUtil.class)) {
+            mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
+
+            when(businessRepository.findById(businessId)).thenReturn(Optional.of(businessEntity));
+            when(businessRepository.findByUserId(any(UUID.class))).thenReturn(0);
+            when(userService.findUser(any(UUID.class))).thenReturn(ResponseEntity.ok(getUserResponse(userId)));
+            when(userService.update(any(UUID.class), any(PutUserRequest.class))).thenReturn(ResponseEntity.ok().build());
+            ResponseEntity<Void> response = businessService.deleteBusiness(businessId, T_VALUE);
+            assertEquals(HttpStatus.ACCEPTED, response.getStatusCode());
+        }
+    }
+
+    @Test
+    @DisplayName("Delete business forbidden when not owner")
+    void deleteBusinessForbiddenWhenNotOwner() {
+        UUID businessId = UUID.randomUUID();
+        UUID ownerId = UUID.randomUUID();
+        BusinessEntity businessEntity = new BusinessEntity();
+        UserEntity userEntity = new UserEntity();
+        userEntity.setId(ownerId);
+        businessEntity.setId(businessId);
+        businessEntity.setUserFk(userEntity);
+        try (MockedStatic<JwtUtil> mockedStatic = Mockito.mockStatic(JwtUtil.class)) {
+            mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(UUID.randomUUID());
+
+            when(businessRepository.findById(businessId)).thenReturn(Optional.of(businessEntity));
+            ResponseEntity<Void> response = businessService.deleteBusiness(businessId, T_VALUE);
+            assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        }
+    }
+
+    @Test
+    @DisplayName("Delete business not found")
+    void deleteBusinessNotFound() {
+        UUID businessId = UUID.randomUUID();
+        try (MockedStatic<JwtUtil> mockedStatic = Mockito.mockStatic(JwtUtil.class)) {
+            mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(UUID.randomUUID());
+
+            when(businessRepository.findById(businessId)).thenReturn(Optional.empty());
+            ResponseEntity<Void> response = businessService.deleteBusiness(businessId, T_VALUE);
+            assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        }
+    }
+
+    @Test
+    @DisplayName("Delete business internal server error")
+    void deleteBusinessInternalServerError() {
+        UUID businessId = UUID.randomUUID();
+        try (MockedStatic<JwtUtil> mockedStatic = Mockito.mockStatic(JwtUtil.class)) {
+            mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(UUID.randomUUID());
+
+            when(businessRepository.findById(businessId)).thenThrow(new RuntimeException("DB error"));
+            ResponseEntity<Void> response = businessService.deleteBusiness(businessId, T_VALUE);
+            assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        }
+    }
+
+    private static GetUserResponse getUserResponse(UUID userId) {
+        String alias = "userAlias";
+        String email = "user@example.com";
+        String firstName = "First";
+        String middleName = "Middle";
+        String lastName = "Last";
+        String displayName = "Alias Name";
+        UUID phoneId = UUID.randomUUID();
+        String phoneNumber = "(+1) 4167489302";
+        LocalDate dateOfBirth = LocalDate.now();
+        LocalDateTime createdAt = LocalDateTime.now();
+        LocalDateTime updatedAt = LocalDateTime.now();
+        boolean notificationEmail = true;
+        boolean notificationSms = true;
+        boolean privacyDataOutActive = true;
+        boolean status = true;
+        UUID roleId = UUID.randomUUID();
+        UUID applicationId = UUID.randomUUID();
+
+        return new GetUserResponse(userId, alias, email, firstName, middleName, lastName, displayName,
+                phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
     }
 }

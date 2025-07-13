@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.UUID;
+
 import static com.prx.security.constant.ConstantApp.SESSION_TOKEN_KEY;
 
 /// Feign client for the Mercury service. This client is used to interact with the Mercury service.
@@ -45,6 +47,6 @@ public interface MercuryClient {
      * @return true if the verification code is done, false if pending
      */
     @GetMapping("/api/v1/verification-code/latest-status")
-    Boolean isVerificationCodeDone(@RequestHeader(SESSION_TOKEN_KEY) String sessionToken, @RequestParam("userId") String userId);
+    Boolean isVerificationCodeDone(@RequestHeader(SESSION_TOKEN_KEY) String sessionToken, @RequestParam("userId") UUID userId);
 
 }

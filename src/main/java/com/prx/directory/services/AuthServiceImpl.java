@@ -7,17 +7,17 @@ import com.prx.security.service.SessionJwtService;
 import com.prx.security.to.AuthRequest;
 import com.prx.security.to.AuthResponse;
 import feign.FeignException;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.Base64;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.prx.directory.util.JwtUtil.getUidFromToken;
 import static org.apache.commons.lang3.BooleanUtils.FALSE;
 
 /**
@@ -30,7 +30,6 @@ public class AuthServiceImpl implements AuthService {
     private final SessionJwtService sessionJwtService;
     private final BackboneClient backboneClient;
     private final MercuryClient mercuryClient;
-    private static final int MAX_LENGTH = 2;
 
     /**
      * Constructor for AuthServiceImpl.
@@ -79,10 +78,11 @@ public class AuthServiceImpl implements AuthService {
         }
 
         var mercuryToken = mercuryClient.token(sessionTokenBkd, authRequest);
-        String userId = getUidFromToken(sessionTokenBkd);
+        UUID userId = getUidFromToken(sessionTokenBkd);
         try {
             verificationCodeCompleted = mercuryClient.isVerificationCodeDone(mercuryToken.token(), userId);
             parameters.put("vcCompleted", verificationCodeCompleted.toString());
+            parameters.put("uid", userId.toString());
         } catch (FeignException.NotFound e) {
             logger.info("Token verification code not found for user {}:{}", userId, authRequest.alias());
             parameters.put("vcCompleted", FALSE);
@@ -103,28 +103,5 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public boolean validate(String sessionTokenBkd) {
         return backboneClient.validate(sessionTokenBkd);
-    }
-
-    /**
-     * Extracts the uid from a JWT token.
-     *
-     * @param token the JWT token
-     * @return the uid if present, otherwise null
-     */
-    public String getUidFromToken(String token) {
-        if (token == null || token.isBlank()) {
-            return null;
-        }
-        try {
-            String[] parts = token.split("\\.");
-            if (parts.length < MAX_LENGTH) {
-                return null;
-            }
-            String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
-            JSONObject payload = new JSONObject(payloadJson);
-            return payload.optString("uid", null);
-        } catch (Exception e) {
-            return null;
-        }
     }
 }

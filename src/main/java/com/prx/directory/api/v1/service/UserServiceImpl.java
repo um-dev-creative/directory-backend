@@ -1,6 +1,6 @@
 package com.prx.directory.api.v1.service;
 
-import com.prx.commons.constants.types.MessageType;
+import com.prx.commons.constants.httpstatus.type.MessageType;
 import com.prx.commons.exception.StandardException;
 import com.prx.directory.api.v1.to.GetUserResponse;
 import com.prx.directory.api.v1.to.PutUserRequest;
