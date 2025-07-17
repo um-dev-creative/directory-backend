@@ -1,6 +1,7 @@
 package com.prx.directory.client.backbone;
 
 import com.prx.commons.general.pojo.Role;
+import com.prx.directory.api.v1.to.PostProfileImageResponse;
 import com.prx.directory.api.v1.to.PrxTokenString;
 import com.prx.directory.client.backbone.to.*;
 import com.prx.directory.client.interceptor.BackboneFeignConfigurer;
@@ -47,4 +48,7 @@ public interface BackboneClient {
 
     @DeleteMapping("/api/v1/users/application/{applicationId}/user/{userId}")
     ResponseEntity<Void> deleteUserByUserIdAndApplicationId(@PathVariable UUID applicationId, @PathVariable UUID userId);
+
+    @PostMapping(value = "/api/v1/profile/image/application/{applicationId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = {MediaType.APPLICATION_JSON_VALUE})
+    ResponseEntity<PostProfileImageResponse> saveProfilePhoto(@RequestHeader(SESSION_TOKEN_KEY) String sessionToken, @PathVariable UUID applicationId, @RequestPart byte[] image);
 }
