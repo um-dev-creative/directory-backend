@@ -4,6 +4,7 @@ import com.prx.directory.api.v1.to.PostProfileImageResponse;
 import com.prx.directory.client.backbone.BackboneClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +31,11 @@ public class ProfileImageServiceImpl implements ProfileImageService {
      */
     @Override
     public ResponseEntity<PostProfileImageResponse> save(String token, byte[] imageData) {
-        return backboneClient.saveProfilePhoto(token, UUID.fromString(applicationIdString), imageData);
+        var response = backboneClient.saveProfilePhoto(token, UUID.fromString(applicationIdString), imageData);
+        if(HttpStatus.OK.equals(response.getStatusCode())) {
+            var postProfileImageResponse = response.getBody();
+            return ResponseEntity.ok(postProfileImageResponse);
+        }
+        return response;
     }
 }
