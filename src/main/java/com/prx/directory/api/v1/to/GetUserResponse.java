@@ -16,6 +16,7 @@ public record GetUserResponse(
         String middleName,
         String lastName,
         String displayName,
+        String profileImageRef,
         UUID phoneId,
         String phoneNumber,
         @JsonFormat(pattern = DateUtil.PATTERN_DATE)
@@ -42,6 +43,7 @@ public record GetUserResponse(
                 ", middleName='" + middleName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", displayName='" + displayName + '\'' +
+                ", profileImageRef='" + profileImageRef + '\'' +
                 ", phoneId=" + phoneId +
                 ", phoneNumber='" + phoneNumber + '\'' +
                 ", dateOfBirth=" + dateOfBirth +

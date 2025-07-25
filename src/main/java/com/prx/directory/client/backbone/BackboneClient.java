@@ -51,4 +51,14 @@ public interface BackboneClient {
 
     @PostMapping(value = "/api/v1/profile/image/application/{applicationId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = {MediaType.APPLICATION_JSON_VALUE})
     ResponseEntity<PostProfileImageResponse> saveProfilePhoto(@RequestHeader(SESSION_TOKEN_KEY) String sessionToken, @PathVariable UUID applicationId, @RequestPart byte[] image);
+
+    /**
+     * Fetches the profile image reference for a user by application ID.
+     *
+     * @param applicationId The ID of the application.
+     * @return The profile image reference as a String.
+     */
+    @GetMapping("/api/v1/profile/image/application/{applicationId}/reference")
+    ResponseEntity<BackboneProfileImageRefResponse> getProfileImageRef(@RequestHeader(SESSION_TOKEN_KEY) String sessionToken,
+                                                                       @PathVariable("applicationId") UUID applicationId);
 }

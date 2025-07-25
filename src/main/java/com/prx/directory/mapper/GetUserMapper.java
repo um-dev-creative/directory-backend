@@ -32,21 +32,22 @@ public interface GetUserMapper {
     /// @see BackboneUserGetResponse
     /// @see GetUserResponse
     /// @see GetUserMapper
-    @Mapping(target = "id", source = "id")
-    @Mapping(target = "alias", source = "alias")
-    @Mapping(target = "email", source = "email")
-    @Mapping(target = "firstName", source = "person.firstName")
-    @Mapping(target = "middleName", source = "person.middleName")
-    @Mapping(target = "lastName", source = "person.lastName")
-    @Mapping(target = "updatedAt", source = "lastUpdate")
-    @Mapping(target = "createdAt", source = "createdDate")
-    @Mapping(target = "dateOfBirth", source = "person.birthdate")
+    @Mapping(target = "id", source = "backboneUserGetResponse.id")
+    @Mapping(target = "alias", source = "backboneUserGetResponse.alias")
+    @Mapping(target = "email", source = "backboneUserGetResponse.email")
+    @Mapping(target = "firstName", source = "backboneUserGetResponse.person.firstName")
+    @Mapping(target = "middleName", source = "backboneUserGetResponse.person.middleName")
+    @Mapping(target = "lastName", source = "backboneUserGetResponse.person.lastName")
+    @Mapping(target = "profileImageRef", source = "profileImageRef")
+    @Mapping(target = "updatedAt", source = "backboneUserGetResponse.lastUpdate")
+    @Mapping(target = "createdAt", source = "backboneUserGetResponse.createdDate")
+    @Mapping(target = "dateOfBirth", source = "backboneUserGetResponse.person.birthdate")
     @Mapping(target = "phoneId", expression = "java(getContactId(backboneUserGetResponse.person()))")
     @Mapping(target = "phoneNumber", expression = "java(getPhone(backboneUserGetResponse.person()))")
-    @Mapping(target = "status", source = "active")
+    @Mapping(target = "status", source = "backboneUserGetResponse.active")
     @Mapping(target = "roleId", expression = "java(getRoleId(backboneUserGetResponse))")
     @Mapping(target = "applicationId", expression = "java(getApplicationId(backboneUserGetResponse))")
-    GetUserResponse fromBackbone(BackboneUserGetResponse backboneUserGetResponse);
+    GetUserResponse fromBackbone(BackboneUserGetResponse backboneUserGetResponse, String profileImageRef);
 
     default UUID getRoleId(BackboneUserGetResponse backboneUserGetResponse) {
         List<Role> roles = backboneUserGetResponse.roles();

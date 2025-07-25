@@ -92,10 +92,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<GetUserResponse> findUser(UUID id) {
+    public ResponseEntity<GetUserResponse> findUser(String token, UUID id) {
         try {
+            UUID applicationID = UUID.fromString(applicationIdString);
             var result = backboneClient.findUserById(id);
-            return ResponseEntity.ok(getUserMapper.fromBackbone(result));
+            var profileImageRef = backboneClient.getProfileImageRef(token, applicationID);
+            var profileRef = Objects.nonNull(profileImageRef.getBody()) && Objects.nonNull(profileImageRef.getBody().ref()) ?
+                    profileImageRef.getBody().ref() : "";
+            return ResponseEntity.ok(getUserMapper.fromBackbone(result,profileRef));
         } catch (FeignException e) {
             logger.warn("Error finding user: {}", e.getMessage());
             if (e.status() == HttpStatus.NOT_FOUND.value()) {

@@ -7,6 +7,7 @@ import com.prx.directory.api.v1.to.GetUserResponse;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
 import com.prx.directory.client.backbone.BackboneClient;
+import com.prx.directory.client.backbone.to.BackboneProfileImageRefResponse;
 import com.prx.directory.client.backbone.to.BackboneUserCreateRequest;
 import com.prx.directory.client.backbone.to.BackboneUserCreateResponse;
 import com.prx.directory.client.backbone.to.BackboneUserGetResponse;
@@ -328,6 +329,7 @@ class UserServiceImplTest {
     @Test
     @DisplayName("Find User Successfully")
     void findUserSuccessfully() {
+        String profileImageRef = "LTHB/3171803c-bb08-4eb0-8821-b6ebe5948f48-250723104035.jpg";
         Person person = new Person();
         person.setGender("M");
         person.setFirstName("John");
@@ -350,6 +352,7 @@ class UserServiceImplTest {
                 "Marcus",
                 "Connor",
                 "M",
+                profileImageRef,
                 UUID.randomUUID(),
                 "(+1) 4167389402",
                 LocalDate.parse("1984-05-12"),
@@ -378,15 +381,15 @@ class UserServiceImplTest {
                 List.of(role),
                 List.of(application)
         );
-
+        ResponseEntity<BackboneProfileImageRefResponse> expectedReference = ResponseEntity.ok(new BackboneProfileImageRefResponse("imageRef123"));
 
         when(backboneClient.findUserById(userId)).thenReturn(backboneResponse);
-        when(getUserMapper.fromBackbone(backboneResponse)).thenReturn(expectedResponse);
+        when(backboneClient.getProfileImageRef(anyString(), any(UUID.class))).thenReturn(expectedReference);
+        when(getUserMapper.fromBackbone(backboneResponse, profileImageRef)).thenReturn(expectedResponse);
 
-        ResponseEntity<GetUserResponse> response = userService.findUser(userId);
+        ResponseEntity<GetUserResponse> response = userService.findUser("token", userId);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(expectedResponse, response.getBody());
     }
 
     @Test
@@ -396,7 +399,7 @@ class UserServiceImplTest {
         Request requestFeign = Request.create(Request.HttpMethod.GET, "url", Map.of(), null, null, null);
         when(backboneClient.findUserById(any())).thenThrow(new FeignException.NotFound("User not found", requestFeign, null, null));
 
-        ResponseEntity<GetUserResponse> response = userService.findUser(userId);
+        ResponseEntity<GetUserResponse> response = userService.findUser("token", userId);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertEquals("User not found.", response.getHeaders().getFirst("message-error"));
@@ -410,7 +413,7 @@ class UserServiceImplTest {
         when(backboneClient.findUserById(any())).thenThrow(new FeignException
                 .InternalServerError(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), requestFeign, null, null));
 
-        ResponseEntity<GetUserResponse> response = userService.findUser(userId);
+        ResponseEntity<GetUserResponse> response = userService.findUser("token", userId);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }

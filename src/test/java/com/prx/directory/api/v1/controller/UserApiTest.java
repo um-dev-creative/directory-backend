@@ -149,6 +149,7 @@ class UserApiTest {
     @DisplayName("findUser should return OK status with valid ID")
     void findUserShouldReturnOkStatusWithValidID() {
         UUID userId = UUID.randomUUID();
+        String profileImageRef = "LTHB/3171803c-bb08-4eb0-8821-b6ebe5948f48-250723104035.jpg";
         GetUserResponse response = new GetUserResponse(
                 userId,
                 "John",
@@ -157,6 +158,7 @@ class UserApiTest {
                 "Marcus",
                 "Connor",
                 "John M",
+                profileImageRef,
                 UUID.randomUUID(),
                 "(+1) 4167487564",
                 LocalDate.now(),
@@ -169,9 +171,9 @@ class UserApiTest {
                 UUID.randomUUID(),
                 UUID.randomUUID()
         );
-        when(userService.findUser(userId)).thenReturn(ResponseEntity.ok(response));
+        when(userService.findUser("token", userId)).thenReturn(ResponseEntity.ok(response));
 
-        ResponseEntity<GetUserResponse> result = userApi.userGet(userId);
+        ResponseEntity<GetUserResponse> result = userApi.userGet("token", userId);
 
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals(response, result.getBody());
@@ -181,9 +183,9 @@ class UserApiTest {
     @DisplayName("findUser should return NOT_FOUND status with non-existent ID")
     void findUserShouldReturnNotFoundStatusWithNonExistentID() {
         UUID userId = UUID.randomUUID();
-        when(userService.findUser(userId)).thenReturn(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+        when(userService.findUser("token", userId)).thenReturn(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
 
-        ResponseEntity<GetUserResponse> result = userApi.userGet(userId);
+        ResponseEntity<GetUserResponse> result = userApi.userGet("token", userId);
 
         assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
     }
@@ -193,9 +195,9 @@ class UserApiTest {
     @DisplayName("findUser should return INTERNAL_SERVER_ERROR status with server error")
     void findUserShouldReturnInternalServerErrorStatusWithServerError() {
         UUID userId = UUID.randomUUID();
-        when(userService.findUser(userId)).thenReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
+        when(userService.findUser("token", userId)).thenReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
 
-        ResponseEntity<GetUserResponse> result = userApi.userGet(userId);
+        ResponseEntity<GetUserResponse> result = userApi.userGet("token", userId);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
     }

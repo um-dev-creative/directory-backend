@@ -293,7 +293,7 @@ class BusinessServiceImplTest {
 
             when(businessRepository.findById(businessId)).thenReturn(Optional.of(businessEntity));
             when(businessRepository.findByUserId(any(UUID.class))).thenReturn(0);
-            when(userService.findUser(any(UUID.class))).thenReturn(ResponseEntity.ok(getUserResponse(userId)));
+            when(userService.findUser(anyString(), any(UUID.class))).thenReturn(ResponseEntity.ok(getUserResponse(userId)));
             when(userService.update(any(UUID.class), any(PutUserRequest.class))).thenReturn(ResponseEntity.ok().build());
             ResponseEntity<Void> response = businessService.deleteBusiness(businessId, T_VALUE);
             assertEquals(HttpStatus.ACCEPTED, response.getStatusCode());
@@ -346,6 +346,7 @@ class BusinessServiceImplTest {
     }
 
     private static GetUserResponse getUserResponse(UUID userId) {
+        String profileImageRef = "LTHB/3171803c-bb08-4eb0-8821-b6ebe5948f48-250723104035.jpg";
         String alias = "userAlias";
         String email = "user@example.com";
         String firstName = "First";
@@ -364,7 +365,7 @@ class BusinessServiceImplTest {
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        return new GetUserResponse(userId, alias, email, firstName, middleName, lastName, displayName,
+        return new GetUserResponse(userId, alias, email, firstName, middleName, lastName, displayName, profileImageRef,
                 phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
     }
 }

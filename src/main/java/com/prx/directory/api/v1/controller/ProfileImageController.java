@@ -27,3 +27,4 @@ public class ProfileImageController implements ProfileImageApi {
         return profileImageService.save(token, imageData);
     }
 }
+
