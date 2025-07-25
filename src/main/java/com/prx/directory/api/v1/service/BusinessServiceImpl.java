@@ -187,7 +187,7 @@ public class BusinessServiceImpl implements BusinessService {
             businessRepository.deleteById(businessId);
             var countResult = businessRepository.findByUserId(userId);
             if(countResult <= 0 ) {
-                return updateUserRole(userId);
+                return updateUserRole(token, userId);
             }
             return ResponseEntity.ok().build();
         } catch (Exception e) {
@@ -195,8 +195,8 @@ public class BusinessServiceImpl implements BusinessService {
         }
     }
 
-    private ResponseEntity<Void> updateUserRole(UUID userId) {
-        var findUserResponse = userService.findUser(userId);
+    private ResponseEntity<Void> updateUserRole(String token, UUID userId) {
+        var findUserResponse = userService.findUser(token, userId);
         if(Objects.nonNull(findUserResponse) && findUserResponse.getStatusCode().is2xxSuccessful()) {
             var businessRoleId = UUID.fromString(initialRoleId);
             var currentUser = findUserResponse.getBody();

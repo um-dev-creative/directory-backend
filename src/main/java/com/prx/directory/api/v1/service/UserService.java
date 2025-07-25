@@ -33,7 +33,7 @@ public interface UserService {
     /// @see ResponseEntity
     /// @see HttpStatus
     /// @see UUID
-    default ResponseEntity<GetUserResponse> findUser(UUID id) {
+    default ResponseEntity<GetUserResponse> findUser(String token, UUID id) {
         return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
     }
 

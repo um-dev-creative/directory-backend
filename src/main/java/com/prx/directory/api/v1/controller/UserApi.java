@@ -3,6 +3,7 @@ package com.prx.directory.api.v1.controller;
 import com.prx.directory.api.v1.service.UserService;
 import com.prx.directory.api.v1.to.*;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -14,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+
+import static com.prx.security.constant.ConstantApp.SESSION_TOKEN_KEY;
 
 /// User API interface for handling user-related operations.
 @Tag(name="user", description="The user API")
@@ -63,8 +66,11 @@ public interface UserApi {
         @ApiResponse(responseCode = "404", description = "User not found", content = @Content)
     })
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    default ResponseEntity<GetUserResponse> userGet(@NotNull @PathVariable UUID id) {
-        return this.getService().findUser(id);
+    default ResponseEntity<GetUserResponse> userGet(
+            @Parameter(description = "Token session", required = true)
+            @RequestHeader(SESSION_TOKEN_KEY) String token,
+            @NotNull @PathVariable UUID id) {
+        return this.getService().findUser(token, id);
     }
 
     /// Updates a user by ID.

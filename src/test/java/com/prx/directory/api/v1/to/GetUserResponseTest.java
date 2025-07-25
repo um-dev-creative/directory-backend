@@ -15,6 +15,7 @@ class GetUserResponseTest {
     @Test
     @DisplayName("Create UseGetResponse with valid data")
     void createUseGetResponseWithValidData() {
+        String profileImageRef = "LTHB/3171803c-bb08-4eb0-8821-b6ebe5948f48-250723104035.jpg";
         UUID id = UUID.randomUUID();
         String alias = "userAlias";
         String email = "user@example.com";
@@ -34,7 +35,7 @@ class GetUserResponseTest {
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName,
+        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName, profileImageRef,
                 phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         assertEquals(id, response.id());
@@ -60,6 +61,7 @@ class GetUserResponseTest {
     @Test
     @DisplayName("Create UseGetResponse with null id")
     void createUseGetResponseWithNullId() {
+        String profileImageRef = "LTHB/3171803c-bb08-4eb0-8821-b6ebe5948f48-250723104035.jpg";
         String alias = "userAlias";
         String email = "user@example.com";
         String firstName = "First";
@@ -78,7 +80,7 @@ class GetUserResponseTest {
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        GetUserResponse response = new GetUserResponse(null, alias, email, firstName, middleName, lastName, displayName,
+        GetUserResponse response = new GetUserResponse(null, alias, email, firstName, middleName, lastName, displayName, profileImageRef,
                 phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
@@ -105,6 +107,7 @@ class GetUserResponseTest {
     @DisplayName("Create UseGetResponse with null alias")
     void createUseGetResponseWithNullAlias() {
         UUID id = UUID.randomUUID();
+        String profileImageRef = "LTHB/3171803c-bb08-4eb0-8821-b6ebe5948f48-250723104035.jpg";
         String email = "user@example.com";
         String firstName = "First";
         String middleName = "Middle";
@@ -122,7 +125,7 @@ class GetUserResponseTest {
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        GetUserResponse response = new GetUserResponse(id, null, email, firstName, middleName, lastName, displayName,
+        GetUserResponse response = new GetUserResponse(id, null, email, firstName, middleName, lastName, displayName, profileImageRef,
                 phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
@@ -148,6 +151,7 @@ class GetUserResponseTest {
     @Test
     @DisplayName("Create UseGetResponse with null email")
     void createUseGetResponseWithNullEmail() {
+        String profileImageRef = "LTHB/3171803c-bb08-4eb0-8821-b6ebe5948f48-250723104035.jpg";
         UUID id = UUID.randomUUID();
         String alias = "userAlias";
         String firstName = "First";
@@ -166,7 +170,7 @@ class GetUserResponseTest {
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        GetUserResponse response = new GetUserResponse(id, alias, null, firstName, middleName, lastName, displayName,
+        GetUserResponse response = new GetUserResponse(id, alias, null, firstName, middleName, lastName, displayName, profileImageRef,
                 phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
@@ -192,6 +196,7 @@ class GetUserResponseTest {
     @Test
     @DisplayName("Create UseGetResponse with null firstName")
     void createUseGetResponseWithNullFirstName() {
+        String profileImageRef = "LTHB/3171803c-bb08-4eb0-8821-b6ebe5948f48-250723104035.jpg";
         String phoneNumber = "(+1) 4167489302";
         UUID phoneId = UUID.randomUUID();
         String displayName = "Alias Name";
@@ -210,7 +215,7 @@ class GetUserResponseTest {
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        GetUserResponse response = new GetUserResponse(id, alias, email, null, middleName, lastName, displayName,
+        GetUserResponse response = new GetUserResponse(id, alias, email, null, middleName, lastName, displayName, profileImageRef,
                 phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
@@ -236,6 +241,7 @@ class GetUserResponseTest {
     @Test
     @DisplayName("Create UseGetResponse with null middleName")
     void createUseGetResponseWithNullMiddleName() {
+        String profileImageRef = "LTHB/3171803c-bb08-4eb0-8821-b6ebe5948f48-250723104035.jpg";
         String phoneNumber = "(+1) 4167489302";
         UUID phoneId = UUID.randomUUID();
         String displayName = "Alias Name";
@@ -254,7 +260,7 @@ class GetUserResponseTest {
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, null, lastName, displayName,
+        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, null, lastName, displayName, profileImageRef,
                 phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
@@ -280,6 +286,7 @@ class GetUserResponseTest {
     @Test
     @DisplayName("Create UseGetResponse with null lastName")
     void createUseGetResponseWithNullLastName() {
+        String profileImageRef = "LTHB/3171803c-bb08-4eb0-8821-b6ebe5948f48-250723104035.jpg";
         String phoneNumber = "(+1) 4167489302";
         UUID phoneId = UUID.randomUUID();
         String displayName = "Alias Name";
@@ -298,7 +305,7 @@ class GetUserResponseTest {
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, null, displayName,
+        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, null, displayName, profileImageRef,
                 phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
@@ -324,6 +331,7 @@ class GetUserResponseTest {
     @Test
     @DisplayName("Create UseGetResponse with null phoneId")
     void createUseGetResponseWithNullPhoneId() {
+        String profileImageRef = "LTHB/3171803c-bb08-4eb0-8821-b6ebe5948f48-250723104035.jpg";
         String phoneNumber = "(+1) 4167489302";
         String displayName = "Alias Name";
         boolean notificationEmail = true;
@@ -342,7 +350,7 @@ class GetUserResponseTest {
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName,
+        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName, profileImageRef,
                 null, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
@@ -368,6 +376,7 @@ class GetUserResponseTest {
     @Test
     @DisplayName("Create UseGetResponse with null phoneNumber")
     void createUseGetResponseWithNullPhoneNumber() {
+        String profileImageRef = "LTHB/3171803c-bb08-4eb0-8821-b6ebe5948f48-250723104035.jpg";
         UUID phoneId = UUID.randomUUID();
         String displayName = "Alias Name";
         boolean notificationEmail = true;
@@ -386,7 +395,7 @@ class GetUserResponseTest {
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName,
+        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName, profileImageRef,
                 phoneId, null, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
@@ -412,6 +421,7 @@ class GetUserResponseTest {
     @Test
     @DisplayName("Create UseGetResponse with null dateOfBirth")
     void createUseGetResponseWithNullDateOfBirth() {
+        String profileImageRef = "LTHB/3171803c-bb08-4eb0-8821-b6ebe5948f48-250723104035.jpg";
         String phoneNumber = "(+1) 4167489302";
         UUID phoneId = UUID.randomUUID();
         String displayName = "Alias Name";
@@ -430,7 +440,7 @@ class GetUserResponseTest {
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName,
+        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName, profileImageRef,
                 phoneId, phoneNumber, null, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
@@ -456,6 +466,7 @@ class GetUserResponseTest {
     @Test
     @DisplayName("Create UseGetResponse with null createdAt")
     void createUseGetResponseWithNullCreatedAt() {
+        String profileImageRef = "LTHB/3171803c-bb08-4eb0-8821-b6ebe5948f48-250723104035.jpg";
         String phoneNumber = "(+1) 4167489302";
         UUID phoneId = UUID.randomUUID();
         String displayName = "Alias Name";
@@ -473,7 +484,7 @@ class GetUserResponseTest {
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName,
+        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName, profileImageRef,
                 phoneId, phoneNumber, dateOfBirth, null, updatedAt, notificationEmail, notificationEmail, privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
@@ -496,6 +507,7 @@ class GetUserResponseTest {
     @Test
     @DisplayName("Create UseGetResponse with null updatedAt")
     void createUseGetResponseWithNullUpdatedAt() {
+        String profileImageRef = "LTHB/3171803c-bb08-4eb0-8821-b6ebe5948f48-250723104035.jpg";
         String phoneNumber = "(+1) 4167489302";
         UUID phoneId = UUID.randomUUID();
         String displayName = "Alias Name";
@@ -514,7 +526,7 @@ class GetUserResponseTest {
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName,
+        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName, profileImageRef,
                 phoneId, phoneNumber, dateOfBirth, createdAt, null, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
@@ -537,6 +549,7 @@ class GetUserResponseTest {
     @Test
     @DisplayName("UseGetResponse toString method")
     void useGetResponseToString() {
+        String profileImageRef = "LTHB/3171803c-bb08-4eb0-8821-b6ebe5948f48-250723104035.jpg";
         String phoneNumber = "(+1) 4167489302";
         UUID phoneId = UUID.randomUUID();
         String displayName = "Alias Name";
@@ -556,7 +569,7 @@ class GetUserResponseTest {
         UUID roleId = UUID.randomUUID();
         UUID applicationId = UUID.randomUUID();
 
-        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName,
+        GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName, profileImageRef,
                 phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         String expectedString = "UseGetResponse{" +
@@ -567,6 +580,7 @@ class GetUserResponseTest {
                 ", middleName='" + middleName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", displayName='" + displayName + '\'' +
+                ", profileImageRef='" + profileImageRef + '\'' +
                 ", phoneId=" + phoneId +
                 ", phoneNumber='" + phoneNumber + '\'' +
                 ", dateOfBirth=" + dateOfBirth +
