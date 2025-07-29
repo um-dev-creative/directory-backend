@@ -77,7 +77,7 @@ public interface CategoryApi {
             @ApiResponse(responseCode = "200", description = "Categories retrieved successfully",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = Collection.class))),
-            @ApiResponse(responseCode = "404", description = "No categories found", content = @Content),
+            // Removed 404 response as it is not appropriate for findAll operation
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     @GetMapping
