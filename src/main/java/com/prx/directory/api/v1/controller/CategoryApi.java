@@ -21,6 +21,7 @@ import java.util.UUID;
 ///
 /// @see CategoryService
 /// @see CategoryGetResponse
+@Schema(description = "/ REST controller for category-related operations.// @see CategoryService/ @see CategoryGetResponse")
 @Tag(name = "categories", description = "The Category API")
 public interface CategoryApi {
 
@@ -64,5 +65,23 @@ public interface CategoryApi {
     @GetMapping(path = "/parent/{parentId}", produces = MediaType.APPLICATION_JSON_VALUE)
     default ResponseEntity<Collection<CategoryGetResponse>> findByParentId(@NotNull @PathVariable UUID parentId) {
         return getService().findByParentId(parentId);
+    }
+
+    /**
+     * Retrieves all categories.
+     *
+     * @return a {@link ResponseEntity} containing a collection of {@link CategoryGetResponse} objects
+     */
+    @Operation(summary = "Retrieve all categories", description = "Returns a collection of all available categories.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Categories retrieved successfully",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = Collection.class))),
+            @ApiResponse(responseCode = "404", description = "No categories found", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
+    @GetMapping
+    default ResponseEntity<Collection<CategoryGetResponse>> findAll() {
+        return getService().findAll();
     }
 }

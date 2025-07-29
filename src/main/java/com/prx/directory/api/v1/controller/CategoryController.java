@@ -28,4 +28,9 @@ public class CategoryController implements CategoryApi {
     public ResponseEntity<Collection<CategoryGetResponse>> findByParentId(UUID parentId) {
         return categoryService.findByParentId(parentId);
     }
+
+    @Override
+    public ResponseEntity<Collection<CategoryGetResponse>> findAll() {
+        return categoryService.findAll();
+    }
 }
