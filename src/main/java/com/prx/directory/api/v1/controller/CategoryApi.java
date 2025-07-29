@@ -21,7 +21,7 @@ import java.util.UUID;
 ///
 /// @see CategoryService
 /// @see CategoryGetResponse
-@Schema(description = "/ REST controller for category-related operations.// @see CategoryService/ @see CategoryGetResponse")
+@Schema(description = "REST controller for category-related operations. @see CategoryService @see CategoryGetResponse")
 @Tag(name = "categories", description = "The Category API")
 public interface CategoryApi {
 
