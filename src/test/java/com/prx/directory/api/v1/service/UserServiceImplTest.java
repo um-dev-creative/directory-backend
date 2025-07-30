@@ -11,6 +11,7 @@ import com.prx.directory.client.backbone.to.BackboneProfileImageRefResponse;
 import com.prx.directory.client.backbone.to.BackboneUserCreateRequest;
 import com.prx.directory.client.backbone.to.BackboneUserCreateResponse;
 import com.prx.directory.client.backbone.to.BackboneUserGetResponse;
+import com.prx.directory.jpa.repository.BusinessRepository;
 import com.prx.directory.kafka.producer.EmailMessageProducerService;
 import com.prx.directory.mapper.GetUserMapper;
 import com.prx.directory.mapper.UserCreateMapper;
@@ -29,6 +30,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -48,6 +50,8 @@ class UserServiceImplTest {
     UserCreateMapper userCreateMapper;
     @Mock
     GetUserMapper getUserMapper;
+    @Mock
+    BusinessRepository businessRepository;
     @Mock
     EmailMessageProducerService emailMessageProducerService;
     @InjectMocks
@@ -355,6 +359,7 @@ class UserServiceImplTest {
                 profileImageRef,
                 UUID.randomUUID(),
                 "(+1) 4167389402",
+                Collections.emptySet(),
                 LocalDate.parse("1984-05-12"),
                 LocalDateTime.now(),
                 LocalDateTime.now(),
@@ -384,8 +389,9 @@ class UserServiceImplTest {
         ResponseEntity<BackboneProfileImageRefResponse> expectedReference = ResponseEntity.ok(new BackboneProfileImageRefResponse("imageRef123"));
 
         when(backboneClient.findUserById(userId)).thenReturn(backboneResponse);
+        when(businessRepository.findIdCollectionById(any(UUID.class))).thenReturn(Collections.emptySet());
         when(backboneClient.getProfileImageRef(anyString(), any(UUID.class))).thenReturn(expectedReference);
-        when(getUserMapper.fromBackbone(backboneResponse, profileImageRef)).thenReturn(expectedResponse);
+        when(getUserMapper.fromBackbone(backboneResponse, profileImageRef, Collections.emptySet())).thenReturn(expectedResponse);
 
         ResponseEntity<GetUserResponse> response = userService.findUser("token", userId);
 

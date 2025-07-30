@@ -8,6 +8,7 @@ import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
 import com.prx.directory.client.backbone.BackboneClient;
 import com.prx.directory.client.backbone.to.BackboneUserUpdateRequest;
+import com.prx.directory.jpa.repository.BusinessRepository;
 import com.prx.directory.kafka.producer.EmailMessageProducerService;
 import com.prx.directory.kafka.to.EmailMessageTO;
 import com.prx.directory.kafka.to.Recipient;
@@ -51,6 +52,7 @@ public class UserServiceImpl implements UserService {
     private final PutUserMapper putUserMapper;
     private final BackboneClient backboneClient;
     private final GetUserMapper getUserMapper;
+    private final BusinessRepository businessRepository;
 
     /// Constructs a new UserServiceImpl with the specified BackboneClient and UserCreateMapper.
     ///
@@ -58,12 +60,13 @@ public class UserServiceImpl implements UserService {
     /// @param userCreateMapper the mapper used to convert between request/response objects and backend objects
     public UserServiceImpl(BackboneClient backboneClient, EmailMessageProducerService emailMessageProducerService,
                            UserCreateMapper userCreateMapper, PutUserMapper putUserMapper,
-                           GetUserMapper getUserMapper) {
+                           GetUserMapper getUserMapper, BusinessRepository businessRepository) {
         this.emailMessageProducerService = emailMessageProducerService;
         this.userCreateMapper = userCreateMapper;
         this.backboneClient = backboneClient;
         this.putUserMapper = putUserMapper;
         this.getUserMapper = getUserMapper;
+        this.businessRepository = businessRepository;
     }
 
     @Override
@@ -99,7 +102,8 @@ public class UserServiceImpl implements UserService {
             var profileImageRef = backboneClient.getProfileImageRef(token, applicationID);
             var profileRef = Objects.nonNull(profileImageRef.getBody()) && Objects.nonNull(profileImageRef.getBody().ref()) ?
                     profileImageRef.getBody().ref() : "";
-            return ResponseEntity.ok(getUserMapper.fromBackbone(result,profileRef));
+            var businessIds = businessRepository.findIdCollectionById(id);
+            return ResponseEntity.ok(getUserMapper.fromBackbone(result, profileRef, businessIds));
         } catch (FeignException e) {
             logger.warn("Error finding user: {}", e.getMessage());
             if (e.status() == HttpStatus.NOT_FOUND.value()) {
@@ -270,8 +274,6 @@ public class UserServiceImpl implements UserService {
     ///
     /// This method uses [SecureRandom] to generate a random integer between 1000 and 9999 (inclusive), ensuring
     /// that the result is always a four-digit number. This can be used for purposes such as verification codes or temporary PINs.
-    ///
-    ///
     /// @return a random four-digit integer between 1000 and 9999
     public int generateFourDigitNumber() {
         SecureRandom random = new SecureRandom();

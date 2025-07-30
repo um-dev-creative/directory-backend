@@ -5,11 +5,13 @@ import com.prx.directory.api.v1.to.BusinessCreateResponse;
 import com.prx.directory.api.v1.to.BusinessTO;
 import com.prx.directory.api.v1.to.LinkBusinessProductResponse;
 import jakarta.validation.constraints.NotNull;
+// Removed the import for org.glassfish.jersey.internal.guava.Sets as it is no longer used.
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.Set;
 import java.util.UUID;
 
 /// Service interface for business-related operations.
@@ -63,4 +65,7 @@ public interface BusinessService {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
+    default Set<UUID> findIdByUserId(UUID id) {
+        return new HashSet<>();
+    }
 }

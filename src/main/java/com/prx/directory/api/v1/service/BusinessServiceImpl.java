@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 import static com.prx.directory.constant.DirectoryAppConstants.MESSAGE_HEADER;
@@ -185,7 +186,7 @@ public class BusinessServiceImpl implements BusinessService {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             businessRepository.deleteById(businessId);
-            var countResult = businessRepository.findByUserId(userId);
+            var countResult = businessRepository.countByUserId(userId);
             if(countResult <= 0 ) {
                 return updateUserRole(token, userId);
             }
@@ -193,6 +194,14 @@ public class BusinessServiceImpl implements BusinessService {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @Override
+    public Set<UUID> findIdByUserId(UUID id) {
+        if(Objects.isNull(id)) {
+            return new HashSet<>();
+        }
+        return businessRepository.findIdCollectionById(id);
     }
 
     private ResponseEntity<Void> updateUserRole(String token, UUID userId) {

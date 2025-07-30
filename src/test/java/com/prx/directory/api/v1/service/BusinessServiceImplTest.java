@@ -292,7 +292,7 @@ class BusinessServiceImplTest {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
 
             when(businessRepository.findById(businessId)).thenReturn(Optional.of(businessEntity));
-            when(businessRepository.findByUserId(any(UUID.class))).thenReturn(0);
+            when(businessRepository.countByUserId(any(UUID.class))).thenReturn(0);
             when(userService.findUser(anyString(), any(UUID.class))).thenReturn(ResponseEntity.ok(getUserResponse(userId)));
             when(userService.update(any(UUID.class), any(PutUserRequest.class))).thenReturn(ResponseEntity.ok().build());
             ResponseEntity<Void> response = businessService.deleteBusiness(businessId, T_VALUE);
@@ -366,6 +366,6 @@ class BusinessServiceImplTest {
         UUID applicationId = UUID.randomUUID();
 
         return new GetUserResponse(userId, alias, email, firstName, middleName, lastName, displayName, profileImageRef,
-                phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
+                phoneId, phoneNumber, Collections.emptySet(), dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
     }
 }
