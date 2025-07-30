@@ -199,7 +199,7 @@ public class BusinessServiceImpl implements BusinessService {
     @Override
     public Set<UUID> findIdByUserId(UUID id) {
         if(Objects.isNull(id)) {
-            return Sets.newHashSet();
+            return new HashSet<>();
         }
         return businessRepository.findIdCollectionById(id);
     }
