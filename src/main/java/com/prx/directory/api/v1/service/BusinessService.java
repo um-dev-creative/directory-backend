@@ -66,6 +66,6 @@ public interface BusinessService {
     }
 
     default Set<UUID> findIdByUserId(UUID id) {
-        return Sets.newHashSet();
+        return new HashSet<>();
     }
 }
