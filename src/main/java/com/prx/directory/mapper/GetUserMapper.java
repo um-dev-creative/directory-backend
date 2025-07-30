@@ -10,6 +10,7 @@ import org.mapstruct.*;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 @Mapper(
@@ -47,7 +48,8 @@ public interface GetUserMapper {
     @Mapping(target = "status", source = "backboneUserGetResponse.active")
     @Mapping(target = "roleId", expression = "java(getRoleId(backboneUserGetResponse))")
     @Mapping(target = "applicationId", expression = "java(getApplicationId(backboneUserGetResponse))")
-    GetUserResponse fromBackbone(BackboneUserGetResponse backboneUserGetResponse, String profileImageRef);
+    @Mapping(target = "businessIds", source = "businessIds")
+    GetUserResponse fromBackbone(BackboneUserGetResponse backboneUserGetResponse, String profileImageRef, Set<UUID> businessIds);
 
     default UUID getRoleId(BackboneUserGetResponse backboneUserGetResponse) {
         List<Role> roles = backboneUserGetResponse.roles();

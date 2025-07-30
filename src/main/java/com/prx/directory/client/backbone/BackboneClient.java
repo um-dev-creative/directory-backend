@@ -26,11 +26,10 @@ public interface BackboneClient {
     @GetMapping("/api/v1/users/check/email/{email}/application/{applicationId}")
     ResponseEntity<Void> checkEmail(@PathVariable String email, @PathVariable UUID applicationId);
 
-    ///  Generates a session token based on the provided authentication request.
-    ///
-    /// @param backboneTokenRequest the authentication request containing user alias
-    /// @return a PrxTokenString containing the authentication response with the session token
-    /// @see ResponseEntity
+    // Generates a session token based on the provided authentication request.
+    // @param backboneTokenRequest the authentication request containing user alias
+    // @return a PrxTokenString containing the authentication response with the session token
+    // @see ResponseEntity
     @PostMapping("/api/v1/session/token")
     PrxTokenString token(BackboneTokenRequest backboneTokenRequest);
 

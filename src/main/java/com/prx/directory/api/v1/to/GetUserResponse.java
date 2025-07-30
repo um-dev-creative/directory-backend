@@ -5,6 +5,7 @@ import com.prx.commons.util.DateUtil;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 /// Represents the response object for a user get operation.
@@ -19,6 +20,7 @@ public record GetUserResponse(
         String profileImageRef,
         UUID phoneId,
         String phoneNumber,
+        Set<UUID> businessIds,
         @JsonFormat(pattern = DateUtil.PATTERN_DATE)
         LocalDate dateOfBirth,
         @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME)

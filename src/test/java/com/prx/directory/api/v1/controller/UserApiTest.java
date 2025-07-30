@@ -15,6 +15,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -161,6 +162,7 @@ class UserApiTest {
                 profileImageRef,
                 UUID.randomUUID(),
                 "(+1) 4167487564",
+                Collections.emptySet(),
                 LocalDate.now(),
                 LocalDateTime.now(),
                 LocalDateTime.now(),

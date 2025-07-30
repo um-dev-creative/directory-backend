@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -24,5 +25,8 @@ public interface BusinessRepository extends JpaRepository<BusinessEntity, UUID> 
     Optional<BusinessEntity> findByName(@NotNull String name);
 
     @Query("SELECT count(bu.id) FROM BusinessEntity bu WHERE bu.userEntityFk.id = :userId")
-    int findByUserId(@Param("userId") UUID userId);
+    int countByUserId(@Param("userId") UUID userId);
+
+    @Query("SELECT b.id FROM BusinessEntity  b WHERE b.userEntityFk.id = :userId")
+    Set<UUID> findIdCollectionById(@Param("userId") UUID userId);
 }

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,7 +37,8 @@ class GetUserResponseTest {
         UUID applicationId = UUID.randomUUID();
 
         GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName, profileImageRef,
-                phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
+                phoneId, phoneNumber, Collections.emptySet(), dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive,
+                status, roleId, applicationId);
 
         assertEquals(id, response.id());
         assertEquals(alias, response.alias());
@@ -81,7 +83,8 @@ class GetUserResponseTest {
         UUID applicationId = UUID.randomUUID();
 
         GetUserResponse response = new GetUserResponse(null, alias, email, firstName, middleName, lastName, displayName, profileImageRef,
-                phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
+                phoneId, phoneNumber, Collections.emptySet(), dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive,
+                status, roleId, applicationId);
 
         assertNotNull(response);
         assertEquals(alias, response.alias());
@@ -126,7 +129,7 @@ class GetUserResponseTest {
         UUID applicationId = UUID.randomUUID();
 
         GetUserResponse response = new GetUserResponse(id, null, email, firstName, middleName, lastName, displayName, profileImageRef,
-                phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
+                phoneId, phoneNumber, Collections.emptySet(), dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
         assertEquals(id, response.id());
@@ -171,7 +174,8 @@ class GetUserResponseTest {
         UUID applicationId = UUID.randomUUID();
 
         GetUserResponse response = new GetUserResponse(id, alias, null, firstName, middleName, lastName, displayName, profileImageRef,
-                phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
+                phoneId, phoneNumber, Collections.emptySet(), dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive,
+                status, roleId, applicationId);
 
         assertNotNull(response);
         assertEquals(id, response.id());
@@ -216,7 +220,8 @@ class GetUserResponseTest {
         UUID applicationId = UUID.randomUUID();
 
         GetUserResponse response = new GetUserResponse(id, alias, email, null, middleName, lastName, displayName, profileImageRef,
-                phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
+                phoneId, phoneNumber, Collections.emptySet(), dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive,
+                status, roleId, applicationId);
 
         assertNotNull(response);
         assertEquals(id, response.id());
@@ -261,7 +266,8 @@ class GetUserResponseTest {
         UUID applicationId = UUID.randomUUID();
 
         GetUserResponse response = new GetUserResponse(id, alias, email, firstName, null, lastName, displayName, profileImageRef,
-                phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
+                phoneId, phoneNumber, Collections.emptySet(), dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive,
+                status, roleId, applicationId);
 
         assertNotNull(response);
         assertEquals(id, response.id());
@@ -306,7 +312,8 @@ class GetUserResponseTest {
         UUID applicationId = UUID.randomUUID();
 
         GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, null, displayName, profileImageRef,
-                phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
+                phoneId, phoneNumber, Collections.emptySet(), dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive,
+                status, roleId, applicationId);
 
         assertNotNull(response);
         assertEquals(id, response.id());
@@ -351,7 +358,8 @@ class GetUserResponseTest {
         UUID applicationId = UUID.randomUUID();
 
         GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName, profileImageRef,
-                null, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
+                null, phoneNumber, Collections.emptySet(), dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms,
+                privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
         assertEquals(id, response.id());
@@ -396,7 +404,8 @@ class GetUserResponseTest {
         UUID applicationId = UUID.randomUUID();
 
         GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName, profileImageRef,
-                phoneId, null, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
+                phoneId, null, Collections.emptySet(), dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms,
+                privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
         assertEquals(id, response.id());
@@ -441,7 +450,8 @@ class GetUserResponseTest {
         UUID applicationId = UUID.randomUUID();
 
         GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName, profileImageRef,
-                phoneId, phoneNumber, null, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
+                phoneId, phoneNumber, Collections.emptySet(), null, createdAt, updatedAt, notificationEmail, notificationSms,
+                privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
         assertEquals(id, response.id());
@@ -485,7 +495,8 @@ class GetUserResponseTest {
         UUID applicationId = UUID.randomUUID();
 
         GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName, profileImageRef,
-                phoneId, phoneNumber, dateOfBirth, null, updatedAt, notificationEmail, notificationEmail, privacyDataOutActive, status, roleId, applicationId);
+                phoneId, phoneNumber, Collections.emptySet(), dateOfBirth, null, updatedAt, notificationEmail, notificationEmail,
+                privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
         assertEquals(id, response.id());
@@ -527,7 +538,8 @@ class GetUserResponseTest {
         UUID applicationId = UUID.randomUUID();
 
         GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName, profileImageRef,
-                phoneId, phoneNumber, dateOfBirth, createdAt, null, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
+                phoneId, phoneNumber, Collections.emptySet(), dateOfBirth, createdAt, null, notificationEmail, notificationSms,
+                privacyDataOutActive, status, roleId, applicationId);
 
         assertNotNull(response);
         assertEquals(id, response.id());
@@ -570,7 +582,8 @@ class GetUserResponseTest {
         UUID applicationId = UUID.randomUUID();
 
         GetUserResponse response = new GetUserResponse(id, alias, email, firstName, middleName, lastName, displayName, profileImageRef,
-                phoneId, phoneNumber, dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive, status, roleId, applicationId);
+                phoneId, phoneNumber, Collections.emptySet(), dateOfBirth, createdAt, updatedAt, notificationEmail, notificationSms, privacyDataOutActive,
+                status, roleId, applicationId);
 
         String expectedString = "UseGetResponse{" +
                 "id=" + id +
