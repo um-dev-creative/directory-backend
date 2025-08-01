@@ -12,11 +12,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Set;
 import java.util.UUID;
 
 import static com.prx.security.constant.ConstantApp.SESSION_TOKEN_KEY;
@@ -80,8 +80,8 @@ public interface BusinessApi {
         @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     @GetMapping(path = "/user/{userId}")
-    default ResponseEntity<Page<BusinessTO>> findByUserId(@PathVariable UUID userId, Pageable pageable) {
-        return this.getService().findByUserId(userId, pageable);
+    default ResponseEntity<Set<BusinessTO>> findByUserId(@PathVariable UUID userId) {
+        return this.getService().findByUserId(userId);
     }
 
     /**

@@ -5,9 +5,6 @@ import com.prx.directory.api.v1.to.BusinessCreateResponse;
 import com.prx.directory.api.v1.to.BusinessTO;
 import com.prx.directory.api.v1.to.LinkBusinessProductResponse;
 import jakarta.validation.constraints.NotNull;
-// Removed the import for org.glassfish.jersey.internal.guava.Sets as it is no longer used.
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -45,9 +42,8 @@ public interface BusinessService {
     /// Finds businesses by user ID.
     ///
     /// @param userId the UUID of the user
-    /// @param pageable the pagination information
     /// @return a ResponseEntity containing a page of business transfer objects and HTTP status
-    default ResponseEntity<Page<BusinessTO>> findByUserId(UUID userId, Pageable pageable) {
+    default ResponseEntity<Set<BusinessTO>> findByUserId(UUID userId) {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 

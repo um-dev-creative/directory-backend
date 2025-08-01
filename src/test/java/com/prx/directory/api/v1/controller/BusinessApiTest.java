@@ -8,11 +8,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -67,9 +66,7 @@ class BusinessApiTest {
     @DisplayName("Find businesses by user ID - Success")
     void findBusinessesByUserIdSuccess() {
         UUID userId = UUID.randomUUID();
-        Pageable pageable = Pageable.unpaged();
-
-        ResponseEntity<Page<BusinessTO>> result = businessApi.findByUserId(userId, pageable);
+        ResponseEntity<Set<BusinessTO>> result = businessApi.findByUserId(userId);
         assertEquals(HttpStatus.NOT_IMPLEMENTED, result.getStatusCode());
     }
 

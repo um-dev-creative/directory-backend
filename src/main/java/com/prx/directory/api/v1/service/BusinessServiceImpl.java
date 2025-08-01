@@ -6,20 +6,18 @@ import com.prx.directory.api.v1.to.BusinessTO;
 import com.prx.directory.api.v1.to.PutUserRequest;
 import com.prx.directory.client.backbone.BackboneClient;
 import com.prx.directory.client.backbone.to.BackboneUserUpdateRequest;
-import com.prx.directory.jpa.entity.UserEntity;
 import com.prx.directory.jpa.repository.BusinessRepository;
 import com.prx.directory.mapper.BusinessMapper;
 import com.prx.directory.util.JwtUtil;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.prx.directory.constant.DirectoryAppConstants.MESSAGE_HEADER;
 import static com.prx.directory.constant.RoleKey.LH_STANDARD;
@@ -136,11 +134,9 @@ public class BusinessServiceImpl implements BusinessService {
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<Page<BusinessTO>> findByUserId(@NotNull UUID userId, Pageable pageable) {
-        UserEntity user = new UserEntity();
-        user.setId(userId);
-        var businessPage = businessRepository.findByUserEntityFk(user, pageable)
-                .map(businessMapper::toBusinessTO);
+    public ResponseEntity<Set<BusinessTO>> findByUserId(@NotNull UUID userId) {
+        var businessPage = businessRepository.findByUserEntityFk(userId).stream()
+                .map(businessMapper::toBusinessTO).collect(Collectors.toSet());
         return ResponseEntity.ok(businessPage);
     }
 
@@ -198,7 +194,7 @@ public class BusinessServiceImpl implements BusinessService {
         if(Objects.isNull(id)) {
             return Collections.emptySet();
         }
-        return businessRepository.findIdCollectionById(id);
+        return businessRepository.findIdCollectionByUserId(id);
     }
 
     private ResponseEntity<Void> updateUserRole(String token, UUID userId) {

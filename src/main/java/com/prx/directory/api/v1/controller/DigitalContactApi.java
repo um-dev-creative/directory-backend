@@ -56,7 +56,7 @@ public interface DigitalContactApi {
     default ResponseEntity<DigitalContactTO> getDigitalContactById(@PathVariable UUID id) {
         return ResponseEntity.ok(getService().getDigitalContactById(id).orElse(null));
     }
-
+    
     /**
      * Retrieve a list of digital contacts by business ID.
      *

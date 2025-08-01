@@ -389,7 +389,7 @@ class UserServiceImplTest {
         ResponseEntity<BackboneProfileImageRefResponse> expectedReference = ResponseEntity.ok(new BackboneProfileImageRefResponse("imageRef123"));
 
         when(backboneClient.findUserById(userId)).thenReturn(backboneResponse);
-        when(businessRepository.findIdCollectionById(any(UUID.class))).thenReturn(Collections.emptySet());
+        when(businessRepository.findIdCollectionByUserId(any(UUID.class))).thenReturn(Collections.emptySet());
         when(backboneClient.getProfileImageRef(anyString(), any(UUID.class))).thenReturn(expectedReference);
         when(getUserMapper.fromBackbone(backboneResponse, profileImageRef, Collections.emptySet())).thenReturn(expectedResponse);
 

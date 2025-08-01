@@ -102,7 +102,7 @@ public class UserServiceImpl implements UserService {
             var profileImageRef = backboneClient.getProfileImageRef(token, applicationID);
             var profileRef = Objects.nonNull(profileImageRef.getBody()) && Objects.nonNull(profileImageRef.getBody().ref()) ?
                     profileImageRef.getBody().ref() : "";
-            var businessIds = businessRepository.findIdCollectionById(id);
+            var businessIds = businessRepository.findIdCollectionByUserId(id);
             return ResponseEntity.ok(getUserMapper.fromBackbone(result, profileRef, businessIds));
         } catch (FeignException e) {
             logger.warn("Error finding user: {}", e.getMessage());
