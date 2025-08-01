@@ -68,7 +68,6 @@ public interface BusinessApi {
     /// Finds businesses by user ID.
     ///
     /// @param userId the user ID of the businesses to find
-    /// @param pageable the pagination information
     /// @return a ResponseEntity containing the response of the businesses find operation
     @Operation(summary = "Find businesses by user ID", description = "Finds businesses by their user ID.")
     @ApiResponses(value = {
