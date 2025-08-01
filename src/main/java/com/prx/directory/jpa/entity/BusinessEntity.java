@@ -59,7 +59,7 @@ public class BusinessEntity implements Serializable {
     private LocalDateTime createdDate;
 
     /**
-     * The date when the business was last lastUpdate.
+     * The date when the business was last updated.
      * This field is required.
      */
     @NotNull
