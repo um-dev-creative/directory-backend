@@ -19,9 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/api/v1/timezones")
 public interface TimezoneApi {
 
-    default TimezoneService getService(){
-        return new TimezoneService(){};
-    }
+    TimezoneService getService();
 
     /**
      * Retrieves a list of all available timezones.
