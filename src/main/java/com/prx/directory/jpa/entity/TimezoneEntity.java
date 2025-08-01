@@ -88,18 +88,26 @@ public class TimezoneEntity implements Serializable {
         this.lastUpdated = lastUpdated;
     }
 
-    public Object getUtcOffset() {
+    public Duration getUtcOffset() {
         return utcOffset;
     }
 
-    public void setUtcOffset(Object utcOffset) {
+    public void setUtcOffset(Duration utcOffset) {
         this.utcOffset = utcOffset;
     }
 
-/*
- TODO [Reverse Engineering] create field to map the 'utc_offset' column
- Available actions: Define target Java type | Uncomment as is | Remove column mapping
-    @Column(name = "utc_offset", columnDefinition = "interval not null")
-    private Object utcOffset;
-*/
+    /**
+     * JPA AttributeConverter to map Duration to String (ISO-8601) and back.
+     */
+    public static class DurationToStringConverter implements jakarta.persistence.AttributeConverter<Duration, String> {
+        @Override
+        public String convertToDatabaseColumn(Duration attribute) {
+            return attribute == null ? null : attribute.toString();
+        }
+
+        @Override
+        public Duration convertToEntityAttribute(String dbData) {
+            return dbData == null ? null : Duration.parse(dbData);
+        }
+    }
 }
