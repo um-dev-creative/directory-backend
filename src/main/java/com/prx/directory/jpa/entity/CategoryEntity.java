@@ -67,7 +67,7 @@ public class CategoryEntity implements Serializable {
     private LocalDateTime createdDate;
 
     /**
-     * The date when the category was last lastUpdate.
+     * The date when the category was last updated.
      * This field is required.
      */
     @NotNull
