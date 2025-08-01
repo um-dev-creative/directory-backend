@@ -197,9 +197,7 @@ class BusinessServiceImplTest {
     void findBusinessByIdSuccessfully() {
         UUID id = UUID.randomUUID();
         BusinessEntity business = new BusinessEntity();
-
-        when(businessRepository.findById(id)).thenReturn(Optional.of(business));
-        when(businessMapper.toBusinessTO(business)).thenReturn(new BusinessTO(
+        var businessTO = new BusinessTO(
                 id,
                 "Example Business",
                 "This is an example business description.",
@@ -211,7 +209,10 @@ class BusinessServiceImplTest {
                 "domain.ext",
                 LocalDateTime.now(),
                 LocalDateTime.now()
-        ));
+        );
+
+        when(businessRepository.findBusinessWithDigitalContactsById(id)).thenReturn(Optional.of(business));
+        when(businessMapper.toBusinessTO(business)).thenReturn(businessTO);
 
         ResponseEntity<BusinessTO> response = businessService.findById(id);
 

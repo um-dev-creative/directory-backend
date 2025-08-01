@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -26,11 +26,11 @@ public class DigitalContactEntity implements Serializable {
 
     @NotNull
     @Column(name = "created_date", nullable = false)
-    private Instant createdDate;
+    private LocalDateTime createdDate;
 
     @NotNull
     @Column(name = "last_update", nullable = false)
-    private Instant lastUpdate;
+    private LocalDateTime lastUpdate;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -62,19 +62,19 @@ public class DigitalContactEntity implements Serializable {
         this.content = name;
     }
 
-    public Instant getCreatedDate() {
+    public LocalDateTime getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(Instant createdDate) {
+    public void setCreatedDate(LocalDateTime createdDate) {
         this.createdDate = createdDate;
     }
 
-    public Instant getLastUpdate() {
+    public LocalDateTime getLastUpdate() {
         return lastUpdate;
     }
 
-    public void setLastUpdate(Instant lastUpdate) {
+    public void setLastUpdate(LocalDateTime lastUpdate) {
         this.lastUpdate = lastUpdate;
     }
 
