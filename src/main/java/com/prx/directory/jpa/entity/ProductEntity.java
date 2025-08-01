@@ -59,7 +59,7 @@ public class ProductEntity implements Serializable {
     private LocalDateTime createdDate;
 
     /**
-     * The date when the product was last lastUpdate.
+     * The date when the product was last updated.
      * This field is required.
      */
     @NotNull
