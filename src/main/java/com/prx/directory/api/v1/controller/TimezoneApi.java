@@ -19,7 +19,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/api/v1/timezones")
 public interface TimezoneApi {
 
-    TimezoneService getService();
+    default TimezoneService getService() {
+        return new TimezoneService() {
+        };
+    }
 
     /**
      * Retrieves a list of all available timezones.
@@ -27,7 +30,7 @@ public interface TimezoneApi {
      * @return a ResponseEntity containing a list of TimezoneTO objects.
      */
     @GetMapping(path = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
-    default ResponseEntity<GetTimezoneCollectionResponse> getAllTimezones(){
+    default ResponseEntity<GetTimezoneCollectionResponse> getAllTimezones() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -39,8 +42,8 @@ public interface TimezoneApi {
      */
     @Operation(summary = "Get all supported timezones (paginated)", description = "Returns a paginated list of all supported timezones.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Page of timezones returned successfully"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "200", description = "Page of timezones returned successfully"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping
     default ResponseEntity<Page<TimezoneTO>> getTimezones(Pageable pageable) {

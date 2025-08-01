@@ -2,14 +2,14 @@ package com.prx.directory.api.v1.to;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.UUID;
 
 public record TimezoneTO(
         UUID id,
         String name,
-        ZoneOffset utcOffset,
+        Duration utcOffset,
         String abbreviation,
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
         LocalDateTime createdAt,

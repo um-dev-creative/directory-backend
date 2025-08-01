@@ -1,6 +1,7 @@
 package com.prx.directory.jpa.entity;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -10,6 +11,7 @@ import org.hibernate.annotations.ColumnDefault;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -30,6 +32,7 @@ public class TimezoneEntity implements Serializable {
 
     @NotNull
     @Column(name = "utc_offset", nullable = false)
+    @Convert(converter = TimezoneEntity.DurationToStringConverter.class)
     private Duration utcOffset;
 
     @Size(max = 10)
@@ -107,7 +110,20 @@ public class TimezoneEntity implements Serializable {
 
         @Override
         public Duration convertToEntityAttribute(String dbData) {
-            return dbData == null ? null : Duration.parse(dbData);
+            if (dbData == null) return null;
+            try {
+                return Duration.parse(dbData); // ISO-8601
+            } catch (Exception e) {
+                // Try HH:mm:ss
+                String[] parts = dbData.split(":");
+                if (parts.length == 3) {
+                    long hours = Long.parseLong(parts[0]);
+                    long minutes = Long.parseLong(parts[1]);
+                    long seconds = Long.parseLong(parts[2]);
+                    return Duration.ofHours(hours).plusMinutes(minutes).plusSeconds(seconds);
+                }
+                throw new IllegalArgumentException("Cannot parse duration: " + dbData, e);
+            }
         }
     }
 }
