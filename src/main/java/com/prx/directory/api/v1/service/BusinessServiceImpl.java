@@ -19,10 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static com.prx.directory.constant.DirectoryAppConstants.MESSAGE_HEADER;
 import static com.prx.directory.constant.RoleKey.LH_STANDARD;
@@ -129,8 +126,8 @@ public class BusinessServiceImpl implements BusinessService {
      */
     @Override
     public ResponseEntity<BusinessTO> findById(@NotNull UUID id) {
-        var business = businessRepository.findById(id);
-        return business.map(businessEntity ->
+        var result = businessRepository.findBusinessWithDigitalContactsById(id);
+        return result.map(businessEntity ->
                         ResponseEntity.ok(businessMapper.toBusinessTO(businessEntity)))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
@@ -199,7 +196,7 @@ public class BusinessServiceImpl implements BusinessService {
     @Override
     public Set<UUID> findIdByUserId(UUID id) {
         if(Objects.isNull(id)) {
-            return new HashSet<>();
+            return Collections.emptySet();
         }
         return businessRepository.findIdCollectionById(id);
     }
