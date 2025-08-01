@@ -212,19 +212,7 @@ class BusinessServiceImplTest {
         );
 
         when(businessRepository.findBusinessWithDigitalContactsById(id)).thenReturn(Optional.of(business));
-        when(businessMapper.toBusinessTO(business)).thenReturn(new BusinessTO(
-                id,
-                "Example Business",
-                "This is an example business description.",
-                UUID.randomUUID(),
-                UUID.randomUUID(),
-                "user@domain.ext",
-                "user@domain.ext",
-                "user@domain.ext",
-                "domain.ext",
-                LocalDateTime.now(),
-                LocalDateTime.now()
-        ));
+        when(businessMapper.toBusinessTO(business)).thenReturn(businessTO);
 
         ResponseEntity<BusinessTO> response = businessService.findById(id);
 
