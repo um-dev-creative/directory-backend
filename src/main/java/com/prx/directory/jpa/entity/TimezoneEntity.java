@@ -30,7 +30,7 @@ public class TimezoneEntity implements Serializable {
 
     @NotNull
     @Column(name = "utc_offset", nullable = false)
-    private Object utcOffset;
+    private Duration utcOffset;
 
     @Size(max = 10)
     @NotNull
