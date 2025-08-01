@@ -68,13 +68,12 @@ public interface BusinessApi {
     /// Finds businesses by user ID.
     ///
     /// @param userId the user ID of the businesses to find
-    /// @param pageable the pagination information
     /// @return a ResponseEntity containing the response of the businesses find operation
     @Operation(summary = "Find businesses by user ID", description = "Finds businesses by their user ID.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Businesses found",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                schema = @Schema(implementation = Page.class))),
+                schema = @Schema(implementation = Set.class))),
         @ApiResponse(responseCode = "404", description = "Businesses not found", content = @Content),
         @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
