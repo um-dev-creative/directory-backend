@@ -12,8 +12,8 @@ import java.util.UUID;
 ///     - **id**: The unique identifier of the user.
 ///     - **alias**: The alias of the user.
 ///     - **email**: The email for the user.
-///     - **createdDate**: The date and time when the user was created.
-///     - **lastUpdate**: The date and time when the user was last updated.
+///     - **createdDate**: The date and time when the user was createdAt.
+///     - **lastUpdate**: The date and time when the user was last lastUpdate.
 ///     - **active**: The active status of the user.
 ///     - **personId**: The unique identifier of the associated person.
 ///     - **roleIds**: The unique identifier of the associated role.
@@ -30,9 +30,9 @@ public record BackboneUserCreateResponse(
         String alias,
         /// The email for the user.
         String email,
-        /// The date and time when the user was created.
+        /// The date and time when the user was createdAt.
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime createdDate,
-        /// The date and time when the user was last updated.
+        /// The date and time when the user was last lastUpdate.
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime lastUpdate,
         /// The active status of the user.
         boolean active,

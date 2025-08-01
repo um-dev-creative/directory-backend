@@ -37,7 +37,7 @@ public interface BusinessApi {
     /// @return a ResponseEntity containing the response of the business creation operation
     @Operation(summary = "Create a new business", description = "Handles the creation of a new business.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Business successfully created",
+        @ApiResponse(responseCode = "201", description = "Business successfully createdAt",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                 schema = @Schema(implementation = BusinessCreateResponse.class))),
         @ApiResponse(responseCode = "400", description = "Invalid request data", content = @Content),

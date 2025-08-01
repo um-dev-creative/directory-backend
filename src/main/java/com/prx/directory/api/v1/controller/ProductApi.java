@@ -34,7 +34,7 @@ public interface ProductApi {
     /// @return a ResponseEntity containing the response of the product creation operation
     @Operation(summary = "Create a new product", description = "Handles the creation of a new product.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Product successfully created",
+        @ApiResponse(responseCode = "201", description = "Product successfully createdAt",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                 schema = @Schema(implementation = ProductCreateResponse.class))),
         @ApiResponse(responseCode = "400", description = "Invalid request data", content = @Content),

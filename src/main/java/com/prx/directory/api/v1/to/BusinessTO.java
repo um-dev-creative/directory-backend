@@ -20,7 +20,8 @@ public record BusinessTO(
         LocalDateTime createdDate,
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
         LocalDateTime updatedDate,
-        boolean verified
+        boolean verified,
+        UUID timezoneId
 ) {
 
     @Override
@@ -38,6 +39,7 @@ public record BusinessTO(
                 ", createdDate=" + createdDate +
                 ", updatedDate=" + updatedDate +
                 ", verified=" + verified +
+                ", timezoneId=" + timezoneId +
                 '}';
     }
 }

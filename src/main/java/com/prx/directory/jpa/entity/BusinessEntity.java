@@ -51,7 +51,7 @@ public class BusinessEntity implements Serializable {
     private String description;
 
     /**
-     * The date when the business was created.
+     * The date when the business was createdAt.
      * This field is required.
      */
     @NotNull
@@ -95,6 +95,13 @@ public class BusinessEntity implements Serializable {
      */
     @Column(name = "verified")
     private boolean verified;
+
+    /**
+     * Represents the foreign key reference to the timezone associated with the business.
+     * This field stores the UUID of a timezone entity.
+     */
+    @Column(name = "timezone_fk")
+    private UUID timezoneFk;
 
     public BusinessEntity() {
         // Default constructor
@@ -155,36 +162,36 @@ public class BusinessEntity implements Serializable {
     }
 
     /**
-     * Gets the date when the business was created.
+     * Gets the date when the business was createdAt.
      *
-     * @return the date when the business was created
+     * @return the date when the business was createdAt
      */
     public LocalDateTime getCreatedDate() {
         return createdDate;
     }
 
     /**
-     * Sets the date when the business was created.
+     * Sets the date when the business was createdAt.
      *
-     * @param createdDate the date when the business was created
+     * @param createdDate the date when the business was createdAt
      */
     public void setCreatedDate(LocalDateTime createdDate) {
         this.createdDate = createdDate;
     }
 
     /**
-     * Gets the date when the business was last updated.
+     * Gets the date when the business was last lastUpdate.
      *
-     * @return the date when the business was last updated
+     * @return the date when the business was last lastUpdate
      */
     public LocalDateTime getLastUpdate() {
         return lastUpdate;
     }
 
     /**
-     * Sets the date when the business was last updated.
+     * Sets the date when the business was last lastUpdate.
      *
-     * @param lastUpdate the date when the business was last updated
+     * @param lastUpdate the date when the business was last lastUpdate
      */
     public void setLastUpdate(LocalDateTime lastUpdate) {
         this.lastUpdate = lastUpdate;
@@ -262,5 +269,24 @@ public class BusinessEntity implements Serializable {
      */
     public void setVerified(boolean verified) {
         this.verified = verified;
+    }
+
+    /**
+     * Retrieves the foreign key reference to the timezone associated with the business.
+     *
+     * @return the UUID representing the foreign key of the associated timezone
+     */
+    public UUID getTimezoneFk() {
+        return timezoneFk;
+    }
+
+    /**
+     * Sets the timezone foreign key (timezoneFk) for the current object.
+     *
+     * @param timezoneFk the UUID representing the foreign key for the timezone
+     *                   associated with the current object. It must not be null.
+     */
+    public void setTimezoneFk(UUID timezoneFk) {
+        this.timezoneFk = timezoneFk;
     }
 }

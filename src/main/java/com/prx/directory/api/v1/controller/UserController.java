@@ -1,19 +1,15 @@
 package com.prx.directory.api.v1.controller;
 
 import com.prx.directory.api.v1.service.UserService;
-import com.prx.directory.api.v1.to.PutUserRequest;
 import com.prx.directory.api.v1.to.GetUserResponse;
+import com.prx.directory.api.v1.to.PutUserRequest;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
-import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
-
-import static com.prx.security.constant.ConstantApp.SESSION_TOKEN_KEY;
 
 /// REST controller for user-related operations.
 @RestController
@@ -50,7 +46,7 @@ public class UserController implements UserApi {
     /// Handles the HTTP PATCH request to update an existing user.
     ///
     /// @param userId the ID of the user to update
-    /// @param request the request object containing the updated user details
+    /// @param request the request object containing the lastUpdate user details
     /// @return a ResponseEntity containing the PatchUserResponse
     @Override
     public ResponseEntity<Void> update(UUID userId, PutUserRequest request) {

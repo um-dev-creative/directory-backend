@@ -13,7 +13,7 @@ import java.util.UUID;
 ///     - **alias**: User's alias or username.
 ///     - **email**: User's email address.
 ///     - **displayName**: User's display name.
-///     - **createdDate**: Date and time when the user was created.
+///     - **createdDate**: Date and time when the user was createdAt.
 ///     - **lastUpdate**: Date and time of the last update to the user.
 ///     - **notificationEmail**: Indicates if email notifications are enabled for the user.
 ///     - **notificationSms**: Indicates if SMS notifications are enabled for the user.

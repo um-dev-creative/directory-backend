@@ -190,6 +190,7 @@ class BusinessServiceImplTest {
     void findBusinessByIdSuccessfully() {
         UUID id = UUID.randomUUID();
         BusinessEntity business = new BusinessEntity();
+        UUID timezone = UUID.randomUUID();
         var businessTO = new BusinessTO(
                 id,
                 "Example Business",
@@ -202,7 +203,8 @@ class BusinessServiceImplTest {
                 "domain.ext",
                 LocalDateTime.now(),
                 LocalDateTime.now(),
-                true
+                true,
+                timezone
         );
 
         when(businessRepository.findBusinessWithDigitalContactsById(id)).thenReturn(Optional.of(business));
@@ -238,6 +240,7 @@ class BusinessServiceImplTest {
     void findBusinessesByUserIdSuccessfully() {
         UUID userId = UUID.randomUUID();
         Set<BusinessEntity> businessPage = Set.of(new BusinessEntity());
+        UUID timezone = UUID.randomUUID();
         BusinessTO businessTO = new BusinessTO(UUID.randomUUID(),
                 "Example Business",
                 "This is an example business description.",
@@ -248,7 +251,7 @@ class BusinessServiceImplTest {
                 "user1@domain.ext",
                 "domain.ext",
                 LocalDateTime.now(),
-                LocalDateTime.now(), false);
+                LocalDateTime.now(), false, timezone);
         when(businessRepository.findByUserEntityFk(any(UUID.class))).thenReturn(businessPage);
         when(businessMapper.toBusinessTO(any(BusinessEntity.class))).thenReturn(businessTO);
 

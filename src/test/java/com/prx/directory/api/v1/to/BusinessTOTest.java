@@ -17,11 +17,12 @@ class BusinessTOTest {
         UUID userId = UUID.randomUUID();
         UUID categoryId = UUID.randomUUID();
         LocalDateTime now = LocalDateTime.now();
+        UUID timezone = UUID.randomUUID();
 
         BusinessTO businessTO = new BusinessTO(
                 id, "Test Business", "Description", userId, categoryId,
                 "test@example.com", "cs@example.com", "om@example.com",
-                "http://example.com", now, now, false
+                "https://example.com", now, now, false, timezone
         );
 
         assertEquals(id, businessTO.id());
@@ -32,7 +33,8 @@ class BusinessTOTest {
         assertEquals("test@example.com", businessTO.email());
         assertEquals("cs@example.com", businessTO.customerServiceEmail());
         assertEquals("om@example.com", businessTO.orderManagementEmail());
-        assertEquals("http://example.com", businessTO.website());
+        assertEquals("https://example.com", businessTO.website());
+        assertEquals(timezone, businessTO.timezoneId());
         assertEquals(now, businessTO.createdDate());
         assertEquals(now, businessTO.updatedDate());
     }
@@ -44,11 +46,12 @@ class BusinessTOTest {
         UUID userId = UUID.randomUUID();
         UUID categoryId = UUID.randomUUID();
         LocalDateTime now = LocalDateTime.now();
+        UUID timezone = UUID.randomUUID();
 
         BusinessTO businessTO = new BusinessTO(
                 id, "Test Business", "Description", userId, categoryId,
                 "test@example.com", "cs@example.com", "om@example.com",
-                "http://example.com", now, now, true
+                "https://example.com", now, now, true, timezone
         );
 
         String expected = "BusinessTO{" +
@@ -60,10 +63,11 @@ class BusinessTOTest {
                 ", email='test@example.com'" +
                 ", customerServiceEmail='cs@example.com'" +
                 ", orderManagementEmail='om@example.com'" +
-                ", website='http://example.com'" +
+                ", website='https://example.com'" +
                 ", createdDate=" + now +
                 ", updatedDate=" + now +
                 ", verified=" + true +
+                ", timezoneId=" + timezone +
                 '}';
 
         assertEquals(expected, businessTO.toString());

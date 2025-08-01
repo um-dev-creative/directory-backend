@@ -5,7 +5,7 @@ import java.util.UUID;
 
 /// PutUserRequest record.
 ///
-/// Represents a request to update a user's information in the system. This record encapsulates all fields that can be updated for a user.
+/// Represents a request to update a user's information in the system. This record encapsulates all fields that can be lastUpdate for a user.
 ///
 /// Fields:
 ///   - **firstName**: The user's first name.
