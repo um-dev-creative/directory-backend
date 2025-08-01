@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -33,8 +34,8 @@ public class BusinessController implements BusinessApi {
     }
 
     @Override
-    public ResponseEntity<Page<BusinessTO>> findByUserId(UUID userId, Pageable pageable) {
-        return businessService.findByUserId(userId, pageable);
+    public ResponseEntity<Set<BusinessTO>> findByUserId(UUID userId) {
+        return businessService.findByUserId(userId);
     }
 
     @Override

@@ -19,7 +19,8 @@ public record BusinessTO(
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
         LocalDateTime createdDate,
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-        LocalDateTime updatedDate
+        LocalDateTime updatedDate,
+        boolean verified
 ) {
 
     @Override
@@ -36,6 +37,7 @@ public record BusinessTO(
                 ", website='" + website + '\'' +
                 ", createdDate=" + createdDate +
                 ", updatedDate=" + updatedDate +
+                ", verified=" + verified +
                 '}';
     }
 }

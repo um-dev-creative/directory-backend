@@ -87,6 +87,15 @@ public class BusinessEntity implements Serializable {
     @OneToMany(mappedBy = "business")
     private Set<DigitalContactEntity> digitalContacts;
 
+    /**
+     * Indicates whether the entity has been verified.
+     * The value is represented as a boolean, where {@code true} means the entity has been verified,
+     * and {@code false} indicates it has not been verified.
+     * Mapped to the database column named "verified".
+     */
+    @Column(name = "verified")
+    private boolean verified;
+
     public BusinessEntity() {
         // Default constructor
     }
@@ -234,5 +243,24 @@ public class BusinessEntity implements Serializable {
      */
     public void setDigitalContacts(Set<DigitalContactEntity> digitalContacts) {
         this.digitalContacts = digitalContacts;
+    }
+
+    /**
+     * Checks if the business entity has been verified.
+     *
+     * @return true if the business entity is verified, false otherwise
+     */
+    public boolean isVerified() {
+        return verified;
+    }
+
+    /**
+     * Sets the verification status of the business entity.
+     *
+     * @param verified a boolean value indicating whether the business is verified
+     *                 (true if the business is verified, false otherwise)
+     */
+    public void setVerified(boolean verified) {
+        this.verified = verified;
     }
 }

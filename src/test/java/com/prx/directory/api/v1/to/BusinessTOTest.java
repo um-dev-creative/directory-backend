@@ -21,7 +21,7 @@ class BusinessTOTest {
         BusinessTO businessTO = new BusinessTO(
                 id, "Test Business", "Description", userId, categoryId,
                 "test@example.com", "cs@example.com", "om@example.com",
-                "http://example.com", now, now
+                "http://example.com", now, now, false
         );
 
         assertEquals(id, businessTO.id());
@@ -48,7 +48,7 @@ class BusinessTOTest {
         BusinessTO businessTO = new BusinessTO(
                 id, "Test Business", "Description", userId, categoryId,
                 "test@example.com", "cs@example.com", "om@example.com",
-                "http://example.com", now, now
+                "http://example.com", now, now, true
         );
 
         String expected = "BusinessTO{" +
@@ -63,6 +63,7 @@ class BusinessTOTest {
                 ", website='http://example.com'" +
                 ", createdDate=" + now +
                 ", updatedDate=" + now +
+                ", verified=" + true +
                 '}';
 
         assertEquals(expected, businessTO.toString());

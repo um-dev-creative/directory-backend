@@ -20,10 +20,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -31,10 +27,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -208,7 +201,8 @@ class BusinessServiceImplTest {
                 "user@domain.ext",
                 "domain.ext",
                 LocalDateTime.now(),
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                true
         );
 
         when(businessRepository.findBusinessWithDigitalContactsById(id)).thenReturn(Optional.of(business));
@@ -243,8 +237,7 @@ class BusinessServiceImplTest {
     @DisplayName("Find businesses by user ID successfully")
     void findBusinessesByUserIdSuccessfully() {
         UUID userId = UUID.randomUUID();
-        PageRequest pageable = PageRequest.of(0, 10);
-        Page<BusinessEntity> businessPage = new PageImpl<>(Collections.singletonList(new BusinessEntity()));
+        Set<BusinessEntity> businessPage = Set.of(new BusinessEntity());
         BusinessTO businessTO = new BusinessTO(UUID.randomUUID(),
                 "Example Business",
                 "This is an example business description.",
@@ -255,11 +248,11 @@ class BusinessServiceImplTest {
                 "user1@domain.ext",
                 "domain.ext",
                 LocalDateTime.now(),
-                LocalDateTime.now());
-        when(businessRepository.findByUserEntityFk(any(UserEntity.class), any(Pageable.class))).thenReturn(businessPage);
+                LocalDateTime.now(), false);
+        when(businessRepository.findByUserEntityFk(any(UUID.class))).thenReturn(businessPage);
         when(businessMapper.toBusinessTO(any(BusinessEntity.class))).thenReturn(businessTO);
 
-        ResponseEntity<Page<BusinessTO>> response = businessService.findByUserId(userId, pageable);
+        ResponseEntity<Set<BusinessTO>> response = businessService.findByUserId(userId);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
@@ -268,15 +261,13 @@ class BusinessServiceImplTest {
     @DisplayName("Find businesses by user ID with empty result")
     void findBusinessesByUserIdWithEmptyResult() {
         UUID userId = UUID.randomUUID();
-        PageRequest pageable = PageRequest.of(0, 10);
-        Page<BusinessEntity> businessPage = new PageImpl<>(Collections.emptyList());
+        Set<BusinessEntity> businessEntities = Collections.emptySet();
 
-        when(businessRepository.findByUserEntityFk(any(UserEntity.class), any(Pageable.class))).thenReturn(businessPage);
+        when(businessRepository.findByUserEntityFk(any(UUID.class))).thenReturn(businessEntities);
 
-        ResponseEntity<Page<BusinessTO>> response = businessService.findByUserId(userId, pageable);
+        ResponseEntity<Set<BusinessTO>> response = businessService.findByUserId(userId);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(0, response.getBody().getTotalElements());
     }
 
     @Test

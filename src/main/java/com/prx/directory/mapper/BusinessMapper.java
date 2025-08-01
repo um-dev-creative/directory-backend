@@ -53,6 +53,7 @@ public interface BusinessMapper {
     /// @return The converted BusinessTO object.
     @Mapping(target = "id", source = "id")
     @Mapping(target = "name", source = "name")
+    @Mapping(target = "verified", source = "verified")
     @Mapping(target = "description", source = "description")
     @Mapping(target = "updatedDate", source = "lastUpdate")
     @Mapping(target = "createdDate", source = "createdDate")
