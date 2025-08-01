@@ -8,7 +8,6 @@ import com.prx.directory.api.v1.to.UserCreateResponse;
 import com.prx.directory.client.backbone.to.BackboneUserCreateRequest;
 import com.prx.directory.client.backbone.to.BackboneUserCreateResponse;
 import org.mapstruct.*;
-import org.springframework.cloud.config.client.ConfigClientProperties;
 
 import java.util.List;
 import java.util.UUID;
