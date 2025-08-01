@@ -32,7 +32,6 @@ public interface TimezoneMapper {
      * @param timezoneEntity the TimezoneEntity to be converted
      * @return a TimezoneResumeTO containing the id, name, and abbreviation from the given entity
      */
-    @Mapping(target = "id", source = "id")
     @Mapping(target = "name", source = "name")
     @Mapping(target = "abbreviation", source = "abbreviation")
     TimezoneResumeTO toTimezoneResume(TimezoneEntity timezoneEntity);
