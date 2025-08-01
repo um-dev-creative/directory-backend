@@ -103,7 +103,7 @@ public class TimezoneEntity implements Serializable {
      * JPA AttributeConverter to map Duration to String (ISO-8601) and back.
      */
     public static class DurationToStringConverter implements jakarta.persistence.AttributeConverter<Duration, String> {
-        private final static int MAX_LENGTH = 3;
+        private static final int MAX_LENGTH = 3;
 
         @Override
         public String convertToDatabaseColumn(Duration attribute) {
