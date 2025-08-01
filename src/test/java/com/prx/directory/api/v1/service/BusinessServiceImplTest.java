@@ -201,7 +201,8 @@ class BusinessServiceImplTest {
                 "user@domain.ext",
                 "domain.ext",
                 LocalDateTime.now(),
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                true
         );
 
         when(businessRepository.findBusinessWithDigitalContactsById(id)).thenReturn(Optional.of(business));
@@ -247,7 +248,7 @@ class BusinessServiceImplTest {
                 "user1@domain.ext",
                 "domain.ext",
                 LocalDateTime.now(),
-                LocalDateTime.now());
+                LocalDateTime.now(), false);
         when(businessRepository.findByUserEntityFk(any(UUID.class))).thenReturn(businessPage);
         when(businessMapper.toBusinessTO(any(BusinessEntity.class))).thenReturn(businessTO);
 
