@@ -73,7 +73,7 @@ public interface BusinessApi {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Businesses found",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                schema = @Schema(implementation = Page.class))),
+                schema = @Schema(implementation = Set.class))),
         @ApiResponse(responseCode = "404", description = "Businesses not found", content = @Content),
         @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
