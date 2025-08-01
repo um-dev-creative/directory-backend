@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 /// Represents the response object for a user get request.
-/// Contains the user's ID, alias, password, created date, last update, active status, person, roles, and applications.
+/// Contains the user's ID, alias, password, createdAt date, last update, active status, person, roles, and applications.
 public record BackboneUserGetResponse(
         UUID id,
         String alias,

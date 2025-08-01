@@ -59,7 +59,7 @@ public class CategoryEntity implements Serializable {
     private CategoryEntity categoryParentFk;
 
     /**
-     * The date when the category was created.
+     * The date when the category was createdAt.
      * This field is required.
      */
     @NotNull
@@ -67,7 +67,7 @@ public class CategoryEntity implements Serializable {
     private LocalDateTime createdDate;
 
     /**
-     * The date when the category was last updated.
+     * The date when the category was last lastUpdate.
      * This field is required.
      */
     @NotNull
@@ -160,36 +160,36 @@ public class CategoryEntity implements Serializable {
     }
 
     /**
-     * Gets the date when the category was created.
+     * Gets the date when the category was createdAt.
      *
-     * @return the date when the category was created
+     * @return the date when the category was createdAt
      */
     public LocalDateTime getCreatedDate() {
         return createdDate;
     }
 
     /**
-     * Sets the date when the category was created.
+     * Sets the date when the category was createdAt.
      *
-     * @param createDate the date when the category was created
+     * @param createDate the date when the category was createdAt
      */
     public void setCreatedDate(LocalDateTime createDate) {
         this.createdDate = createDate;
     }
 
     /**
-     * Gets the date when the category was last updated.
+     * Gets the date when the category was last lastUpdate.
      *
-     * @return the date when the category was last updated
+     * @return the date when the category was last lastUpdate
      */
     public LocalDateTime getLastUpdate() {
         return lastUpdate;
     }
 
     /**
-     * Sets the date when the category was last updated.
+     * Sets the date when the category was last lastUpdate.
      *
-     * @param lastUpdate the date when the category was last updated
+     * @param lastUpdate the date when the category was last lastUpdate
      */
     public void setLastUpdate(LocalDateTime lastUpdate) {
         this.lastUpdate = lastUpdate;

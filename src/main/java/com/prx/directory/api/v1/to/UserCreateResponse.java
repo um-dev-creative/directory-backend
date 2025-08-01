@@ -15,8 +15,8 @@ import java.util.UUID;
 ///     - **id**: The unique identifier for the user.
 ///     - **alias**: The user's alias or username.
 ///     - **email**: The user's email address.
-///     - **createdDate**: The date and time when the user was created.
-///     - **lastUpdate**: The date and time when the user was last updated.
+///     - **createdDate**: The date and time when the user was createdAt.
+///     - **lastUpdate**: The date and time when the user was last lastUpdate.
 ///     - **active**: Indicates if the user is currently active.
 ///     - **personId**: The unique identifier of the associated person entity.
 ///     - **roleIds**: The unique identifier of the user's role.

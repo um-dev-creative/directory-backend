@@ -58,7 +58,7 @@ class BusinessCreateResponseTest {
     }
 
     @Test
-    @DisplayName("Create BusinessCreateResponse with null created date")
+    @DisplayName("Create BusinessCreateResponse with null createdAt date")
     void createBusinessCreateResponseWithNullCreatedDate() {
         UUID id = UUID.randomUUID();
         String businessName = "Test Business";
@@ -73,7 +73,7 @@ class BusinessCreateResponseTest {
     }
 
     @Test
-    @DisplayName("Create BusinessCreateResponse with null updated date")
+    @DisplayName("Create BusinessCreateResponse with null lastUpdate date")
     void createBusinessCreateResponseWithNullUpdatedDate() {
         UUID id = UUID.randomUUID();
         String businessName = "Test Business";

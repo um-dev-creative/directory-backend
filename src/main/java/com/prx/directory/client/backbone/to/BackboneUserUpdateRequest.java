@@ -6,11 +6,11 @@ import java.util.UUID;
 
 /// BackboneUserUpdateRequest record.
 ///
-/// Represents a request to update a user in the backbone system. This record encapsulates all fields that can be updated for a user, including personal, authentication, and notification details.
+/// Represents a request to update a user in the backbone system. This record encapsulates all fields that can be lastUpdate for a user, including personal, authentication, and notification details.
 ///
 ///
 ///     - **displayName**: The display name for the user.
-///     - **password**: The password for the user (if being updated).
+///     - **password**: The password for the user (if being lastUpdate).
 ///     - **notificationEmail**: Indicates if email notifications are enabled for the user.
 ///     - **notificationSms**: Indicates if SMS notifications are enabled for the user.
 ///     - **privacyDataOutActive**: Indicates if the user's privacy data out is active.

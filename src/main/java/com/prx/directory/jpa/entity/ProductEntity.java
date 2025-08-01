@@ -51,7 +51,7 @@ public class ProductEntity implements Serializable {
     private String description;
 
     /**
-     * The date when the product was created.
+     * The date when the product was createdAt.
      * This field is required.
      */
     @NotNull
@@ -59,7 +59,7 @@ public class ProductEntity implements Serializable {
     private LocalDateTime createdDate;
 
     /**
-     * The date when the product was last updated.
+     * The date when the product was last lastUpdate.
      * This field is required.
      */
     @NotNull
@@ -143,36 +143,36 @@ public class ProductEntity implements Serializable {
     }
 
     /**
-     * Gets the date when the product was created.
+     * Gets the date when the product was createdAt.
      *
-     * @return the date when the product was created
+     * @return the date when the product was createdAt
      */
     public LocalDateTime getCreatedDate() {
         return createdDate;
     }
 
     /**
-     * Sets the date when the product was created.
+     * Sets the date when the product was createdAt.
      *
-     * @param createDate the date when the product was created
+     * @param createDate the date when the product was createdAt
      */
     public void setCreatedDate(LocalDateTime createDate) {
         this.createdDate = createDate;
     }
 
     /**
-     * Gets the date when the product was last updated.
+     * Gets the date when the product was last lastUpdate.
      *
-     * @return the date when the product was last updated
+     * @return the date when the product was last lastUpdate
      */
     public LocalDateTime getLastUpdate() {
         return lastUpdate;
     }
 
     /**
-     * Sets the date when the product was last updated.
+     * Sets the date when the product was last lastUpdate.
      *
-     * @param lastDate the date when the product was last updated
+     * @param lastDate the date when the product was last lastUpdate
      */
     public void setLastUpdate(LocalDateTime lastDate) {
         this.lastUpdate = lastDate;

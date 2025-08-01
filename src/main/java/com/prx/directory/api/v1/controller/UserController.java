@@ -50,7 +50,7 @@ public class UserController implements UserApi {
     /// Handles the HTTP PATCH request to update an existing user.
     ///
     /// @param userId the ID of the user to update
-    /// @param request the request object containing the updated user details
+    /// @param request the request object containing the lastUpdate user details
     /// @return a ResponseEntity containing the PatchUserResponse
     @Override
     public ResponseEntity<Void> update(UUID userId, PutUserRequest request) {

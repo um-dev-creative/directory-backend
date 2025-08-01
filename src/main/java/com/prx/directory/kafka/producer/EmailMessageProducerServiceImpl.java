@@ -28,7 +28,7 @@ public class EmailMessageProducerServiceImpl implements EmailMessageProducerServ
     public EmailMessageProducerServiceImpl(KafkaTemplate<String, String> kafkaTemplate, ObjectMapper objectMapper) {
         this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = objectMapper;
-        logger.info("EmailMessageProducerServiceImpl created");
+        logger.info("EmailMessageProducerServiceImpl createdAt");
     }
 
     @Override

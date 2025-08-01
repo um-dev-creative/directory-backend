@@ -35,7 +35,7 @@ public interface UserApi {
     /// @return a ResponseEntity containing the response of the user creation operation
     @Operation(summary = "Create a new user", description = "Creates a new user in the system with the provided details.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "User created successfully",
+        @ApiResponse(responseCode = "201", description = "User createdAt successfully",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                 schema = @Schema(implementation = UserCreateResponse.class))),
         @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content),
@@ -80,7 +80,7 @@ public interface UserApi {
     /// @return the patch user response
     @Operation(summary = "Update a user by ID", description = "Updates a user in the system with the provided ID.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "202", description = "User updated successfully",
+        @ApiResponse(responseCode = "202", description = "User lastUpdate successfully",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                 schema = @Schema(implementation = Void.class))),
         @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content),
