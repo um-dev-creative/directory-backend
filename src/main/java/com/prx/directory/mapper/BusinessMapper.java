@@ -4,8 +4,10 @@ import com.prx.commons.services.config.mapper.MapperAppConfig;
 import com.prx.directory.api.v1.to.BusinessCreateRequest;
 import com.prx.directory.api.v1.to.BusinessCreateResponse;
 import com.prx.directory.api.v1.to.BusinessTO;
+import com.prx.directory.constant.ContactTypeKey;
 import com.prx.directory.jpa.entity.BusinessEntity;
 import com.prx.directory.jpa.entity.CategoryEntity;
+import com.prx.directory.jpa.entity.DigitalContactEntity;
 import com.prx.directory.jpa.entity.UserEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -50,23 +52,23 @@ public interface BusinessMapper {
     /// @param businessEntity The BusinessEntity object to convert.
     /// @return The converted BusinessTO object.
     @Mapping(target = "id", source = "id")
-    @Mapping(target = "email", ignore = true)
-    @Mapping(target = "website", ignore = true)
     @Mapping(target = "name", source = "name")
     @Mapping(target = "description", source = "description")
-    @Mapping(target = "customerServiceEmail", ignore = true)
     @Mapping(target = "updatedDate", source = "lastUpdate")
     @Mapping(target = "createdDate", source = "createdDate")
-    @Mapping(target = "orderManagementEmail", ignore = true)
     @Mapping(target = "userId", source = "businessEntity.userFk.id")
     @Mapping(target = "categoryId", source = "businessEntity.categoryFk.id")
+    @Mapping(target = "email", expression = "java(getValueByName(com.prx.directory.constant.ContactTypeKey.EML, businessEntity))")
+    @Mapping(target = "website", expression = "java(getValueByName(com.prx.directory.constant.ContactTypeKey.WBH, businessEntity))")
+    @Mapping(target = "customerServiceEmail", expression = "java(getValueByName(com.prx.directory.constant.ContactTypeKey.SCE, businessEntity))")
+    @Mapping(target = "orderManagementEmail", expression = "java(getValueByName(com.prx.directory.constant.ContactTypeKey.MEC, businessEntity))")
     BusinessTO toBusinessTO(BusinessEntity businessEntity);
 
     /// Converts a BusinessEntity object to a BusinessCreateResponse object.
     ///
     /// @param userId The BusinessEntity object to convert.
     /// @return The converted BusinessCreateResponse object.
-    default UserEntity getUser(UUID userId){
+    default UserEntity getUser(UUID userId) {
         UserEntity userEntity = new UserEntity();
         userEntity.setId(userId);
         return userEntity;
@@ -76,10 +78,16 @@ public interface BusinessMapper {
     ///
     /// @param categoryId The BusinessEntity object to convert.
     /// @return The converted BusinessCreateResponse object.
-    default CategoryEntity getCategory(UUID categoryId){
+    default CategoryEntity getCategory(UUID categoryId) {
         CategoryEntity categoryEntity = new CategoryEntity();
         categoryEntity.setId(categoryId);
         return categoryEntity;
+    }
+
+    default String getValueByName(ContactTypeKey key, BusinessEntity businessEntity) {
+        return businessEntity.getDigitalContacts().stream().filter(digitalContactEntity ->
+                key.toString().equals(digitalContactEntity.getContactType().getName())
+        ).map(DigitalContactEntity::getContent).findFirst().orElse(null);
     }
 
 }

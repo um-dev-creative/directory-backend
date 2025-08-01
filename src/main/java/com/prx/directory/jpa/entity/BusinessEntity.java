@@ -8,6 +8,7 @@ import org.hibernate.annotations.ColumnDefault;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -82,6 +83,9 @@ public class BusinessEntity implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_fk", nullable = false)
     private UserEntity userEntityFk;
+
+    @OneToMany(mappedBy = "business")
+    private Set<DigitalContactEntity> digitalContacts;
 
     public BusinessEntity() {
         // Default constructor
@@ -213,4 +217,22 @@ public class BusinessEntity implements Serializable {
         this.userEntityFk = userEntityFk;
     }
 
+
+    /**
+     * Retrieves the set of digital contacts associated with the business.
+     *
+     * @return a set of {@link DigitalContactEntity} representing the digital contacts of the business
+     */
+    public Set<DigitalContactEntity> getDigitalContacts() {
+        return digitalContacts;
+    }
+
+    /**
+     * Sets the digital contacts associated with the business.
+     *
+     * @param digitalContacts a set of {@link DigitalContactEntity} representing the digital contacts to be associated with the business
+     */
+    public void setDigitalContacts(Set<DigitalContactEntity> digitalContacts) {
+        this.digitalContacts = digitalContacts;
+    }
 }

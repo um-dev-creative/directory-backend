@@ -27,6 +27,10 @@ public interface BusinessRepository extends JpaRepository<BusinessEntity, UUID> 
     @Query("SELECT count(bu.id) FROM BusinessEntity bu WHERE bu.userEntityFk.id = :userId")
     int countByUserId(@Param("userId") UUID userId);
 
-    @Query("SELECT b.id FROM BusinessEntity  b WHERE b.userEntityFk.id = :userId")
-    Set<UUID> findIdCollectionById(@Param("userId") UUID userId);
+    @Query("SELECT b FROM BusinessEntity b LEFT JOIN b.digitalContacts dc ON dc.business.id = b.id  WHERE b.id = :businessId")
+    Set<UUID> findIdCollectionById(@Param("businessId") UUID businessId);
+
+    @Query("SELECT b FROM BusinessEntity b LEFT JOIN FETCH b.digitalContacts dc LEFT JOIN FETCH dc.contactTypeEntity WHERE b.id = :businessId")
+    Optional<BusinessEntity> findBusinessWithDigitalContactsById(@Param("businessId") UUID businessId);
+
 }
