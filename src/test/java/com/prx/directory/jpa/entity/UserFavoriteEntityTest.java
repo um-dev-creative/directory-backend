@@ -71,8 +71,8 @@ class UserFavoriteEntityTest {
     @DisplayName("Active default and setter")
     void activeDefaultAndSetter() {
         UserFavoriteEntity entity = new UserFavoriteEntity();
-        // In the entity the field is initialized to false; verify default Java value
-        assertNotEquals(Boolean.TRUE, entity.getActive());
+        // In the entity the field is initialized to true; verify default Java value
+        assertTrue(entity.getActive());
         entity.setActive(true);
         assertTrue(entity.getActive());
     }
