@@ -13,6 +13,12 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "user_favorite", schema = "directory_site")
+/**
+ * Entity representing a user's favorite item in the directory.
+ * <p>
+ * A favorite can be associated with a business, product, or campaign, and is always linked to a user.
+ * This entity tracks which items a user has marked as favorite, along with status and timestamps.
+ */
 public class UserFavoriteEntity implements Serializable {
     @Serial
     private static final long serialVersionUID = -8555594513161495866L;
