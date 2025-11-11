@@ -81,8 +81,8 @@ public interface FavoriteApi {
      *   <li>Validates that the referenced item exists: if not found, return 404 Not Found.</li>
      *   <li>Is idempotent: repeated requests with the same user+type+itemId should not create duplicates.
      *       First successful creation should return 201 Created with the created {@link FavoriteResponse}.
-     *       Subsequent identical requests should return success without creating another record
-     *       (200 OK or 204 No Content), unless project policy prefers 409 Conflict for duplicates.</li>
+     *       Subsequent identical requests will return 409 Conflict to indicate the favorite already exists,
+     *       as per project policy for handling duplicates and idempotency.</li>
      *   <li>On validation errors return 400 Bad Request; on unauthenticated requests return 401 Unauthorized.</li>
      * </ul>
      * </p>
