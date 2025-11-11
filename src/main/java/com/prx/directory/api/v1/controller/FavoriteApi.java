@@ -30,8 +30,7 @@ import static com.prx.security.constant.ConstantApp.SESSION_TOKEN_KEY;
  *     <li>Validate the request payload (type and itemId).</li>
  *     <li>Verify that the referenced item exists (return 404 if not).</li>
  *     <li>Ensure idempotency: creating the same favorite twice should not produce duplicates.
- *         The preferred behavior is to return 201 Created for a new favorite and 200/204
- *         for subsequent identical requests (or 409 if the project policy prefers conflict).</li>
+ *         The API returns 201 Created for a new favorite and 409 CONFLICT for subsequent identical requests.</li>
  *     <li>Persist the favorite and return the created resource (FavoriteResponse) on creation.</li>
  * </ul>
  * </p>
