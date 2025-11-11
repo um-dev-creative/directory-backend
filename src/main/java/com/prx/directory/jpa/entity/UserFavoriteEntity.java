@@ -64,6 +64,7 @@ public class UserFavoriteEntity implements Serializable {
      * Default no-arg constructor required by JPA and by code style rules.
      */
     public UserFavoriteEntity() {
+        //Default constructor
     }
 
     /**
