@@ -109,7 +109,7 @@ class FavoriteServiceImplTest {
     }
 
     @Test
-        @DisplayName("createFavorite should return CONFLICT when favorite already exists")
+    @DisplayName("createFavorite should return CONFLICT when favorite already exists")
     void createFavoriteShouldReturnOkWhenExists() {
         UUID businessId = UUID.randomUUID();
         var userFavoriteId = UUID.randomUUID();
