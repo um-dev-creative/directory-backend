@@ -4,6 +4,7 @@ import com.prx.directory.api.v1.service.FavoriteService;
 import com.prx.directory.api.v1.to.FavoriteCreateRequest;
 import com.prx.directory.api.v1.to.FavoriteResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -107,7 +108,7 @@ public interface FavoriteApi {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     default ResponseEntity<FavoriteResponse> createFavorite(
             @RequestHeader(SESSION_TOKEN_KEY) String sessionToken,
-            @RequestBody FavoriteCreateRequest request) {
+            @Valid @RequestBody FavoriteCreateRequest request) {
         return this.getService().createFavorite(sessionToken, request);
     }
 }
