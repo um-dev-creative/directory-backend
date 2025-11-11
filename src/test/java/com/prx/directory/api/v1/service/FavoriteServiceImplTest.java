@@ -67,7 +67,7 @@ class FavoriteServiceImplTest {
         UUID businessId = UUID.randomUUID();
         try (MockedStatic<JwtUtil> mockedStatic = Mockito.mockStatic(JwtUtil.class)) {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
-            when(businessRepository.existsById(businessId)).thenReturn(false);
+            when(businessRepository.findById(businessId)).thenReturn(Optional.empty());
 
             ResponseEntity<FavoriteResponse> resp = favoriteService.createFavorite("token", new FavoriteCreateRequest(FavoriteType.STORE, businessId));
 
@@ -85,7 +85,7 @@ class FavoriteServiceImplTest {
 
         try (MockedStatic<JwtUtil> mockedStatic = Mockito.mockStatic(JwtUtil.class)) {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
-            when(businessRepository.existsById(businessId)).thenReturn(true);
+            when(businessRepository.findById(businessId)).thenReturn(Optional.of(new com.prx.directory.jpa.entity.BusinessEntity()));
             when(userFavoriteRepository.findByUserIdAndBusinessId(any(), any())).thenReturn(Optional.empty());
 
             saved.setId(userFavoriteId);
@@ -113,7 +113,7 @@ class FavoriteServiceImplTest {
     void createFavoriteShouldReturnOkWhenExists() {
         UUID businessId = UUID.randomUUID();
         var userFavoriteId = UUID.randomUUID();
-        when(businessRepository.existsById(businessId)).thenReturn(true);
+        when(businessRepository.findById(businessId)).thenReturn(Optional.of(new com.prx.directory.jpa.entity.BusinessEntity()));
         UserFavoriteEntity existing = new UserFavoriteEntity();
         FavoriteResponse favoriteResponse = new FavoriteResponse(userFavoriteId, FavoriteType.STORE.name(), UUID.randomUUID(), UUID.randomUUID(), LocalDateTime.now());
         existing.setId(userFavoriteId);

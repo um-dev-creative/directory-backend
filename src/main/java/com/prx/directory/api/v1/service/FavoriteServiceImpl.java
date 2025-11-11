@@ -22,7 +22,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.BiConsumer;
-import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 @Service
@@ -67,17 +66,14 @@ public class FavoriteServiceImpl implements FavoriteService {
 
         return switch (type) {
             case STORE -> processFavorite(user,
-                    () -> businessRepository.existsById(itemId),
                     () -> businessRepository.findById(itemId),
                     UserFavoriteEntity::setBusiness,
                     () -> userFavoriteRepository.findByUserIdAndBusinessId(user.getId(), itemId));
             case PRODUCT -> processFavorite(user,
-                    () -> productRepository.existsById(itemId),
                     () -> productRepository.findById(itemId),
                     UserFavoriteEntity::setProduct,
                     () -> userFavoriteRepository.findByUserIdAndProductId(user.getId(), itemId));
             case OFFER -> processFavorite(user,
-                    () -> campaignRepository.existsById(itemId),
                     () -> campaignRepository.findById(itemId),
                     UserFavoriteEntity::setCampaign,
                     () -> userFavoriteRepository.findByUserIdAndCampaignId(user.getId(), itemId));
@@ -87,11 +83,11 @@ public class FavoriteServiceImpl implements FavoriteService {
     }
 
     private <T> ResponseEntity<FavoriteResponse> processFavorite(UserEntity user,
-                                                                 BooleanSupplier existsChecker,
                                                                  Supplier<Optional<T>> entityFinder,
                                                                  BiConsumer<UserFavoriteEntity, T> setter,
                                                                  Supplier<Optional<UserFavoriteEntity>> existingFinder) {
-        if (!existsChecker.getAsBoolean()) {
+        Optional<T> entityOpt = entityFinder.get();
+        if (entityOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
         var existing = existingFinder.get();
@@ -99,8 +95,7 @@ public class FavoriteServiceImpl implements FavoriteService {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
         UserFavoriteEntity fav = new UserFavoriteEntity(user);
-        T ent = entityFinder.get().orElse(null);
-        setter.accept(fav, ent);
+        setter.accept(fav, entityOpt.get());
         fav.setCreatedAt(LocalDateTime.now());
         fav.setUpdatedAt(LocalDateTime.now());
         fav.setActive(true);
