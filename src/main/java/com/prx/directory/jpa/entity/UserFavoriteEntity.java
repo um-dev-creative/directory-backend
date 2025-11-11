@@ -30,25 +30,25 @@ public class UserFavoriteEntity implements Serializable {
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_fk", nullable = false)
     private UserEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "business_id")
+    @JoinColumn(name = "business_fk")
     private BusinessEntity business;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id")
+    @JoinColumn(name = "product_fk")
     private ProductEntity product;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "campaign_id")
+    @JoinColumn(name = "campaign_fk")
     private CampaignEntity campaign;
 
     @NotNull
     @ColumnDefault("true")
     @Column(name = "active", nullable = false)
-        private Boolean active = false;
+        private Boolean active = true;
 
     @NotNull
     @ColumnDefault("now()")
@@ -64,7 +64,6 @@ public class UserFavoriteEntity implements Serializable {
      * Default no-arg constructor required by JPA and by code style rules.
      */
     public UserFavoriteEntity() {
-        // no-arg constructor
     }
 
     /**
