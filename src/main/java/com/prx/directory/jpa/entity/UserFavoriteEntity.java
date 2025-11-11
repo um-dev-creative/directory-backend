@@ -48,7 +48,7 @@ public class UserFavoriteEntity implements Serializable {
     @NotNull
     @ColumnDefault("true")
     @Column(name = "active", nullable = false)
-        private Boolean active = true;
+    private Boolean active = true;
 
     @NotNull
     @ColumnDefault("now()")
