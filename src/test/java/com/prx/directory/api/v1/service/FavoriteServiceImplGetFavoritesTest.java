@@ -138,4 +138,63 @@ class FavoriteServiceImplGetFavoritesTest {
             assertTrue(productsResp.getBody().stores().isEmpty());
         }
     }
+
+    @Test
+    @DisplayName("Returns 501 when sort parameter is provided")
+    void getFavoritesWithSortNotImplemented() {
+        UUID userId = UUID.randomUUID();
+        try (MockedStatic<JwtUtil> mocked = Mockito.mockStatic(JwtUtil.class)) {
+            mocked.when(() -> JwtUtil.getUidFromToken("token")).thenReturn(userId);
+
+            ResponseEntity<FavoritesResponse> resp = favoriteService.getFavorites("token", null, 0, 10, "name");
+            assertEquals(501, resp.getStatusCode().value());
+        }
+    }
+
+    @Test
+    @DisplayName("Paginate across combined list when no type filter")
+    void getFavoritesCombinedPagination() {
+        UUID userId = UUID.randomUUID();
+        UUID bId1 = UUID.randomUUID();
+        UUID bId2 = UUID.randomUUID();
+        UUID pId1 = UUID.randomUUID();
+
+        BusinessEntity be1 = new BusinessEntity(); be1.setId(bId1); be1.setName("B1");
+        BusinessEntity be2 = new BusinessEntity(); be2.setId(bId2); be2.setName("B2");
+        ProductEntity pe1 = new ProductEntity(); pe1.setId(pId1); pe1.setName("P1");
+
+        UserFavoriteEntity uf1 = new UserFavoriteEntity(); uf1.setBusiness(be1);
+        UserFavoriteEntity uf2 = new UserFavoriteEntity(); uf2.setBusiness(be2);
+        UserFavoriteEntity uf3 = new UserFavoriteEntity(); uf3.setProduct(pe1);
+
+        try (MockedStatic<JwtUtil> mocked = Mockito.mockStatic(JwtUtil.class)) {
+            mocked.when(() -> JwtUtil.getUidFromToken("token")).thenReturn(userId);
+
+            when(userFavoriteRepository.findByUserId(userId)).thenReturn(List.of(uf1, uf2, uf3));
+
+            BusinessTO bto1 = new BusinessTO(bId1, "B1", null, null, null, null, null, null, null, null, null, false, null);
+            BusinessTO bto2 = new BusinessTO(bId2, "B2", null, null, null, null, null, null, null, null, null, false, null);
+
+            when(businessMapper.toBusinessTO(be1)).thenReturn(bto1);
+            when(businessMapper.toBusinessTO(be2)).thenReturn(bto2);
+
+            // Request page 0, size 2 - should return first 2 items (both stores)
+            ResponseEntity<FavoritesResponse> resp = favoriteService.getFavorites("token", null, 0, 2, null);
+            assertTrue(resp.getStatusCode().is2xxSuccessful());
+            FavoritesResponse f = resp.getBody();
+            assertNotNull(f);
+            assertEquals(2, f.stores().size());
+            assertEquals(0, f.products().size());
+            assertEquals(0, f.offers().size());
+
+            // Request page 1, size 2 - should return next item (product)
+            ResponseEntity<FavoritesResponse> resp2 = favoriteService.getFavorites("token", null, 1, 2, null);
+            assertTrue(resp2.getStatusCode().is2xxSuccessful());
+            FavoritesResponse f2 = resp2.getBody();
+            assertNotNull(f2);
+            assertEquals(0, f2.stores().size());
+            assertEquals(1, f2.products().size());
+            assertEquals(0, f2.offers().size());
+        }
+    }
 }
