@@ -2,6 +2,7 @@ package com.prx.directory.api.v1.service;
 
 import com.prx.directory.api.v1.to.FavoriteCreateRequest;
 import com.prx.directory.api.v1.to.FavoriteResponse;
+import com.prx.directory.api.v1.to.FavoritesResponse;
 import org.springframework.http.ResponseEntity;
 
 /**
@@ -35,6 +36,20 @@ public interface FavoriteService {
      * </ul>
      */
     default ResponseEntity<FavoriteResponse> createFavorite(String sessionToken, FavoriteCreateRequest request) {
+        return ResponseEntity.status(501).build();
+    }
+
+    /**
+     * Retrieve the authenticated user's favorites grouped by type.
+     *
+     * @param sessionToken session token header
+     * @param type         optional filter: "stores" | "products" | "offers"
+     * @param page         page number (0-based)
+     * @param size         page size
+     * @param sort         optional sort string
+     * @return ResponseEntity with grouped favorites
+     */
+    default ResponseEntity<FavoritesResponse> getFavorites(String sessionToken, String type, int page, int size, String sort) {
         return ResponseEntity.status(501).build();
     }
 }
