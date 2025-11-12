@@ -26,6 +26,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -136,6 +137,99 @@ class FavoriteServiceImplGetFavoritesTest {
             assertNotNull(productsResp.getBody());
             assertEquals(1, productsResp.getBody().products().size());
             assertTrue(productsResp.getBody().stores().isEmpty());
+        }
+    }
+
+    @Test
+    @DisplayName("Pagination applies across combined list when no type filter is specified")
+    void getFavoritesPaginationAcrossCombinedList() {
+        UUID userId = UUID.randomUUID();
+
+        // Create 5 stores, 5 products, 5 offers = 15 total
+        List<UserFavoriteEntity> favorites = new ArrayList<>();
+        List<BusinessEntity> businesses = new ArrayList<>();
+        List<ProductEntity> products = new ArrayList<>();
+        List<CampaignEntity> campaigns = new ArrayList<>();
+
+        for (int i = 0; i < 5; i++) {
+            BusinessEntity be = new BusinessEntity();
+            be.setId(UUID.randomUUID());
+            be.setName("Store" + i);
+            businesses.add(be);
+            UserFavoriteEntity uf = new UserFavoriteEntity();
+            uf.setBusiness(be);
+            favorites.add(uf);
+        }
+
+        for (int i = 0; i < 5; i++) {
+            ProductEntity pe = new ProductEntity();
+            pe.setId(UUID.randomUUID());
+            pe.setName("Product" + i);
+            products.add(pe);
+            UserFavoriteEntity uf = new UserFavoriteEntity();
+            uf.setProduct(pe);
+            favorites.add(uf);
+        }
+
+        for (int i = 0; i < 5; i++) {
+            CampaignEntity ce = new CampaignEntity();
+            ce.setId(UUID.randomUUID());
+            ce.setName("Offer" + i);
+            ce.setStartDate(Instant.now());
+            ce.setEndDate(Instant.now());
+            campaigns.add(ce);
+            UserFavoriteEntity uf = new UserFavoriteEntity();
+            uf.setCampaign(ce);
+            favorites.add(uf);
+        }
+
+        try (MockedStatic<JwtUtil> mocked = Mockito.mockStatic(JwtUtil.class)) {
+            mocked.when(() -> JwtUtil.getUidFromToken("token")).thenReturn(userId);
+
+            when(userFavoriteRepository.findByUserId(userId)).thenReturn(favorites);
+            when(businessMapper.toBusinessTO(any(BusinessEntity.class)))
+                    .thenAnswer(inv -> {
+                        BusinessEntity b = inv.getArgument(0);
+                        return new BusinessTO(b.getId(), b.getName(), null, null, null, null, null, null, null, null, null, false, null);
+                    });
+            when(campaignMapper.toOfferTO(any(CampaignEntity.class)))
+                    .thenAnswer(inv -> {
+                        CampaignEntity c = inv.getArgument(0);
+                        return new OfferTO(c.getId(), c.getName(), null, null, c.getStartDate(), c.getEndDate(), false);
+                    });
+
+            // Request page 0 with size 10 - should return exactly 10 items total (5 stores + 5 products)
+            ResponseEntity<FavoritesResponse> resp = favoriteService.getFavorites("token", null, 0, 10, null);
+            assertTrue(resp.getStatusCode().is2xxSuccessful());
+            FavoritesResponse body = resp.getBody();
+            assertNotNull(body);
+            
+            int totalItems = body.stores().size() + body.products().size() + body.offers().size();
+            assertEquals(10, totalItems, "Total items should be 10 when requesting page 0 with size 10");
+            assertEquals(5, body.stores().size());
+            assertEquals(5, body.products().size());
+            assertEquals(0, body.offers().size());
+
+            // Request page 1 with size 10 - should return exactly 5 items total (5 offers)
+            ResponseEntity<FavoritesResponse> resp2 = favoriteService.getFavorites("token", null, 1, 10, null);
+            assertTrue(resp2.getStatusCode().is2xxSuccessful());
+            FavoritesResponse body2 = resp2.getBody();
+            assertNotNull(body2);
+            
+            int totalItems2 = body2.stores().size() + body2.products().size() + body2.offers().size();
+            assertEquals(5, totalItems2, "Total items should be 5 when requesting page 1 with size 10");
+            assertEquals(0, body2.stores().size());
+            assertEquals(0, body2.products().size());
+            assertEquals(5, body2.offers().size());
+
+            // Request page 2 with size 10 - should return 0 items
+            ResponseEntity<FavoritesResponse> resp3 = favoriteService.getFavorites("token", null, 2, 10, null);
+            assertTrue(resp3.getStatusCode().is2xxSuccessful());
+            FavoritesResponse body3 = resp3.getBody();
+            assertNotNull(body3);
+            
+            int totalItems3 = body3.stores().size() + body3.products().size() + body3.offers().size();
+            assertEquals(0, totalItems3, "Total items should be 0 when requesting page 2 with size 10");
         }
     }
 }
