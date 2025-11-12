@@ -58,15 +58,9 @@ class FavoriteServiceImplGetFavoritesTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         favoriteService = new FavoriteServiceImpl(userFavoriteRepository,
-                businessRepository, product_repository(), campaignRepository,
+                businessRepository, productRepository, campaignRepository,
                 favoriteMapper, businessMapper, productMapper, campaignMapper);
     }
-
-    // helper to satisfy constructor call in environments where parameter order differs; returns productRepository
-    private ProductRepository product_repository() {
-        return productRepository;
-    }
-
     @Test
     @DisplayName("401 when token missing or invalid")
     void getFavoritesUnauthorized() {
