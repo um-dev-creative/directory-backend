@@ -97,6 +97,11 @@ public class FavoriteServiceImpl implements FavoriteService {
 
     @Override
     public ResponseEntity<FavoritesResponse> getFavorites(String sessionToken, String type, int page, int size, String sort) {
+        // Return 501 Not Implemented if sort parameter is provided
+        if (sort != null && !sort.isBlank()) {
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        }
+
         UUID userId = JwtUtil.getUidFromToken(sessionToken);
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -123,13 +128,22 @@ public class FavoriteServiceImpl implements FavoriteService {
                 .map(campaignMapper::toOfferTO)
                 .toList();
 
-        // Apply type filter
+        // Apply type filter with pagination
         if (Objects.nonNull(type) && !type.isBlank()) {
             String t = type.trim().toLowerCase(Locale.ROOT);
             return switch (t) {
-                case "stores" -> ResponseEntity.ok(new FavoritesResponse(stores, List.of(), List.of()));
-                case "products" -> ResponseEntity.ok(new FavoritesResponse(List.of(), products, List.of()));
-                case "offers" -> ResponseEntity.ok(new FavoritesResponse(List.of(), List.of(), offers));
+                case "stores" -> {
+                    List<BusinessTO> paginatedStores = paginateList(stores, page, size);
+                    yield ResponseEntity.ok(new FavoritesResponse(paginatedStores, List.of(), List.of()));
+                }
+                case "products" -> {
+                    List<ProductCreateResponse> paginatedProducts = paginateList(products, page, size);
+                    yield ResponseEntity.ok(new FavoritesResponse(List.of(), paginatedProducts, List.of()));
+                }
+                case "offers" -> {
+                    List<OfferTO> paginatedOffers = paginateList(offers, page, size);
+                    yield ResponseEntity.ok(new FavoritesResponse(List.of(), List.of(), paginatedOffers));
+                }
                 default -> ResponseEntity.badRequest().build();
             };
         }
@@ -164,6 +178,12 @@ public class FavoriteServiceImpl implements FavoriteService {
 
         FavoritesResponse response = new FavoritesResponse(storesPage, productsPage, offersPage);
         return ResponseEntity.ok(response);
+    }
+
+    private <T> List<T> paginateList(List<T> list, int page, int size) {
+        int from = Math.max(0, page * size);
+        int to = Math.min(list.size(), from + size);
+        return from < to ? list.subList(from, to) : List.of();
     }
 
     private <T> ResponseEntity<FavoriteResponse> processFavorite(UserEntity user,
