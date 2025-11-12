@@ -1,11 +1,6 @@
 package com.prx.directory.api.v1.service;
 
-import com.prx.directory.api.v1.to.BusinessTO;
-import com.prx.directory.api.v1.to.FavoriteCreateRequest;
-import com.prx.directory.api.v1.to.FavoriteResponse;
-import com.prx.directory.api.v1.to.FavoritesResponse;
-import com.prx.directory.api.v1.to.OfferTO;
-import com.prx.directory.api.v1.to.ProductCreateResponse;
+import com.prx.directory.api.v1.to.*;
 import com.prx.directory.constant.FavoriteType;
 import com.prx.directory.jpa.entity.UserEntity;
 import com.prx.directory.jpa.entity.UserFavoriteEntity;
@@ -164,15 +159,16 @@ public class FavoriteServiceImpl implements FavoriteService {
         List<FavoriteItem> paginatedItems = from < to ? combined.subList(from, to) : List.of();
         
         // Separate back into type-specific lists
-        List<com.prx.directory.api.v1.to.BusinessTO> storesPage = new ArrayList<>();
-        List<com.prx.directory.api.v1.to.ProductCreateResponse> productsPage = new ArrayList<>();
-        List<com.prx.directory.api.v1.to.OfferTO> offersPage = new ArrayList<>();
+        List<BusinessTO> storesPage = new ArrayList<>();
+        List<ProductCreateResponse> productsPage = new ArrayList<>();
+        List<OfferTO> offersPage = new ArrayList<>();
         
         for (FavoriteItem item : paginatedItems) {
             switch (item.itemType()) {
-                case "store" -> storesPage.add((com.prx.directory.api.v1.to.BusinessTO) item.item());
-                case "product" -> productsPage.add((com.prx.directory.api.v1.to.ProductCreateResponse) item.item());
-                case "offer" -> offersPage.add((com.prx.directory.api.v1.to.OfferTO) item.item());
+                case "store" -> storesPage.add((BusinessTO) item.item());
+                case "product" -> productsPage.add((ProductCreateResponse) item.item());
+                case "offer" -> offersPage.add((OfferTO) item.item());
+                default -> ResponseEntity.notFound().build();
             }
         }
 
