@@ -131,19 +131,33 @@ public class FavoriteServiceImpl implements FavoriteService {
             };
         }
 
-        // Pagination: naive in-memory pagination since repository methods returning pageable aren't provided here.
-        // For now, apply pagination on combined lists separately.
+        // Pagination: When no type filter is specified, paginate across the combined list
+        // to ensure the total number of items returned respects the size parameter.
+        // Create a combined list with ordering: stores, then products, then offers
+        record FavoriteItem(Object item, String itemType) {}
+        
+        List<FavoriteItem> combined = new ArrayList<>();
+        stores.forEach(s -> combined.add(new FavoriteItem(s, "store")));
+        products.forEach(p -> combined.add(new FavoriteItem(p, "product")));
+        offers.forEach(o -> combined.add(new FavoriteItem(o, "offer")));
+        
+        // Apply pagination to the combined list
         int from = Math.max(0, page * size);
-        int to = Math.min(stores.size(), from + size);
-        List<com.prx.directory.api.v1.to.BusinessTO> storesPage = from < to ? stores.subList(from, to) : List.of();
-
-        from = Math.max(0, page * size);
-        to = Math.min(products.size(), from + size);
-        List<com.prx.directory.api.v1.to.ProductCreateResponse> productsPage = from < to ? products.subList(from, to) : List.of();
-
-        from = Math.max(0, page * size);
-        to = Math.min(offers.size(), from + size);
-        List<com.prx.directory.api.v1.to.OfferTO> offersPage = from < to ? offers.subList(from, to) : List.of();
+        int to = Math.min(combined.size(), from + size);
+        List<FavoriteItem> paginatedItems = from < to ? combined.subList(from, to) : List.of();
+        
+        // Separate back into type-specific lists
+        List<com.prx.directory.api.v1.to.BusinessTO> storesPage = new ArrayList<>();
+        List<com.prx.directory.api.v1.to.ProductCreateResponse> productsPage = new ArrayList<>();
+        List<com.prx.directory.api.v1.to.OfferTO> offersPage = new ArrayList<>();
+        
+        for (FavoriteItem item : paginatedItems) {
+            switch (item.itemType()) {
+                case "store" -> storesPage.add((com.prx.directory.api.v1.to.BusinessTO) item.item());
+                case "product" -> productsPage.add((com.prx.directory.api.v1.to.ProductCreateResponse) item.item());
+                case "offer" -> offersPage.add((com.prx.directory.api.v1.to.OfferTO) item.item());
+            }
+        }
 
         FavoritesResponse response = new FavoritesResponse(storesPage, productsPage, offersPage);
         return ResponseEntity.ok(response);
