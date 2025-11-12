@@ -3,6 +3,7 @@ package com.prx.directory.api.v1.controller;
 import com.prx.directory.api.v1.service.FavoriteService;
 import com.prx.directory.api.v1.to.FavoriteCreateRequest;
 import com.prx.directory.api.v1.to.FavoriteResponse;
+import com.prx.directory.api.v1.to.FavoritesResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -12,9 +13,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import static com.prx.security.constant.ConstantApp.SESSION_TOKEN_KEY;
 
@@ -109,5 +112,33 @@ public interface FavoriteApi {
             @RequestHeader(SESSION_TOKEN_KEY) String sessionToken,
             @Valid @RequestBody FavoriteCreateRequest request) {
         return this.getService().createFavorite(sessionToken, request);
+    }
+
+    /**
+     * Get the authenticated user's favorites grouped by type. Supports optional filtering by type
+     * and pagination (page, size) and optional sort string (e.g. "name,asc").
+     *
+     * @param sessionToken session token header
+     * @param type optional filter: "stores" | "products" | "offers"
+     * @param page page number (default 0)
+     * @param size page size (default 10)
+     * @param sort optional sort string
+     * @return grouped favorites response
+     */
+    @Operation(summary = "Get user favorites", description = "Returns the authenticated user's favorites grouped by type (stores, products, offers). Supports pagination and optional filtering by type.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Favorites retrieved",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = FavoritesResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content)
+    })
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    default ResponseEntity<FavoritesResponse> getFavorites(
+            @RequestHeader(SESSION_TOKEN_KEY) String sessionToken,
+            @RequestParam(required = false) String type,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String sort) {
+        return this.getService().getFavorites(sessionToken, type, page, size, sort);
     }
 }
