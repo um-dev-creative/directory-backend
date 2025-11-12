@@ -1,8 +1,11 @@
 package com.prx.directory.api.v1.service;
 
+import com.prx.directory.api.v1.to.BusinessTO;
 import com.prx.directory.api.v1.to.FavoriteCreateRequest;
 import com.prx.directory.api.v1.to.FavoriteResponse;
 import com.prx.directory.api.v1.to.FavoritesResponse;
+import com.prx.directory.api.v1.to.OfferTO;
+import com.prx.directory.api.v1.to.ProductCreateResponse;
 import com.prx.directory.constant.FavoriteType;
 import com.prx.directory.jpa.entity.UserEntity;
 import com.prx.directory.jpa.entity.UserFavoriteEntity;
@@ -94,6 +97,11 @@ public class FavoriteServiceImpl implements FavoriteService {
 
     @Override
     public ResponseEntity<FavoritesResponse> getFavorites(String sessionToken, String type, int page, int size, String sort) {
+        // Sorting not yet implemented
+        if (sort != null && !sort.isBlank()) {
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        }
+        
         UUID userId = JwtUtil.getUidFromToken(sessionToken);
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -102,50 +110,53 @@ public class FavoriteServiceImpl implements FavoriteService {
         List<UserFavoriteEntity> favsList = userFavoriteRepository.findByUserId(userId);
 
         // filter by type if provided and map to DTO lists
-        List<com.prx.directory.api.v1.to.BusinessTO> stores = favsList.stream()
+        List<BusinessTO> stores = favsList.stream()
                 .map(UserFavoriteEntity::getBusiness)
                 .filter(Objects::nonNull)
                 .map(businessMapper::toBusinessTO)
                 .toList();
 
-        List<com.prx.directory.api.v1.to.ProductCreateResponse> products = favsList.stream()
+        List<ProductCreateResponse> products = favsList.stream()
                 .map(UserFavoriteEntity::getProduct)
                 .filter(Objects::nonNull)
                 .map(productMapper::toProductCreateResponse)
                 .toList();
 
-        List<com.prx.directory.api.v1.to.OfferTO> offers = favsList.stream()
+        List<OfferTO> offers = favsList.stream()
                 .map(UserFavoriteEntity::getCampaign)
                 .filter(Objects::nonNull)
                 .map(campaignMapper::toOfferTO)
                 .toList();
 
-        // Apply type filter
+        // Apply type filter with pagination
         if (Objects.nonNull(type) && !type.isBlank()) {
             String t = type.trim().toLowerCase(Locale.ROOT);
             return switch (t) {
-                case "stores" -> ResponseEntity.ok(new FavoritesResponse(stores, List.of(), List.of()));
-                case "products" -> ResponseEntity.ok(new FavoritesResponse(List.of(), products, List.of()));
-                case "offers" -> ResponseEntity.ok(new FavoritesResponse(List.of(), List.of(), offers));
+                case "stores" -> {
+                    int from = Math.max(0, page * size);
+                    int to = Math.min(stores.size(), from + size);
+                    List<BusinessTO> storesPage = from < to ? stores.subList(from, to) : List.of();
+                    yield ResponseEntity.ok(new FavoritesResponse(storesPage, List.of(), List.of()));
+                }
+                case "products" -> {
+                    int from = Math.max(0, page * size);
+                    int to = Math.min(products.size(), from + size);
+                    List<ProductCreateResponse> productsPage = from < to ? products.subList(from, to) : List.of();
+                    yield ResponseEntity.ok(new FavoritesResponse(List.of(), productsPage, List.of()));
+                }
+                case "offers" -> {
+                    int from = Math.max(0, page * size);
+                    int to = Math.min(offers.size(), from + size);
+                    List<OfferTO> offersPage = from < to ? offers.subList(from, to) : List.of();
+                    yield ResponseEntity.ok(new FavoritesResponse(List.of(), List.of(), offersPage));
+                }
                 default -> ResponseEntity.badRequest().build();
             };
         }
 
-        // Pagination: naive in-memory pagination since repository methods returning pageable aren't provided here.
-        // For now, apply pagination on combined lists separately.
-        int from = Math.max(0, page * size);
-        int to = Math.min(stores.size(), from + size);
-        List<com.prx.directory.api.v1.to.BusinessTO> storesPage = from < to ? stores.subList(from, to) : List.of();
-
-        from = Math.max(0, page * size);
-        to = Math.min(products.size(), from + size);
-        List<com.prx.directory.api.v1.to.ProductCreateResponse> productsPage = from < to ? products.subList(from, to) : List.of();
-
-        from = Math.max(0, page * size);
-        to = Math.min(offers.size(), from + size);
-        List<com.prx.directory.api.v1.to.OfferTO> offersPage = from < to ? offers.subList(from, to) : List.of();
-
-        FavoritesResponse response = new FavoritesResponse(storesPage, productsPage, offersPage);
+        // When no type filter: return all grouped favorites without pagination
+        // Pagination only applies when a specific type filter is provided
+        FavoritesResponse response = new FavoritesResponse(stores, products, offers);
         return ResponseEntity.ok(response);
     }
 
