@@ -148,28 +148,31 @@ public class FavoriteServiceImpl implements FavoriteService {
             };
         }
 
-        // When no type filter is specified, combine all items and paginate across the combined list
-        // Create a combined list with all favorites
-        List<Object> combinedList = new ArrayList<>();
-        combinedList.addAll(stores);
-        combinedList.addAll(products);
-        combinedList.addAll(offers);
-
+        // Pagination: When no type filter is specified, paginate across the combined list
+        // to ensure the total number of items returned respects the size parameter.
+        // Create a combined list with ordering: stores, then products, then offers
+        record FavoriteItem(Object item, String itemType) {}
+        
+        List<FavoriteItem> combined = new ArrayList<>();
+        stores.forEach(s -> combined.add(new FavoriteItem(s, "store")));
+        products.forEach(p -> combined.add(new FavoriteItem(p, "product")));
+        offers.forEach(o -> combined.add(new FavoriteItem(o, "offer")));
+        
         // Apply pagination to the combined list
-        List<Object> paginatedCombined = paginateList(combinedList, page, size);
-
-        // Separate the paginated results back into their respective categories
-        List<BusinessTO> storesPage = new ArrayList<>();
-        List<ProductCreateResponse> productsPage = new ArrayList<>();
-        List<OfferTO> offersPage = new ArrayList<>();
-
-        for (Object item : paginatedCombined) {
-            if (item instanceof BusinessTO business) {
-                storesPage.add(business);
-            } else if (item instanceof ProductCreateResponse product) {
-                productsPage.add(product);
-            } else if (item instanceof OfferTO offer) {
-                offersPage.add(offer);
+        int from = Math.max(0, page * size);
+        int to = Math.min(combined.size(), from + size);
+        List<FavoriteItem> paginatedItems = from < to ? combined.subList(from, to) : List.of();
+        
+        // Separate back into type-specific lists
+        List<com.prx.directory.api.v1.to.BusinessTO> storesPage = new ArrayList<>();
+        List<com.prx.directory.api.v1.to.ProductCreateResponse> productsPage = new ArrayList<>();
+        List<com.prx.directory.api.v1.to.OfferTO> offersPage = new ArrayList<>();
+        
+        for (FavoriteItem item : paginatedItems) {
+            switch (item.itemType()) {
+                case "store" -> storesPage.add((com.prx.directory.api.v1.to.BusinessTO) item.item());
+                case "product" -> productsPage.add((com.prx.directory.api.v1.to.ProductCreateResponse) item.item());
+                case "offer" -> offersPage.add((com.prx.directory.api.v1.to.OfferTO) item.item());
             }
         }
 
