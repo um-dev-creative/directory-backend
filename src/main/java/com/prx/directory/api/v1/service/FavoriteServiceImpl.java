@@ -97,11 +97,11 @@ public class FavoriteServiceImpl implements FavoriteService {
 
     @Override
     public ResponseEntity<FavoritesResponse> getFavorites(String sessionToken, String type, int page, int size, String sort) {
-        // Sorting not yet implemented
+        // Return 501 Not Implemented if sort parameter is provided
         if (sort != null && !sort.isBlank()) {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
         }
-        
+
         UUID userId = JwtUtil.getUidFromToken(sessionToken);
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -133,31 +133,57 @@ public class FavoriteServiceImpl implements FavoriteService {
             String t = type.trim().toLowerCase(Locale.ROOT);
             return switch (t) {
                 case "stores" -> {
-                    int from = Math.max(0, page * size);
-                    int to = Math.min(stores.size(), from + size);
-                    List<BusinessTO> storesPage = from < to ? stores.subList(from, to) : List.of();
-                    yield ResponseEntity.ok(new FavoritesResponse(storesPage, List.of(), List.of()));
+                    List<BusinessTO> paginatedStores = paginateList(stores, page, size);
+                    yield ResponseEntity.ok(new FavoritesResponse(paginatedStores, List.of(), List.of()));
                 }
                 case "products" -> {
-                    int from = Math.max(0, page * size);
-                    int to = Math.min(products.size(), from + size);
-                    List<ProductCreateResponse> productsPage = from < to ? products.subList(from, to) : List.of();
-                    yield ResponseEntity.ok(new FavoritesResponse(List.of(), productsPage, List.of()));
+                    List<ProductCreateResponse> paginatedProducts = paginateList(products, page, size);
+                    yield ResponseEntity.ok(new FavoritesResponse(List.of(), paginatedProducts, List.of()));
                 }
                 case "offers" -> {
-                    int from = Math.max(0, page * size);
-                    int to = Math.min(offers.size(), from + size);
-                    List<OfferTO> offersPage = from < to ? offers.subList(from, to) : List.of();
-                    yield ResponseEntity.ok(new FavoritesResponse(List.of(), List.of(), offersPage));
+                    List<OfferTO> paginatedOffers = paginateList(offers, page, size);
+                    yield ResponseEntity.ok(new FavoritesResponse(List.of(), List.of(), paginatedOffers));
                 }
                 default -> ResponseEntity.badRequest().build();
             };
         }
 
-        // When no type filter: return all grouped favorites without pagination
-        // Pagination only applies when a specific type filter is provided
-        FavoritesResponse response = new FavoritesResponse(stores, products, offers);
+        // Pagination: When no type filter is specified, paginate across the combined list
+        // to ensure the total number of items returned respects the size parameter.
+        // Create a combined list with ordering: stores, then products, then offers
+        record FavoriteItem(Object item, String itemType) {}
+        
+        List<FavoriteItem> combined = new ArrayList<>();
+        stores.forEach(s -> combined.add(new FavoriteItem(s, "store")));
+        products.forEach(p -> combined.add(new FavoriteItem(p, "product")));
+        offers.forEach(o -> combined.add(new FavoriteItem(o, "offer")));
+        
+        // Apply pagination to the combined list
+        int from = Math.max(0, page * size);
+        int to = Math.min(combined.size(), from + size);
+        List<FavoriteItem> paginatedItems = from < to ? combined.subList(from, to) : List.of();
+        
+        // Separate back into type-specific lists
+        List<com.prx.directory.api.v1.to.BusinessTO> storesPage = new ArrayList<>();
+        List<com.prx.directory.api.v1.to.ProductCreateResponse> productsPage = new ArrayList<>();
+        List<com.prx.directory.api.v1.to.OfferTO> offersPage = new ArrayList<>();
+        
+        for (FavoriteItem item : paginatedItems) {
+            switch (item.itemType()) {
+                case "store" -> storesPage.add((com.prx.directory.api.v1.to.BusinessTO) item.item());
+                case "product" -> productsPage.add((com.prx.directory.api.v1.to.ProductCreateResponse) item.item());
+                case "offer" -> offersPage.add((com.prx.directory.api.v1.to.OfferTO) item.item());
+            }
+        }
+
+        FavoritesResponse response = new FavoritesResponse(storesPage, productsPage, offersPage);
         return ResponseEntity.ok(response);
+    }
+
+    private <T> List<T> paginateList(List<T> list, int page, int size) {
+        int from = Math.max(0, page * size);
+        int to = Math.min(list.size(), from + size);
+        return from < to ? list.subList(from, to) : List.of();
     }
 
     private <T> ResponseEntity<FavoriteResponse> processFavorite(UserEntity user,
