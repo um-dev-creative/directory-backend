@@ -1,8 +1,11 @@
 package com.prx.directory.api.v1.service;
 
+import com.prx.directory.api.v1.to.BusinessTO;
 import com.prx.directory.api.v1.to.FavoriteCreateRequest;
 import com.prx.directory.api.v1.to.FavoriteResponse;
 import com.prx.directory.api.v1.to.FavoritesResponse;
+import com.prx.directory.api.v1.to.OfferTO;
+import com.prx.directory.api.v1.to.ProductCreateResponse;
 import com.prx.directory.constant.FavoriteType;
 import com.prx.directory.jpa.entity.UserEntity;
 import com.prx.directory.jpa.entity.UserFavoriteEntity;
@@ -102,19 +105,19 @@ public class FavoriteServiceImpl implements FavoriteService {
         List<UserFavoriteEntity> favsList = userFavoriteRepository.findByUserId(userId);
 
         // filter by type if provided and map to DTO lists
-        List<com.prx.directory.api.v1.to.BusinessTO> stores = favsList.stream()
+        List<BusinessTO> stores = favsList.stream()
                 .map(UserFavoriteEntity::getBusiness)
                 .filter(Objects::nonNull)
                 .map(businessMapper::toBusinessTO)
                 .toList();
 
-        List<com.prx.directory.api.v1.to.ProductCreateResponse> products = favsList.stream()
+        List<ProductCreateResponse> products = favsList.stream()
                 .map(UserFavoriteEntity::getProduct)
                 .filter(Objects::nonNull)
                 .map(productMapper::toProductCreateResponse)
                 .toList();
 
-        List<com.prx.directory.api.v1.to.OfferTO> offers = favsList.stream()
+        List<OfferTO> offers = favsList.stream()
                 .map(UserFavoriteEntity::getCampaign)
                 .filter(Objects::nonNull)
                 .map(campaignMapper::toOfferTO)
