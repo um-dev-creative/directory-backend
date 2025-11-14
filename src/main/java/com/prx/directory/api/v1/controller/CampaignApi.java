@@ -1,8 +1,10 @@
 package com.prx.directory.api.v1.controller;
 
 import com.prx.directory.api.v1.service.CampaignService;
+import com.prx.directory.api.v1.to.CampaignListResponse;
 import com.prx.directory.api.v1.to.CampaignTO;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -12,7 +14,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.Map;
 
 @Tag(name = "campaigns", description = "The Campaign API")
 public interface CampaignApi {
@@ -33,7 +39,7 @@ public interface CampaignApi {
             requestBody = @RequestBody(description = "Campaign create payload", required = true,
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = CampaignTO.class),
-                            examples = @ExampleObject(value = "{\n  \"name\": \"Holiday Sale\",\n  \"description\": \"Seasonal discount campaign\",\n  \"startDate\": \"2025-11-25T00:00:00Z\",\n  \"endDate\": \"2025-12-31T23:59:59Z\",\n  \"categoryId\": \"11111111-2222-3333-4444-555555555555\",\n  \"businessId\": \"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\",\n  \"active\": true\n}")
+                            examples = @ExampleObject(value = "{\n  \"name\": \"Holiday Sale\",\n  \"description\": \"Seasonal discount campaign\",\n  \"startDate\": \"2025-11-25T00:00:00Z\",\n  \"endDate\": \"2025-12-31T23:59:59Z\",\n  \"categoryId\": \"11111111-2222-3333-4444-555555555555\",\n  \"businessId\": \"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\",\n  \"active\": true\n}" )
                     )))
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Campaign created",
@@ -46,5 +52,24 @@ public interface CampaignApi {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     default ResponseEntity<CampaignTO> create(@RequestBody CampaignTO campaignTO) {
         return this.getService().create(campaignTO);
+    }
+
+    @Operation(summary = "List campaigns with pagination and sorting",
+            description = "Returns a paginated list of campaigns. Supports sorting by name, start_date, end_date, created_date using 'sort' param like 'name,-start_date'.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful response",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = CampaignListResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid pagination or sort parameters", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    default ResponseEntity<CampaignListResponse> listCampaigns(
+            @Parameter(description = "Page number (1-based). Default 1") @RequestParam(name = "page", required = false) Integer page,
+            @Parameter(description = "Items per page. Default 20, max 100") @RequestParam(name = "per_page", required = false) Integer perPage,
+            @Parameter(description = "Comma-separated sort fields. Prefix with '-' for descending. Allowed: name, start_date, end_date, created_date") @RequestParam(name = "sort", required = false) String sort,
+            @Parameter(description = "Additional search filters (q, active, business_id, category_id, *_from, *_to)") @RequestParam Map<String, String> filters
+    ) {
+        return getService().list(page, perPage, sort, filters);
     }
 }

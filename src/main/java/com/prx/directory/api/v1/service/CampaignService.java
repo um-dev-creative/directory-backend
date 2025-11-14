@@ -1,9 +1,11 @@
 package com.prx.directory.api.v1.service;
 
+import com.prx.directory.api.v1.to.CampaignListResponse;
 import com.prx.directory.api.v1.to.CampaignTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -45,6 +47,23 @@ public interface CampaignService {
      * @return ResponseEntity with CampaignTO if found or 404 status if not
      */
     default ResponseEntity<CampaignTO> find(UUID id) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    }
+
+    /**
+     * Lists campaigns with pagination, sorting and optional filters.
+     * <p>Expected HTTP status codes:</p>
+     * <ul>
+     *   <li>200 OK on success</li>
+     *   <li>400 BAD REQUEST for invalid pagination or sort parameters</li>
+     * </ul>
+     * @param page 1-based page number (default 1)
+     * @param perPage page size (default 20, max 100)
+     * @param sort comma-separated sort fields, prefix with '-' for DESC. Allowed: name, start_date, end_date, created_date
+     * @param filters optional filters map (e.g., q, active, business_id, category_id, *_from, *_to)
+     * @return ResponseEntity with CampaignListResponse
+     */
+    default ResponseEntity<CampaignListResponse> list(Integer page, Integer perPage, String sort, Map<String, String> filters) {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 }
