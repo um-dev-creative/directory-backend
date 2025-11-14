@@ -72,7 +72,7 @@ public class CampaignEntity implements Serializable {
     @NotNull
     @ColumnDefault("true")
     @Column(name = "active", nullable = false)
-    private Boolean active = false;
+    private Boolean active = true;
 
     /**
      * The category to which the campaign belongs.

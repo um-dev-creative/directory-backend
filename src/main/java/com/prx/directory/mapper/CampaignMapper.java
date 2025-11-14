@@ -1,10 +1,14 @@
 package com.prx.directory.mapper;
 
 import com.prx.commons.services.config.mapper.MapperAppConfig;
+import com.prx.directory.api.v1.to.CampaignTO;
 import com.prx.directory.api.v1.to.OfferTO;
 import com.prx.directory.jpa.entity.CampaignEntity;
+import com.prx.directory.jpa.entity.CategoryEntity;
+import com.prx.directory.jpa.entity.BusinessEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 
 @Mapper(config = MapperAppConfig.class)
 public interface CampaignMapper {
@@ -17,5 +21,30 @@ public interface CampaignMapper {
     @Mapping(target = "endDate", source = "endDate")
     @Mapping(target = "active", source = "active")
     OfferTO toOfferTO(CampaignEntity campaignEntity);
-}
 
+    @Mapping(target = "businessId", source = "businessFk.id")
+    @Mapping(target = "categoryId", source = "categoryFk.id")
+    CampaignTO toTO(CampaignEntity entity);
+
+    @Mapping(target = "businessFk", source = "businessId", qualifiedByName = "toBusinessEntity")
+    @Mapping(target = "categoryFk", source = "categoryId", qualifiedByName = "toCategoryEntity")
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "lastUpdate", ignore = true)
+    CampaignEntity toEntity(CampaignTO to);
+
+    @Named("toCategoryEntity")
+    default CategoryEntity toCategoryEntity(java.util.UUID id) {
+        if (id == null) return null;
+        CategoryEntity c = new CategoryEntity();
+        c.setId(id);
+        return c;
+    }
+
+    @Named("toBusinessEntity")
+    default BusinessEntity toBusinessEntity(java.util.UUID id) {
+        if (id == null) return null;
+        BusinessEntity b = new BusinessEntity();
+        b.setId(id);
+        return b;
+    }
+}
