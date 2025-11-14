@@ -18,8 +18,7 @@ public class CampaignController implements CampaignApi {
     }
 
     @Override
-    @PostMapping
-    public ResponseEntity<CampaignTO> create(@RequestBody CampaignTO campaignTO) {
+    public ResponseEntity<CampaignTO> create(CampaignTO campaignTO) {
         return campaignService.create(campaignTO);
     }
 
