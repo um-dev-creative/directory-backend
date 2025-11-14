@@ -130,4 +130,17 @@ class CampaignServiceImplTest {
         assertEquals(HttpStatus.OK, ok.getStatusCode());
         verify(campaignRepository, times(1)).findAll(any(Pageable.class));
     }
+
+    @Test
+    @DisplayName("list: returns 400 for malformed sort strings with empty tokens")
+    void listRejectsEmptyTokensInSort() {
+        ResponseEntity<CampaignListResponse> bad1 = campaignService.list(1, 20, "name,,end_date", Collections.emptyMap());
+        assertEquals(HttpStatus.BAD_REQUEST, bad1.getStatusCode());
+
+        ResponseEntity<CampaignListResponse> bad2 = campaignService.list(1, 20, "name,", Collections.emptyMap());
+        assertEquals(HttpStatus.BAD_REQUEST, bad2.getStatusCode());
+
+        ResponseEntity<CampaignListResponse> bad3 = campaignService.list(1, 20, ",name", Collections.emptyMap());
+        assertEquals(HttpStatus.BAD_REQUEST, bad3.getStatusCode());
+    }
 }
