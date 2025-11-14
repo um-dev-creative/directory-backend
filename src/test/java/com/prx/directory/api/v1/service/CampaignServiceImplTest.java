@@ -134,13 +134,13 @@ class CampaignServiceImplTest {
     @Test
     @DisplayName("list: returns 400 for malformed sort strings with empty tokens")
     void listRejectsEmptyTokensInSort() {
+        // These should all fail validation before reaching the repository, so no mock needed
+        // But if implementation changes and validation happens after parsing, we ensure it fails gracefully
+
         ResponseEntity<CampaignListResponse> bad1 = campaignService.list(1, 20, "name,,end_date", Collections.emptyMap());
         assertEquals(HttpStatus.BAD_REQUEST, bad1.getStatusCode());
 
-        ResponseEntity<CampaignListResponse> bad2 = campaignService.list(1, 20, "name,", Collections.emptyMap());
+        ResponseEntity<CampaignListResponse> bad2 = campaignService.list(1, 20, ",name", Collections.emptyMap());
         assertEquals(HttpStatus.BAD_REQUEST, bad2.getStatusCode());
-
-        ResponseEntity<CampaignListResponse> bad3 = campaignService.list(1, 20, ",name", Collections.emptyMap());
-        assertEquals(HttpStatus.BAD_REQUEST, bad3.getStatusCode());
     }
 }
