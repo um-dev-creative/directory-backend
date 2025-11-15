@@ -112,7 +112,7 @@ spring:
     bootstrap:
       # Enables the Spring Cloud Bootstrap application context
       enabled: ${SPRING_BOOT_CLOUD_BOOTSTRAP_ENABLED}
-    # The active profile for the Spring Boot application
+    # The active profile for the Spring Cloud Config
     profile: ${SPRING_BOOT_PROFILE_ACTIVE}
     config:
       # The active profile for the Spring Cloud Config
@@ -129,6 +129,9 @@ spring:
       hibernate:
         boot:
           allow_jdbc_metadata_access: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
     # Defers the initialization of the datasource
     defer-datasource-initialization: true
 

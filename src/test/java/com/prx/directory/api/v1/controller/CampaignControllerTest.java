@@ -2,6 +2,7 @@ package com.prx.directory.api.v1.controller;
 
 import com.prx.directory.api.v1.service.CampaignService;
 import com.prx.directory.api.v1.to.CampaignListResponse;
+import com.prx.directory.api.v1.to.CampaignTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,6 +14,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -38,5 +40,17 @@ class CampaignControllerTest {
 
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals(response, result.getBody());
+    }
+
+    @Test
+    @DisplayName("getById: delegates to service and returns result")
+    void getByIdDelegates() {
+        UUID id = UUID.randomUUID();
+        CampaignTO to = new CampaignTO(id, "n", null, null, null, null, null, null, null, true);
+        when(campaignService.find(id)).thenReturn(ResponseEntity.ok(to));
+
+        ResponseEntity<CampaignTO> resp = campaignController.getById(id);
+        assertEquals(HttpStatus.OK, resp.getStatusCode());
+        assertEquals(to, resp.getBody());
     }
 }

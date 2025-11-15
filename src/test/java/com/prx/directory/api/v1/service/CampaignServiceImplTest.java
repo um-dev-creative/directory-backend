@@ -12,10 +12,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -69,7 +67,7 @@ class CampaignServiceImplTest {
     void listReturnsPaginatedItemsWithMetadata() {
         List<CampaignEntity> content = List.of(entity1, entity2);
         Page<CampaignEntity> page = new PageImpl<>(content, PageRequest.of(0, 2), 10);
-        when(campaignRepository.findAll(any(Pageable.class))).thenReturn(page);
+        doReturn(page).when(campaignRepository).findAll(any(Specification.class), any(Pageable.class));
         when(campaignMapper.toOfferTO(entity1)).thenReturn(new OfferTO(entity1.getId(), entity1.getName(), entity1.getDescription(), null, entity1.getStartDate(), entity1.getEndDate(), true));
         when(campaignMapper.toOfferTO(entity2)).thenReturn(new OfferTO(entity2.getId(), entity2.getName(), entity2.getDescription(), null, entity2.getStartDate(), entity2.getEndDate(), false));
 
@@ -83,14 +81,14 @@ class CampaignServiceImplTest {
         assertEquals(2, body.per_page());
         assertEquals(5, body.total_pages());
         assertEquals(2, body.items().size());
-        verify(campaignRepository, times(1)).findAll(any(Pageable.class));
+        verify(campaignRepository, times(1)).findAll(any(Specification.class), any(Pageable.class));
     }
 
     @Test
     @DisplayName("list: supports multi-field sort and returns 400 on invalid field")
     void listSortsAndValidatesSort() {
-        when(campaignRepository.findAll(any(Pageable.class)))
-                .thenReturn(new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 20), 0));
+        doReturn(new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 20), 0))
+                .when(campaignRepository).findAll(any(Specification.class), any(Pageable.class));
 
         ResponseEntity<CampaignListResponse> ok = campaignService.list(1, 20, "name,-start_date", Collections.emptyMap());
         assertEquals(HttpStatus.OK, ok.getStatusCode());
@@ -105,8 +103,8 @@ class CampaignServiceImplTest {
         ResponseEntity<CampaignListResponse> bad = campaignService.list(1, 101, null, Collections.emptyMap());
         assertEquals(HttpStatus.BAD_REQUEST, bad.getStatusCode());
 
-        when(campaignRepository.findAll(any(Pageable.class)))
-                .thenReturn(new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 20), 0));
+        doReturn(new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 20), 0))
+                .when(campaignRepository).findAll(any(Specification.class), any(Pageable.class));
 
         ResponseEntity<CampaignListResponse> ok = campaignService.list(1, 0, null, Collections.emptyMap());
         assertEquals(HttpStatus.OK, ok.getStatusCode());
@@ -123,20 +121,17 @@ class CampaignServiceImplTest {
         filters.put("start_date_from", "2024-01-01T00:00:00Z");
         filters.put("end_date_to", "2024-12-31T23:59:59Z");
 
-        when(campaignRepository.findAll(any(Pageable.class)))
-                .thenReturn(new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 20), 0));
+        doReturn(new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 20), 0))
+                .when(campaignRepository).findAll(any(Specification.class), any(Pageable.class));
 
         ResponseEntity<CampaignListResponse> ok = campaignService.list(null, null, null, filters);
         assertEquals(HttpStatus.OK, ok.getStatusCode());
-        verify(campaignRepository, times(1)).findAll(any(Pageable.class));
+        verify(campaignRepository, times(1)).findAll(any(Specification.class), any(Pageable.class));
     }
 
     @Test
     @DisplayName("list: returns 400 for malformed sort strings with empty tokens")
     void listRejectsEmptyTokensInSort() {
-        // These should all fail validation before reaching the repository, so no mock needed
-        // But if implementation changes and validation happens after parsing, we ensure it fails gracefully
-
         ResponseEntity<CampaignListResponse> bad1 = campaignService.list(1, 20, "name,,end_date", Collections.emptyMap());
         assertEquals(HttpStatus.BAD_REQUEST, bad1.getStatusCode());
 
