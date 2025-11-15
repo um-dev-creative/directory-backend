@@ -91,9 +91,10 @@ public interface CampaignApi {
             @Parameter(description = "Page number (1-based). Default 1") @RequestParam(name = "page", required = false) Integer page,
             @Parameter(description = "Items per page. Default 20, max 100") @RequestParam(name = "per_page", required = false) Integer perPage,
             @Parameter(description = "Comma-separated sort fields. Prefix with '-' for descending. Allowed: name, start_date, end_date, created_date") @RequestParam(name = "sort", required = false) String sort,
-            @Parameter(description = "Additional search filters: name, category_fk, business_fk, active, start_from, start_to, end_from, end_to. " +
-                    "Legacy parameter names also supported for backward compatibility: q (name), category_id (category_fk), business_id (business_fk), " +
-                    "start_date_from/start_date_to (start_from/start_to), end_date_from/end_date_to (end_from/end_to).") @RequestParam Map<String, String> filters
+            @Parameter(description = "Additional search filters (preferred): name (partial, case-insensitive), category_fk (UUID), business_fk (UUID), active (boolean), " +
+                    "start_from/start_to (ISO datetime), end_from/end_to (ISO datetime). " +
+                    "Legacy/deprecated filter parameters (supported for backward compatibility, avoid using in new integrations): q (use 'name'), category_id (use 'category_fk'), business_id (use 'business_fk'), " +
+                    "start_date_from/start_date_to (use 'start_from'/'start_to'), end_date_from/end_date_to (use 'end_from'/'end_to').") @RequestParam Map<String, String> filters
     ) {
         return getService().list(page, perPage, sort, filters);
     }
