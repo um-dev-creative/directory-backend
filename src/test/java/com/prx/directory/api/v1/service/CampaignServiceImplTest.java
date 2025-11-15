@@ -1,9 +1,15 @@
 package com.prx.directory.api.v1.service;
 
 import com.prx.directory.api.v1.to.CampaignListResponse;
+import com.prx.directory.api.v1.to.CampaignTO;
+import com.prx.directory.api.v1.to.CampaignUpdateRequest;
 import com.prx.directory.api.v1.to.OfferTO;
+import com.prx.directory.jpa.entity.BusinessEntity;
 import com.prx.directory.jpa.entity.CampaignEntity;
+import com.prx.directory.jpa.entity.CategoryEntity;
+import com.prx.directory.jpa.repository.BusinessRepository;
 import com.prx.directory.jpa.repository.CampaignRepository;
+import com.prx.directory.jpa.repository.CategoryRepository;
 import com.prx.directory.mapper.CampaignMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,6 +22,7 @@ import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.*;
@@ -31,6 +38,12 @@ class CampaignServiceImplTest {
     private CampaignRepository campaignRepository;
 
     @Mock
+    private CategoryRepository categoryRepository;
+
+    @Mock
+    private BusinessRepository businessRepository;
+
+    @Mock
     private CampaignMapper campaignMapper;
 
     @InjectMocks
@@ -38,9 +51,17 @@ class CampaignServiceImplTest {
 
     private CampaignEntity entity1;
     private CampaignEntity entity2;
+    private CategoryEntity categoryEntity;
+    private BusinessEntity businessEntity;
 
     @BeforeEach
     void setUp() {
+        categoryEntity = new CategoryEntity();
+        categoryEntity.setId(UUID.randomUUID());
+
+        businessEntity = new BusinessEntity();
+        businessEntity.setId(UUID.randomUUID());
+
         entity1 = new CampaignEntity();
         entity1.setId(UUID.randomUUID());
         entity1.setName("Alpha");
@@ -50,6 +71,8 @@ class CampaignServiceImplTest {
         entity1.setActive(true);
         entity1.setCreatedDate(Instant.parse("2024-01-01T00:00:00Z"));
         entity1.setLastUpdate(Instant.parse("2024-01-02T00:00:00Z"));
+        entity1.setCategoryFk(categoryEntity);
+        entity1.setBusinessFk(businessEntity);
 
         entity2 = new CampaignEntity();
         entity2.setId(UUID.randomUUID());
@@ -137,5 +160,144 @@ class CampaignServiceImplTest {
 
         ResponseEntity<CampaignListResponse> bad2 = campaignService.list(1, 20, ",name", Collections.emptyMap());
         assertEquals(HttpStatus.BAD_REQUEST, bad2.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("update: successfully updates campaign name")
+    void updateSuccessfullyUpdatesName() {
+        UUID campaignId = entity1.getId();
+        CampaignUpdateRequest request = new CampaignUpdateRequest("Updated Name", null, null, null, null, null, null, null);
+        
+        when(campaignRepository.findById(campaignId)).thenReturn(Optional.of(entity1));
+        when(campaignRepository.save(any(CampaignEntity.class))).thenReturn(entity1);
+        when(campaignMapper.toTO(entity1)).thenReturn(new CampaignTO(campaignId, "Updated Name", "First", 
+                entity1.getStartDate(), entity1.getEndDate(), categoryEntity.getId(), businessEntity.getId(), 
+                entity1.getCreatedDate(), entity1.getLastUpdate(), true));
+
+        ResponseEntity<CampaignTO> response = campaignService.update(campaignId, request);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        verify(campaignRepository).save(any(CampaignEntity.class));
+    }
+
+    @Test
+    @DisplayName("update: returns 404 when campaign not found")
+    void updateReturns404WhenCampaignNotFound() {
+        UUID campaignId = UUID.randomUUID();
+        CampaignUpdateRequest request = new CampaignUpdateRequest("Updated Name", null, null, null, null, null, null, null);
+        
+        when(campaignRepository.findById(campaignId)).thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, 
+                () -> campaignService.update(campaignId, request));
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("update: returns 409 on optimistic locking conflict")
+    void updateReturns409OnOptimisticLockingConflict() {
+        UUID campaignId = entity1.getId();
+        Instant oldTimestamp = Instant.parse("2024-01-01T00:00:00Z");
+        CampaignUpdateRequest request = new CampaignUpdateRequest("Updated Name", null, null, null, null, null, null, oldTimestamp);
+        
+        when(campaignRepository.findById(campaignId)).thenReturn(Optional.of(entity1));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, 
+                () -> campaignService.update(campaignId, request));
+        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("update: validates startDate <= endDate")
+    void updateValidatesDateConstraint() {
+        UUID campaignId = entity1.getId();
+        Instant futureStart = Instant.parse("2025-01-01T00:00:00Z");
+        Instant pastEnd = Instant.parse("2024-01-01T00:00:00Z");
+        CampaignUpdateRequest request = new CampaignUpdateRequest(null, null, futureStart, pastEnd, null, null, null, null);
+        
+        when(campaignRepository.findById(campaignId)).thenReturn(Optional.of(entity1));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, 
+                () -> campaignService.update(campaignId, request));
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertTrue(exception.getReason().contains("startDate must be before or equal to endDate"));
+    }
+
+    @Test
+    @DisplayName("update: returns 404 when category not found")
+    void updateReturns404WhenCategoryNotFound() {
+        UUID campaignId = entity1.getId();
+        UUID newCategoryId = UUID.randomUUID();
+        CampaignUpdateRequest request = new CampaignUpdateRequest(null, null, null, null, newCategoryId, null, null, null);
+        
+        when(campaignRepository.findById(campaignId)).thenReturn(Optional.of(entity1));
+        when(categoryRepository.existsById(newCategoryId)).thenReturn(false);
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, 
+                () -> campaignService.update(campaignId, request));
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertTrue(exception.getReason().contains("Category not found"));
+    }
+
+    @Test
+    @DisplayName("update: returns 404 when business not found")
+    void updateReturns404WhenBusinessNotFound() {
+        UUID campaignId = entity1.getId();
+        UUID newBusinessId = UUID.randomUUID();
+        CampaignUpdateRequest request = new CampaignUpdateRequest(null, null, null, null, null, newBusinessId, null, null);
+        
+        when(campaignRepository.findById(campaignId)).thenReturn(Optional.of(entity1));
+        when(businessRepository.existsById(newBusinessId)).thenReturn(false);
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, 
+                () -> campaignService.update(campaignId, request));
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertTrue(exception.getReason().contains("Business not found"));
+    }
+
+    @Test
+    @DisplayName("update: successfully updates multiple fields")
+    void updateSuccessfullyUpdatesMultipleFields() {
+        UUID campaignId = entity1.getId();
+        UUID newCategoryId = UUID.randomUUID();
+        CampaignUpdateRequest request = new CampaignUpdateRequest("New Name", "New Description", 
+                null, null, newCategoryId, null, false, null);
+        
+        CategoryEntity newCategory = new CategoryEntity();
+        newCategory.setId(newCategoryId);
+        
+        when(campaignRepository.findById(campaignId)).thenReturn(Optional.of(entity1));
+        when(categoryRepository.existsById(newCategoryId)).thenReturn(true);
+        when(campaignRepository.save(any(CampaignEntity.class))).thenReturn(entity1);
+        when(campaignMapper.toTO(entity1)).thenReturn(new CampaignTO(campaignId, "New Name", "New Description", 
+                entity1.getStartDate(), entity1.getEndDate(), newCategoryId, businessEntity.getId(), 
+                entity1.getCreatedDate(), Instant.now(), false));
+
+        ResponseEntity<CampaignTO> response = campaignService.update(campaignId, request);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        verify(campaignRepository).save(any(CampaignEntity.class));
+    }
+
+    @Test
+    @DisplayName("update: returns 400 when id is null")
+    void updateReturns400WhenIdIsNull() {
+        CampaignUpdateRequest request = new CampaignUpdateRequest("Updated Name", null, null, null, null, null, null, null);
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, 
+                () -> campaignService.update(null, request));
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("update: returns 400 when request is null")
+    void updateReturns400WhenRequestIsNull() {
+        UUID campaignId = UUID.randomUUID();
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, 
+                () -> campaignService.update(campaignId, null));
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
     }
 }

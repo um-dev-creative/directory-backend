@@ -3,6 +3,7 @@ package com.prx.directory.api.v1.controller;
 import com.prx.directory.api.v1.service.CampaignService;
 import com.prx.directory.api.v1.to.CampaignListResponse;
 import com.prx.directory.api.v1.to.CampaignTO;
+import com.prx.directory.api.v1.to.CampaignUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -15,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -97,5 +99,32 @@ public interface CampaignApi {
                     "start_date_from/start_date_to (use 'start_from'/'start_to'), end_date_from/end_date_to (use 'end_from'/'end_to').") @RequestParam Map<String, String> filters
     ) {
         return getService().list(page, perPage, sort, filters);
+    }
+
+    @Operation(
+            summary = "Update an existing campaign",
+            description = "Updates an existing campaign. Supports partial updates (PATCH semantics). " +
+                    "Only provided fields will be updated. Validates field lengths, date constraints, " +
+                    "and foreign key references. Updates last_update timestamp automatically. " +
+                    "Implements optimistic locking - include the current last_update value to prevent concurrent modifications.",
+            requestBody = @RequestBody(description = "Campaign update payload. All fields are optional.", required = true,
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = CampaignUpdateRequest.class),
+                            examples = @ExampleObject(value = "{\n  \"name\": \"Updated Holiday Sale\",\n  \"description\": \"Extended seasonal discount campaign\",\n  \"startDate\": \"2025-11-25T00:00:00Z\",\n  \"endDate\": \"2026-01-15T23:59:59Z\",\n  \"categoryId\": \"11111111-2222-3333-4444-555555555555\",\n  \"businessId\": \"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\",\n  \"active\": true,\n  \"lastUpdate\": \"2025-11-15T10:30:00Z\"\n}")
+                    )))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Campaign updated successfully",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = CampaignTO.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid payload data (validation error)", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Campaign not found or referenced entity (category/business) not found", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Concurrency conflict - campaign was modified by another request", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
+    @PatchMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    default ResponseEntity<CampaignTO> update(
+            @Parameter(description = "Campaign UUID") @PathVariable("id") UUID id,
+            @org.springframework.web.bind.annotation.RequestBody CampaignUpdateRequest request) {
+        return getService().update(id, request);
     }
 }
