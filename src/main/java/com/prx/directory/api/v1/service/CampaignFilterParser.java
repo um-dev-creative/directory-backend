@@ -81,7 +81,7 @@ public class CampaignFilterParser {
 
     private Boolean parseBoolean(String v) {
         if (v == null || v.isBlank()) {
-            return false;
+            return null;
         }
         String t = v.trim().toLowerCase(Locale.ROOT);
         if (TRUE.toString().equals(t)) return TRUE;
