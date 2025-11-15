@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -124,7 +125,7 @@ public interface CampaignApi {
     @PatchMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     default ResponseEntity<CampaignTO> update(
             @Parameter(description = "Campaign UUID") @PathVariable("id") UUID id,
-            @org.springframework.web.bind.annotation.RequestBody CampaignUpdateRequest request) {
+            @Valid @org.springframework.web.bind.annotation.RequestBody CampaignUpdateRequest request) {
         return getService().update(id, request);
     }
 }
