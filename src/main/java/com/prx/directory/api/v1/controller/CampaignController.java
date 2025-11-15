@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping({"/api/v1/campaigns", "/api/campaigns"})
@@ -22,6 +23,11 @@ public class CampaignController implements CampaignApi {
     @Override
     public ResponseEntity<CampaignTO> create(CampaignTO campaignTO) {
         return campaignService.create(campaignTO);
+    }
+
+    @Override
+    public ResponseEntity<CampaignTO> getById(UUID id) {
+        return campaignService.find(id);
     }
 
     @Override

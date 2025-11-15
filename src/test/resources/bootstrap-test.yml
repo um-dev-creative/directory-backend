@@ -1,0 +1,30 @@
+prx:
+  logging:
+    trace:
+      enabled: false
+  jwt:
+    secret: test-secret-key
+    expirationMs: 3600000
+  auth:
+    clients: []
+
+app:
+  clientRoles: test-role
+  name: directory-backend-test
+  version: 0.0.1-TEST
+
+spring:
+  cloud:
+    bootstrap:
+      enabled: false
+    config:
+      enabled: false
+    vault:
+      enabled: false
+      token: not-used
+      uri: http://localhost:8200
+      kv:
+        backend: PRX
+        default-context: test
+      application-name: directory-backend-test
+

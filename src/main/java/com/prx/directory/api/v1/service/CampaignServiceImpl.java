@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -19,8 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class CampaignServiceImpl implements CampaignService {
@@ -29,17 +31,11 @@ public class CampaignServiceImpl implements CampaignService {
     private static final int DEFAULT_PER_PAGE = 20;
     private static final int MAX_PER_PAGE = 100;
 
-    private static final Map<String, String> SORT_FIELD_MAPPING = Map.of(
-            "name", "name",
-            "start_date", "startDate",
-            "end_date", "endDate",
-            "created_date", "createdDate"
-    );
-
     private final CampaignRepository campaignRepository;
     private final CategoryRepository categoryRepository;
     private final BusinessRepository businessRepository;
     private final CampaignMapper campaignMapper;
+    private final CampaignFilterParser filterParser;
 
     public CampaignServiceImpl(CampaignRepository campaignRepository,
                                CategoryRepository categoryRepository,
@@ -49,6 +45,7 @@ public class CampaignServiceImpl implements CampaignService {
         this.categoryRepository = categoryRepository;
         this.businessRepository = businessRepository;
         this.campaignMapper = campaignMapper;
+        this.filterParser = new CampaignFilterParser();
     }
 
     @Override
@@ -87,6 +84,14 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     @Override
+    public ResponseEntity<CampaignTO> find(UUID id) {
+        return campaignRepository.findById(id)
+                .map(campaignMapper::toTO)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    }
+
+    @Override
     public ResponseEntity<CampaignListResponse> list(Integer page, Integer perPage, String sort, Map<String, String> filters) {
         int p = (page == null || page < 1) ? DEFAULT_PAGE : page;
         int pp = (perPage == null || perPage < 1) ? DEFAULT_PER_PAGE : perPage;
@@ -94,40 +99,46 @@ public class CampaignServiceImpl implements CampaignService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
-        Sort sortObj = parseSort(sort);
+        Sort sortObj = CampaignSortParser.parse(sort);
         if (sortObj == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
-        Pageable pageable = PageRequest.of(p - 1, pp, sortObj);
-        Page<CampaignEntity> result = campaignRepository.findAll(pageable);
+        try {
+            // Parse all filters using helper
+            String name = filterParser.parseName(filters);
+            UUID categoryId = filterParser.parseCategoryId(filters);
+            UUID businessId = filterParser.parseBusinessId(filters);
+            Boolean active = filterParser.parseActive(filters);
 
-        List<OfferTO> items = result.getContent().stream().map(campaignMapper::toOfferTO).collect(Collectors.toList());
+            Instant startFrom = filterParser.parseStartFrom(filters);
+            Instant startTo = filterParser.parseStartTo(filters);
+            Instant endFrom = filterParser.parseEndFrom(filters);
+            Instant endTo = filterParser.parseEndTo(filters);
 
-        CampaignListResponse response = new CampaignListResponse(
-                result.getTotalElements(),
-                p,
-                pp,
-                result.getTotalPages(),
-                items
-        );
-        return ResponseEntity.ok(response);
-    }
+            // Validate date ranges
+            filterParser.validateDateRanges(startFrom, startTo, endFrom, endTo);
 
-    private Sort parseSort(String sort) {
-        if (sort == null || sort.isBlank()) {
-            return Sort.by(Sort.Order.desc(SORT_FIELD_MAPPING.get("created_date")));
+            Pageable pageable = PageRequest.of(p - 1, pp, sortObj);
+            var criteria = com.prx.directory.jpa.spec.CampaignCriteria.of(active, startFrom, startTo, endFrom, endTo);
+            Specification<CampaignEntity> spec = com.prx.directory.jpa.spec.CampaignSpecifications
+                    .byFilters(name, categoryId, businessId, criteria);
+            Page<CampaignEntity> result = campaignRepository.findAll(spec, pageable);
+
+            List<OfferTO> items = result.getContent().stream()
+                    .map(campaignMapper::toOfferTO)
+                    .toList();
+
+            CampaignListResponse response = new CampaignListResponse(
+                    result.getTotalElements(),
+                    p,
+                    pp,
+                    result.getTotalPages(),
+                    items
+            );
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
-        List<Sort.Order> orders = new ArrayList<>();
-        for (String token : sort.split(",")) {
-            String t = token.trim();
-            if (t.isEmpty()) return null;
-            boolean desc = t.startsWith("-");
-            String key = desc ? t.substring(1) : t;
-            String property = SORT_FIELD_MAPPING.get(key);
-            if (property == null) return null;
-            orders.add(desc ? Sort.Order.desc(property) : Sort.Order.asc(property));
-        }
-        return orders.isEmpty() ? null : Sort.by(orders);
     }
 }
