@@ -1,5 +1,6 @@
 package com.prx.directory.api.v1.service;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -11,78 +12,259 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class CampaignFilterParserTest {
 
-    private final CampaignFilterParser parser = new CampaignFilterParser();
+    private CampaignFilterParser parser;
+
+    @BeforeEach
+    void setup() {
+        parser = new CampaignFilterParser();
+    }
+
+    // -------- parseName tests --------
 
     @Test
-    void parseName_nullOrEmpty() {
+    void parseName_withValidName_returnsName() {
+        Map<String, String> filters = Map.of("name", "Holiday Sale");
+        assertEquals("Holiday Sale", parser.parseName(filters));
+    }
+
+    @Test
+    void parseName_withLegacyQ_returnsQ() {
+        Map<String, String> filters = Map.of("q", "Search Term");
+        assertEquals("Search Term", parser.parseName(filters));
+    }
+
+    @Test
+    void parseName_prefersPrimaryOverLegacy() {
+        Map<String, String> filters = new HashMap<>();
+        filters.put("name", "Primary");
+        filters.put("q", "Legacy");
+        assertEquals("Primary", parser.parseName(filters));
+    }
+
+    @Test
+    void parseName_exceedsMaxLength_throwsException() {
+        String longName = "x".repeat(121);
+        Map<String, String> filters = Map.of("name", longName);
+        assertThrows(IllegalArgumentException.class, () -> parser.parseName(filters));
+    }
+
+    @Test
+    void parseName_nullMap_returnsNull() {
         assertNull(parser.parseName(null));
+    }
+
+    @Test
+    void parseName_emptyMap_returnsNull() {
         assertNull(parser.parseName(Map.of()));
     }
 
+    // -------- parseCategoryId tests --------
+
     @Test
-    void parseName_legacyKey() {
-        Map<String, String> m = new HashMap<>();
-        m.put("q", "TestName");
-        assertEquals("TestName", parser.parseName(m));
+    void parseCategoryId_withValidUUID_returnsUUID() {
+        UUID uuid = UUID.randomUUID();
+        Map<String, String> filters = Map.of("category_fk", uuid.toString());
+        assertEquals(uuid, parser.parseCategoryId(filters));
     }
 
     @Test
-    void parseName_tooLong_throws() {
-        Map<String,String> m = new HashMap<>();
-        m.put("name", "x".repeat(121));
-        assertThrows(IllegalArgumentException.class, () -> parser.parseName(m));
+    void parseCategoryId_withLegacyKey_returnsUUID() {
+        UUID uuid = UUID.randomUUID();
+        Map<String, String> filters = Map.of("category_id", uuid.toString());
+        assertEquals(uuid, parser.parseCategoryId(filters));
     }
 
     @Test
-    void parseUUIDs_validAndLegacy() {
-        UUID id = UUID.randomUUID();
-        Map<String,String> m = new HashMap<>();
-        m.put("category_fk", id.toString());
-        assertEquals(id, parser.parseCategoryId(m));
-        m.clear();
-        m.put("category_id", id.toString());
-        assertEquals(id, parser.parseCategoryId(m));
+    void parseCategoryId_invalidUUID_throwsException() {
+        Map<String, String> filters = Map.of("category_fk", "not-a-uuid");
+        assertThrows(IllegalArgumentException.class, () -> parser.parseCategoryId(filters));
     }
 
     @Test
-    void parseActive_valid() {
-        Map<String,String> m = new HashMap<>();
-        m.put("active", "true");
-        assertEquals(Boolean.TRUE, parser.parseActive(m));
+    void parseCategoryId_nullValue_returnsNull() {
+        assertNull(parser.parseCategoryId(Map.of()));
+    }
 
-        m.put("active", "false");
-        assertEquals(Boolean.FALSE, parser.parseActive(m));
+    // -------- parseBusinessId tests --------
+
+    @Test
+    void parseBusinessId_withValidUUID_returnsUUID() {
+        UUID uuid = UUID.randomUUID();
+        Map<String, String> filters = Map.of("business_fk", uuid.toString());
+        assertEquals(uuid, parser.parseBusinessId(filters));
     }
 
     @Test
-    void parseActive_invalid_throws() {
-        Map<String,String> m = new HashMap<>();
-        m.put("active", "notabool");
-        assertThrows(IllegalArgumentException.class, () -> parser.parseActive(m));
+    void parseBusinessId_withLegacyKey_returnsUUID() {
+        UUID uuid = UUID.randomUUID();
+        Map<String, String> filters = Map.of("business_id", uuid.toString());
+        assertEquals(uuid, parser.parseBusinessId(filters));
     }
 
     @Test
-    void parseInstants_validAndLegacy() {
-        Map<String,String> m = new HashMap<>();
-        m.put("start_from", "2025-11-01T00:00:00Z");
-        assertEquals(Instant.parse("2025-11-01T00:00:00Z"), parser.parseStartFrom(m));
+    void parseBusinessId_blankValue_returnsNull() {
+        Map<String, String> filters = Map.of("business_fk", "   ");
+        assertNull(parser.parseBusinessId(filters));
+    }
 
-        m.clear();
-        m.put("start_date_from", "2025-11-02T00:00:00Z");
-        assertEquals(Instant.parse("2025-11-02T00:00:00Z"), parser.parseStartFrom(m));
+    // -------- parseActive tests --------
+
+    @Test
+    void parseActive_withTrue_returnsTrue() {
+        Map<String, String> filters = Map.of("active", "true");
+        assertTrue(parser.parseActive(filters));
     }
 
     @Test
-    void validateDateRanges_invalidStart_throws() {
-        Instant a = Instant.parse("2025-11-03T00:00:00Z");
-        Instant b = Instant.parse("2025-11-02T00:00:00Z");
-        assertThrows(IllegalArgumentException.class, () -> parser.validateDateRanges(a, b, null, null));
+    void parseActive_withFalse_returnsFalse() {
+        Map<String, String> filters = Map.of("active", "false");
+        assertFalse(parser.parseActive(filters));
     }
 
     @Test
-    void validateDateRanges_invalidEnd_throws() {
-        Instant a = Instant.parse("2025-11-03T00:00:00Z");
-        Instant b = Instant.parse("2025-11-02T00:00:00Z");
-        assertThrows(IllegalArgumentException.class, () -> parser.validateDateRanges(null, null, a, b));
+    void parseActive_caseInsensitive_works() {
+        assertEquals(Boolean.TRUE, parser.parseActive(Map.of("active", "TRUE")));
+        assertEquals(Boolean.FALSE, parser.parseActive(Map.of("active", "FALSE")));
+        assertEquals(Boolean.TRUE, parser.parseActive(Map.of("active", "TrUe")));
+    }
+
+    @Test
+    void parseActive_invalidValue_throwsException() {
+        Map<String, String> filters = Map.of("active", "notabool");
+        assertThrows(IllegalArgumentException.class, () -> parser.parseActive(filters));
+    }
+
+    @Test
+    void parseActive_nullValue_returnsNull() {
+        assertNull(parser.parseActive(Map.of()));
+    }
+
+    @Test
+    void parseActive_blankValue_returnsNull() {
+        Map<String, String> filters = Map.of("active", "  ");
+        assertNull(parser.parseActive(filters));
+    }
+
+    // -------- parseStartFrom tests --------
+
+    @Test
+    void parseStartFrom_validISO_returnsInstant() {
+        Map<String, String> filters = Map.of("start_from", "2025-11-01T00:00:00Z");
+        Instant expected = Instant.parse("2025-11-01T00:00:00Z");
+        assertEquals(expected, parser.parseStartFrom(filters));
+    }
+
+    @Test
+    void parseStartFrom_withLegacyKey_returnsInstant() {
+        Map<String, String> filters = Map.of("start_date_from", "2025-11-01T00:00:00Z");
+        Instant expected = Instant.parse("2025-11-01T00:00:00Z");
+        assertEquals(expected, parser.parseStartFrom(filters));
+    }
+
+    @Test
+    void parseStartFrom_invalidISO_throwsException() {
+        Map<String, String> filters = Map.of("start_from", "not-a-date");
+        assertThrows(Exception.class, () -> parser.parseStartFrom(filters));
+    }
+
+    @Test
+    void parseStartFrom_nullValue_returnsNull() {
+        assertNull(parser.parseStartFrom(Map.of()));
+    }
+
+    // -------- parseStartTo tests --------
+
+    @Test
+    void parseStartTo_validISO_returnsInstant() {
+        Map<String, String> filters = Map.of("start_to", "2025-11-30T23:59:59Z");
+        Instant expected = Instant.parse("2025-11-30T23:59:59Z");
+        assertEquals(expected, parser.parseStartTo(filters));
+    }
+
+    @Test
+    void parseStartTo_withLegacyKey_returnsInstant() {
+        Map<String, String> filters = Map.of("start_date_to", "2025-11-30T23:59:59Z");
+        Instant expected = Instant.parse("2025-11-30T23:59:59Z");
+        assertEquals(expected, parser.parseStartTo(filters));
+    }
+
+    // -------- parseEndFrom tests --------
+
+    @Test
+    void parseEndFrom_validISO_returnsInstant() {
+        Map<String, String> filters = Map.of("end_from", "2025-12-01T00:00:00Z");
+        Instant expected = Instant.parse("2025-12-01T00:00:00Z");
+        assertEquals(expected, parser.parseEndFrom(filters));
+    }
+
+    @Test
+    void parseEndFrom_withLegacyKey_returnsInstant() {
+        Map<String, String> filters = Map.of("end_date_from", "2025-12-01T00:00:00Z");
+        Instant expected = Instant.parse("2025-12-01T00:00:00Z");
+        assertEquals(expected, parser.parseEndFrom(filters));
+    }
+
+    // -------- parseEndTo tests --------
+
+    @Test
+    void parseEndTo_validISO_returnsInstant() {
+        Map<String, String> filters = Map.of("end_to", "2025-12-31T23:59:59Z");
+        Instant expected = Instant.parse("2025-12-31T23:59:59Z");
+        assertEquals(expected, parser.parseEndTo(filters));
+    }
+
+    @Test
+    void parseEndTo_withLegacyKey_returnsInstant() {
+        Map<String, String> filters = Map.of("end_date_to", "2025-12-31T23:59:59Z");
+        Instant expected = Instant.parse("2025-12-31T23:59:59Z");
+        assertEquals(expected, parser.parseEndTo(filters));
+    }
+
+    // -------- validateDateRanges tests --------
+
+    @Test
+    void validateDateRanges_validRanges_doesNotThrow() {
+        Instant start1 = Instant.parse("2025-11-01T00:00:00Z");
+        Instant start2 = Instant.parse("2025-11-30T23:59:59Z");
+        Instant end1 = Instant.parse("2025-12-01T00:00:00Z");
+        Instant end2 = Instant.parse("2025-12-31T23:59:59Z");
+
+        assertDoesNotThrow(() -> parser.validateDateRanges(start1, start2, end1, end2));
+    }
+
+    @Test
+    void validateDateRanges_startFromAfterStartTo_throwsException() {
+        Instant start1 = Instant.parse("2025-11-30T23:59:59Z");
+        Instant start2 = Instant.parse("2025-11-01T00:00:00Z");
+
+        assertThrows(IllegalArgumentException.class,
+                () -> parser.validateDateRanges(start1, start2, null, null));
+    }
+
+    @Test
+    void validateDateRanges_endFromAfterEndTo_throwsException() {
+        Instant end1 = Instant.parse("2025-12-31T23:59:59Z");
+        Instant end2 = Instant.parse("2025-12-01T00:00:00Z");
+
+        assertThrows(IllegalArgumentException.class,
+                () -> parser.validateDateRanges(null, null, end1, end2));
+    }
+
+    @Test
+    void validateDateRanges_nullValues_doesNotThrow() {
+        assertDoesNotThrow(() -> parser.validateDateRanges(null, null, null, null));
+    }
+
+    @Test
+    void validateDateRanges_onlyStartFrom_doesNotThrow() {
+        Instant start = Instant.parse("2025-11-01T00:00:00Z");
+        assertDoesNotThrow(() -> parser.validateDateRanges(start, null, null, null));
+    }
+
+    @Test
+    void validateDateRanges_equalDates_doesNotThrow() {
+        Instant instant = Instant.parse("2025-11-01T00:00:00Z");
+        assertDoesNotThrow(() -> parser.validateDateRanges(instant, instant, instant, instant));
     }
 }
+
