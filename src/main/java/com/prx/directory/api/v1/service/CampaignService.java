@@ -2,6 +2,7 @@ package com.prx.directory.api.v1.service;
 
 import com.prx.directory.api.v1.to.CampaignListResponse;
 import com.prx.directory.api.v1.to.CampaignTO;
+import com.prx.directory.api.v1.to.CampaignUpdateRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -64,6 +65,23 @@ public interface CampaignService {
      * @return ResponseEntity with CampaignListResponse
      */
     default ResponseEntity<CampaignListResponse> list(Integer page, Integer perPage, String sort, Map<String, String> filters) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    }
+
+    /**
+     * Updates an existing Campaign.
+     * <p>Expected HTTP status codes:</p>
+     * <ul>
+     *   <li>200 OK when the campaign is updated successfully</li>
+     *   <li>400 BAD REQUEST when validation fails (invalid field lengths, invalid dates, invalid FKs)</li>
+     *   <li>404 NOT FOUND when the campaign or related entities (category/business) don't exist</li>
+     *   <li>409 CONFLICT when optimistic locking detects a concurrent modification</li>
+     * </ul>
+     * @param id unique identifier of the campaign to update
+     * @param request update request with optional fields (only provided fields will be updated)
+     * @return ResponseEntity containing the updated CampaignTO (including updated lastUpdate) or error status
+     */
+    default ResponseEntity<CampaignTO> update(UUID id, CampaignUpdateRequest request) {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 }
