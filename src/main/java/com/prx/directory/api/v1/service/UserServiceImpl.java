@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -199,9 +200,30 @@ public class UserServiceImpl implements UserService {
             // Call the BackboneClient to delete the user
             ResponseEntity<Void> response = backboneClient.deleteUserByUserIdAndApplicationId(applicationId, userId);
 
-            if (response.getStatusCode().equals(HttpStatus.NO_CONTENT)) {
+            // Handle null response from client
+            if (response == null) {
+                logger.warn("BackboneClient returned null response when deleting user with ID: {} for application: {}", userId, applicationId);
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            // Return NO_CONTENT if deletion was successful
+            if (HttpStatus.NO_CONTENT.equals(response.getStatusCode())) {
                 logger.info("Successfully deleted user with ID: {} for application: {}", userId, applicationId);
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }
+
+            // For any non-success status, map specific statuses if needed, otherwise treat as not modified
+            HttpStatusCode status = response.getStatusCode();
+            if (HttpStatus.UNAUTHORIZED.equals(status) || HttpStatus.SERVICE_UNAVAILABLE.equals(status)) {
+                logger.info("Delete request returned status {} for user: {} application: {}", status, userId, applicationId);
+                return new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
+            }
+
+            // For other statuses, return the status as-is where appropriate, or INTERNAL_SERVER_ERROR as fallback
+            if (status.is4xxClientError()) {
+                return new ResponseEntity<>(status);
+            } else if (status.is5xxServerError()) {
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } catch (FeignException e) {
             if (e.status() == HttpStatus.NOT_FOUND.value()) {

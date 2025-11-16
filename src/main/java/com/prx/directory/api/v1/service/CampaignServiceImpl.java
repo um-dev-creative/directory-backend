@@ -4,6 +4,7 @@ import com.prx.directory.api.v1.to.CampaignListResponse;
 import com.prx.directory.api.v1.to.CampaignTO;
 import com.prx.directory.api.v1.to.CampaignUpdateRequest;
 import com.prx.directory.api.v1.to.OfferTO;
+import com.prx.directory.constant.DirectoryAppConstants;
 import com.prx.directory.jpa.entity.CampaignEntity;
 import com.prx.directory.jpa.repository.BusinessRepository;
 import com.prx.directory.jpa.repository.CampaignRepository;
@@ -23,14 +24,12 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
 public class CampaignServiceImpl implements CampaignService {
 
-    private static final int DEFAULT_PAGE = 1;
-    private static final int DEFAULT_PER_PAGE = 20;
-    private static final int MAX_PER_PAGE = 100;
 
     private final CampaignRepository campaignRepository;
     private final CategoryRepository categoryRepository;
@@ -56,25 +55,25 @@ public class CampaignServiceImpl implements CampaignService {
         UUID categoryId = campaignTO.categoryId();
         UUID businessId = campaignTO.businessId();
 
-        if (categoryId == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "categoryId is required");
+        if (Objects.isNull(categoryId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, DirectoryAppConstants.CAMPAIGN_CATEGORY_ID_REQUIRED);
         }
-        if (businessId == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "businessId is required");
+        if (Objects.isNull(businessId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, DirectoryAppConstants.CAMPAIGN_BUSINESS_ID_REQUIRED);
         }
 
         if (!categoryRepository.existsById(categoryId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "category not found");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, DirectoryAppConstants.CATEGORY_NOT_FOUND);
         }
         if (!businessRepository.existsById(businessId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "business not found");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, DirectoryAppConstants.BUSINESS_NOT_FOUND);
         }
 
         CampaignEntity entity = campaignMapper.toEntity(campaignTO);
         Instant now = Instant.now();
         entity.setCreatedDate(now);
         entity.setLastUpdate(now);
-        if (entity.getActive() == null) {
+        if (Objects.isNull(entity.getActive())) {
             entity.setActive(true);
         }
 
@@ -94,14 +93,14 @@ public class CampaignServiceImpl implements CampaignService {
 
     @Override
     public ResponseEntity<CampaignListResponse> list(Integer page, Integer perPage, String sort, Map<String, String> filters) {
-        int p = (page == null || page < 1) ? DEFAULT_PAGE : page;
-        int pp = (perPage == null || perPage < 1) ? DEFAULT_PER_PAGE : perPage;
-        if (pp > MAX_PER_PAGE) {
+        int p = (Objects.isNull(page) || page < 1) ? DirectoryAppConstants.DEFAULT_PAGE : page;
+        int pp = (Objects.isNull(perPage) || perPage < 1) ? DirectoryAppConstants.DEFAULT_PER_PAGE : perPage;
+        if (pp > DirectoryAppConstants.MAX_PER_PAGE) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
         Sort sortObj = CampaignSortParser.parse(sort);
-        if (sortObj == null) {
+        if (Objects.isNull(sortObj)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
@@ -147,21 +146,21 @@ public class CampaignServiceImpl implements CampaignService {
     @Override
     @Transactional
     public ResponseEntity<CampaignTO> update(UUID id, CampaignUpdateRequest request) {
-        if (id == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Campaign id is required");
+        if (Objects.isNull(id)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, DirectoryAppConstants.CAMPAIGN_ID_REQUIRED);
         }
-        if (request == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request body is required");
+        if (Objects.isNull(request)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, DirectoryAppConstants.CAMPAIGN_REQUEST_BODY_REQUIRED);
         }
 
         // Find existing campaign
         CampaignEntity existingCampaign = campaignRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Campaign not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, DirectoryAppConstants.CAMPAIGN_NOT_FOUND));
 
         // Optimistic locking: check if last_update matches
-        if (request.lastUpdate() != null && !request.lastUpdate().equals(existingCampaign.getLastUpdate())) {
+        if (Objects.nonNull(request.lastUpdate()) && !request.lastUpdate().equals(existingCampaign.getLastUpdate())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Campaign has been modified by another request. Please refresh and try again.");
+                    DirectoryAppConstants.CAMPAIGN_MODIFIED_BY_ANOTHER_REQUEST);
         }
 
         boolean updated = false;
@@ -184,15 +183,15 @@ public class CampaignServiceImpl implements CampaignService {
 
     private boolean applyBasicFieldUpdates(CampaignEntity existingCampaign, CampaignUpdateRequest request) {
         boolean updated = false;
-        if (request.name() != null) {
+        if (Objects.nonNull(request.name())) {
             existingCampaign.setName(request.name());
             updated = true;
         }
-        if (request.description() != null) {
+        if (Objects.nonNull(request.description())) {
             existingCampaign.setDescription(request.description());
             updated = true;
         }
-        if (request.active() != null) {
+        if (Objects.nonNull(request.active())) {
             existingCampaign.setActive(request.active());
             updated = true;
         }
@@ -202,20 +201,20 @@ public class CampaignServiceImpl implements CampaignService {
     private boolean applyDateUpdatesWithValidation(CampaignEntity existingCampaign, CampaignUpdateRequest request) {
         boolean updated = false;
         // Handle date updates with validation
-        Instant newStartDate = request.startDate() != null ? request.startDate() : existingCampaign.getStartDate();
-        Instant newEndDate = request.endDate() != null ? request.endDate() : existingCampaign.getEndDate();
+        Instant newStartDate = Objects.nonNull(request.startDate()) ? request.startDate() : existingCampaign.getStartDate();
+        Instant newEndDate = Objects.nonNull(request.endDate()) ? request.endDate() : existingCampaign.getEndDate();
 
         // Validate date constraint
-        if (newStartDate != null && newEndDate != null && newStartDate.isAfter(newEndDate)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "startDate must be before or equal to endDate");
+        if (Objects.nonNull(newStartDate) && Objects.nonNull(newEndDate) && newStartDate.isAfter(newEndDate)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, DirectoryAppConstants.CAMPAIGN_START_DATE_AFTER_END_DATE);
         }
 
-        if (request.startDate() != null) {
+        if (Objects.nonNull(request.startDate())) {
             existingCampaign.setStartDate(request.startDate());
             updated = true;
         }
 
-        if (request.endDate() != null) {
+        if (Objects.nonNull(request.endDate())) {
             existingCampaign.setEndDate(request.endDate());
             updated = true;
         }
@@ -225,9 +224,9 @@ public class CampaignServiceImpl implements CampaignService {
     private boolean applyRelationUpdates(CampaignEntity existingCampaign, CampaignUpdateRequest request) {
         boolean updated = false;
         // Validate and update categoryId if provided
-        if (request.categoryId() != null) {
+        if (Objects.nonNull(request.categoryId())) {
             if (!categoryRepository.existsById(request.categoryId())) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found");
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, DirectoryAppConstants.CATEGORY_NOT_FOUND);
             }
             var categoryEntity = new com.prx.directory.jpa.entity.CategoryEntity();
             categoryEntity.setId(request.categoryId());
@@ -236,9 +235,9 @@ public class CampaignServiceImpl implements CampaignService {
         }
 
         // Validate and update businessId if provided
-        if (request.businessId() != null) {
+        if (Objects.nonNull(request.businessId())) {
             if (!businessRepository.existsById(request.businessId())) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Business not found");
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, DirectoryAppConstants.BUSINESS_NOT_FOUND);
             }
             var businessEntity = new com.prx.directory.jpa.entity.BusinessEntity();
             businessEntity.setId(request.businessId());

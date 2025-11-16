@@ -1,6 +1,7 @@
 package com.prx.directory.api.v1.service;
 
 import com.prx.directory.api.v1.to.*;
+import com.prx.directory.constant.DirectoryAppConstants;
 import com.prx.directory.constant.FavoriteType;
 import com.prx.directory.jpa.entity.UserEntity;
 import com.prx.directory.jpa.entity.UserFavoriteEntity;
@@ -127,15 +128,15 @@ public class FavoriteServiceImpl implements FavoriteService {
         if (Objects.nonNull(type) && !type.isBlank()) {
             String t = type.trim().toLowerCase(Locale.ROOT);
             return switch (t) {
-                case "stores" -> {
+                case DirectoryAppConstants.FAVORITE_TYPE_STORES -> {
                     List<BusinessTO> paginatedStores = paginateList(stores, page, size);
                     yield ResponseEntity.ok(new FavoritesResponse(paginatedStores, List.of(), List.of()));
                 }
-                case "products" -> {
+                case DirectoryAppConstants.FAVORITE_TYPE_PRODUCTS -> {
                     List<ProductCreateResponse> paginatedProducts = paginateList(products, page, size);
                     yield ResponseEntity.ok(new FavoritesResponse(List.of(), paginatedProducts, List.of()));
                 }
-                case "offers" -> {
+                case DirectoryAppConstants.FAVORITE_TYPE_OFFERS -> {
                     List<OfferTO> paginatedOffers = paginateList(offers, page, size);
                     yield ResponseEntity.ok(new FavoritesResponse(List.of(), List.of(), paginatedOffers));
                 }
@@ -149,10 +150,10 @@ public class FavoriteServiceImpl implements FavoriteService {
         record FavoriteItem(Object item, String itemType) {}
         
         List<FavoriteItem> combined = new ArrayList<>();
-        stores.forEach(s -> combined.add(new FavoriteItem(s, "store")));
-        products.forEach(p -> combined.add(new FavoriteItem(p, "product")));
-        offers.forEach(o -> combined.add(new FavoriteItem(o, "offer")));
-        
+        stores.forEach(s -> combined.add(new FavoriteItem(s, DirectoryAppConstants.FAVORITE_TYPE_STORES)));
+        products.forEach(p -> combined.add(new FavoriteItem(p, DirectoryAppConstants.FAVORITE_TYPE_PRODUCTS)));
+        offers.forEach(o -> combined.add(new FavoriteItem(o, DirectoryAppConstants.FAVORITE_TYPE_OFFERS)));
+
         // Apply pagination to the combined list
         int from = Math.max(0, page * size);
         int to = Math.min(combined.size(), from + size);
@@ -165,9 +166,9 @@ public class FavoriteServiceImpl implements FavoriteService {
         
         for (FavoriteItem item : paginatedItems) {
             switch (item.itemType()) {
-                case "store" -> storesPage.add((BusinessTO) item.item());
-                case "product" -> productsPage.add((ProductCreateResponse) item.item());
-                case "offer" -> offersPage.add((OfferTO) item.item());
+                case DirectoryAppConstants.FAVORITE_TYPE_STORES  -> storesPage.add((BusinessTO) item.item());
+                case DirectoryAppConstants.FAVORITE_TYPE_PRODUCTS -> productsPage.add((ProductCreateResponse) item.item());
+                case DirectoryAppConstants.FAVORITE_TYPE_OFFERS -> offersPage.add((OfferTO) item.item());
                 default -> ResponseEntity.notFound().build();
             }
         }
