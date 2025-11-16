@@ -139,8 +139,8 @@ public class CampaignServiceImpl implements CampaignService {
             );
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", ex.getMessage()));
+            // Return a BAD_REQUEST without a body to keep the generic type consistent
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
@@ -159,37 +159,54 @@ public class CampaignServiceImpl implements CampaignService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Campaign not found"));
 
         // Optimistic locking: check if last_update matches
-        if (request.lastUpdate() != null) {
-            if (!request.lastUpdate().equals(existingCampaign.getLastUpdate())) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT,
-                        "Campaign has been modified by another request. Please refresh and try again.");
-            }
+        if (request.lastUpdate() != null && !request.lastUpdate().equals(existingCampaign.getLastUpdate())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Campaign has been modified by another request. Please refresh and try again.");
         }
 
-        // Validate and update fields if provided
         boolean updated = false;
+        updated |= applyBasicFieldUpdates(existingCampaign, request);
+        updated |= applyDateUpdatesWithValidation(existingCampaign, request);
+        updated |= applyRelationUpdates(existingCampaign, request);
 
+        // Update last_update timestamp if any field was updated
+        if (updated) {
+            existingCampaign.setLastUpdate(Instant.now());
+        }
+
+        CampaignEntity saved = campaignRepository.save(existingCampaign);
+        CampaignTO result = campaignMapper.toTO(saved);
+
+        return ResponseEntity.ok(result);
+    }
+
+    // --- helpers to reduce cognitive complexity ---
+
+    private boolean applyBasicFieldUpdates(CampaignEntity existingCampaign, CampaignUpdateRequest request) {
+        boolean updated = false;
         if (request.name() != null) {
             existingCampaign.setName(request.name());
             updated = true;
         }
-
         if (request.description() != null) {
             existingCampaign.setDescription(request.description());
             updated = true;
         }
-
         if (request.active() != null) {
             existingCampaign.setActive(request.active());
             updated = true;
         }
+        return updated;
+    }
 
+    private boolean applyDateUpdatesWithValidation(CampaignEntity existingCampaign, CampaignUpdateRequest request) {
+        boolean updated = false;
         // Handle date updates with validation
         Instant newStartDate = request.startDate() != null ? request.startDate() : existingCampaign.getStartDate();
         Instant newEndDate = request.endDate() != null ? request.endDate() : existingCampaign.getEndDate();
 
         // Validate date constraint
-        if (newStartDate.isAfter(newEndDate)) {
+        if (newStartDate != null && newEndDate != null && newStartDate.isAfter(newEndDate)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "startDate must be before or equal to endDate");
         }
 
@@ -202,7 +219,11 @@ public class CampaignServiceImpl implements CampaignService {
             existingCampaign.setEndDate(request.endDate());
             updated = true;
         }
+        return updated;
+    }
 
+    private boolean applyRelationUpdates(CampaignEntity existingCampaign, CampaignUpdateRequest request) {
+        boolean updated = false;
         // Validate and update categoryId if provided
         if (request.categoryId() != null) {
             if (!categoryRepository.existsById(request.categoryId())) {
@@ -224,15 +245,6 @@ public class CampaignServiceImpl implements CampaignService {
             existingCampaign.setBusinessFk(businessEntity);
             updated = true;
         }
-
-        // Update last_update timestamp if any field was updated
-        if (updated) {
-            existingCampaign.setLastUpdate(Instant.now());
-        }
-
-        CampaignEntity saved = campaignRepository.save(existingCampaign);
-        CampaignTO result = campaignMapper.toTO(saved);
-
-        return ResponseEntity.ok(result);
+        return updated;
     }
 }
