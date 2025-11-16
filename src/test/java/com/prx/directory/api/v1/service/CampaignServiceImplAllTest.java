@@ -16,6 +16,7 @@ import org.mockito.Mockito;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -390,5 +391,46 @@ class CampaignServiceImplAllTest {
         assertNotNull(saved.getBusinessFk());
         assertNotNull(saved.getLastUpdate());
     }
-}
 
+    // -------- Additional edge case tests --------
+
+    @Test
+    void list_emptyPage_returnsOkWithEmptyItems() {
+        Page<CampaignEntity> emptyPage = new PageImpl<>(Collections.emptyList());
+        when(campaignRepository.findAll((Specification<CampaignEntity>) any(), (Pageable) any())).thenReturn(emptyPage);
+
+        ResponseEntity<CampaignListResponse> resp = service.list(1, 10, "name", Map.of());
+        assertEquals(200, resp.getStatusCode().value());
+        CampaignListResponse body = resp.getBody();
+        assertNotNull(body);
+        assertEquals(0, body.items().size());
+        assertEquals(0, body.total_count());
+    }
+
+    @Test
+    void list_repositoryThrowsException_returnsInternalServerError() {
+        when(campaignRepository.findAll((Specification<CampaignEntity>) any(), (Pageable) any()))
+                .thenThrow(new RuntimeException("Database connection failed"));
+
+        assertThrows(RuntimeException.class, () -> service.list(1, 10, "name", Map.of()));
+    }
+
+    @Test
+    void list_withAllValidFilters_succeeds() {
+        Map<String, String> filters = new HashMap<>();
+        filters.put("name", "Holiday");
+        filters.put("active", "true");
+        filters.put("category_fk", UUID.randomUUID().toString());
+        filters.put("business_fk", UUID.randomUUID().toString());
+        filters.put("start_from", "2025-11-01T00:00:00Z");
+        filters.put("start_to", "2025-11-30T23:59:59Z");
+
+        CampaignEntity e = new CampaignEntity();
+        Page<CampaignEntity> page = new PageImpl<>(List.of(e));
+        when(campaignRepository.findAll((Specification<CampaignEntity>) any(), (Pageable) any())).thenReturn(page);
+        when(campaignMapper.toOfferTO(e)).thenReturn(new OfferTO(UUID.randomUUID(), "title", "desc", UUID.randomUUID(), Instant.now(), Instant.now().plusSeconds(3600), true));
+
+        ResponseEntity<CampaignListResponse> resp = service.list(1, 10, "name", filters);
+        assertEquals(200, resp.getStatusCode().value());
+    }
+}
