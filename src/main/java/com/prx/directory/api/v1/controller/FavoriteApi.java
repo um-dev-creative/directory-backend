@@ -3,6 +3,7 @@ package com.prx.directory.api.v1.controller;
 import com.prx.directory.api.v1.service.FavoriteService;
 import com.prx.directory.api.v1.to.FavoriteCreateRequest;
 import com.prx.directory.api.v1.to.FavoriteResponse;
+import com.prx.directory.api.v1.to.FavoriteUpdateRequest;
 import com.prx.directory.api.v1.to.FavoritesResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -11,13 +12,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 import static com.prx.security.constant.ConstantApp.SESSION_TOKEN_KEY;
 
@@ -140,5 +140,61 @@ public interface FavoriteApi {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String sort) {
         return this.getService().getFavorites(sessionToken, type, page, size, sort);
+    }
+
+    /**
+     * Update the active status of an existing favorite (soft-delete support).
+     *
+     * <p>Request JSON example:
+     * <pre>
+     * {
+     *   "id": "11111111-2222-3333-4444-555555555555",
+     *   "active": false
+     * }
+     * </pre>
+     * </p>
+     *
+     * <p>Behavior and HTTP semantics:
+     * <ul>
+     *   <li>Requires authentication. The session token header is expected under the header name
+     *       defined by {@link com.prx.security.constant.ConstantApp#SESSION_TOKEN_KEY}.</li>
+     *   <li>Validates that the favorite exists and belongs to the authenticated user: if not found, return 404 Not Found;
+     *       if not the owner, return 403 Forbidden.</li>
+     *   <li>Validates that path ID matches request body ID: if mismatch, return 400 Bad Request.</li>
+     *   <li>Updates the favorite's active field as specified in the request.
+     *       Returns the updated {@link FavoriteResponse} on success.</li>
+     *   <li>On validation errors return 400 Bad Request; on unauthenticated requests return 401 Unauthorized;
+     *       on forbidden requests (e.g. updating someone else's favorite) return 403 Forbidden.</li>
+     * </ul>
+     * </p>
+     *
+     * @param sessionToken the session token header value identifying the authenticated user;
+     *                     header name is {@value com.prx.security.constant.ConstantApp#SESSION_TOKEN_KEY}
+     * @param id           the UUID of the favorite to update (from path parameter)
+     * @param request      the update request containing the new active status; must include matching id
+     * @return a ResponseEntity containing the updated {@link FavoriteResponse} when the favorite
+     * is successfully updated (200), or an appropriate error status code
+     * (400, 401, 403, 404 depending on outcome and project policy).
+     */
+    @Operation(summary = "Update favorite", description = "Update the active status of an existing favorite (soft-delete support)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Favorite updated",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = FavoriteResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request or path/body ID mismatch", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden - not the owner", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Favorite not found", content = @Content)
+    })
+    @PatchMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    default ResponseEntity<FavoriteResponse> updateFavorite(
+            @RequestHeader(SESSION_TOKEN_KEY) String sessionToken,
+            @PathVariable("id") UUID id,
+            @Valid @RequestBody FavoriteUpdateRequest request) {
+        // Validate path ID matches request body ID
+        if (request == null || request.id() == null || !id.equals(request.id())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+        return this.getService().updateFavorite(sessionToken, request);
     }
 }

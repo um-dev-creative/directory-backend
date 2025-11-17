@@ -2,6 +2,7 @@ package com.prx.directory.api.v1.service;
 
 import com.prx.directory.api.v1.to.FavoriteCreateRequest;
 import com.prx.directory.api.v1.to.FavoriteResponse;
+import com.prx.directory.api.v1.to.FavoriteUpdateRequest;
 import com.prx.directory.api.v1.to.FavoritesResponse;
 import org.springframework.http.ResponseEntity;
 
@@ -50,6 +51,14 @@ public interface FavoriteService {
      * @return ResponseEntity with grouped favorites
      */
     default ResponseEntity<FavoritesResponse> getFavorites(String sessionToken, String type, int page, int size, String sort) {
+        return ResponseEntity.status(501).build();
+    }
+
+    /**
+     * Update an existing favorite's mutable fields. Implementations should ensure authorization
+     * (owner or admin) and validation; return 404 when favorite not found.
+     */
+    default ResponseEntity<FavoriteResponse> updateFavorite(String sessionToken, FavoriteUpdateRequest request) {
         return ResponseEntity.status(501).build();
     }
 }
