@@ -179,7 +179,7 @@ public interface FavoriteApi {
      * is successfully updated (200), or an appropriate error status code
      * (400, 401, 403, 404 depending on outcome and project policy).
      */
-    @Operation(summary = "Update favorite", description = "Update mutable fields of an existing favorite (name, tags, metadata, visibility)")
+    @Operation(summary = "Update favorite", description = "Update the active status of an existing favorite (soft-delete support)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Favorite updated",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
