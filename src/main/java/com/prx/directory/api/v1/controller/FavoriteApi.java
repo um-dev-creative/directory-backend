@@ -143,16 +143,13 @@ public interface FavoriteApi {
     }
 
     /**
-     * Update mutable fields of an existing favorite (name, tags, metadata, visibility).
+     * Update the active status of an existing favorite (soft-delete support).
      *
      * <p>Request JSON example:
      * <pre>
      * {
      *   "id": "11111111-2222-3333-4444-555555555555",
-     *   "name": "New Favorite Name",
-     *   "tags": ["tag1", "tag2"],
-     *   "metadata": "{\"key\": \"value\"}",
-     *   "visibility": "PUBLIC"
+     *   "active": false
      * }
      * </pre>
      * </p>
@@ -164,7 +161,7 @@ public interface FavoriteApi {
      *   <li>Validates that the favorite exists and belongs to the authenticated user: if not found, return 404 Not Found;
      *       if not the owner, return 403 Forbidden.</li>
      *   <li>Validates that path ID matches request body ID: if mismatch, return 400 Bad Request.</li>
-     *   <li>Updates the favorite fields as specified in the request. Unspecified fields remain unchanged.
+     *   <li>Updates the favorite's active field as specified in the request.
      *       Returns the updated {@link FavoriteResponse} on success.</li>
      *   <li>On validation errors return 400 Bad Request; on unauthenticated requests return 401 Unauthorized;
      *       on forbidden requests (e.g. updating someone else's favorite) return 403 Forbidden.</li>
@@ -174,12 +171,12 @@ public interface FavoriteApi {
      * @param sessionToken the session token header value identifying the authenticated user;
      *                     header name is {@value com.prx.security.constant.ConstantApp#SESSION_TOKEN_KEY}
      * @param id           the UUID of the favorite to update (from path parameter)
-     * @param request      the update request containing new values for mutable favorite fields; must include matching id
+     * @param request      the update request containing the new active status; must include matching id
      * @return a ResponseEntity containing the updated {@link FavoriteResponse} when the favorite
      * is successfully updated (200), or an appropriate error status code
      * (400, 401, 403, 404 depending on outcome and project policy).
      */
-    @Operation(summary = "Update favorite", description = "Update mutable fields of an existing favorite (name, tags, metadata, visibility)")
+    @Operation(summary = "Update favorite", description = "Update the active status of an existing favorite (soft-delete support)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Favorite updated",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
