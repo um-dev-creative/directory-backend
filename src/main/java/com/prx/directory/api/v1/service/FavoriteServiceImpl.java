@@ -148,7 +148,7 @@ public class FavoriteServiceImpl implements FavoriteService {
         // to ensure the total number of items returned respects the size parameter.
         // Create a combined list with ordering: stores, then products, then offers
         record FavoriteItem(Object item, String itemType) {}
-        
+
         List<FavoriteItem> combined = new ArrayList<>();
         stores.forEach(s -> combined.add(new FavoriteItem(s, DirectoryAppConstants.FAVORITE_TYPE_STORES)));
         products.forEach(p -> combined.add(new FavoriteItem(p, DirectoryAppConstants.FAVORITE_TYPE_PRODUCTS)));
@@ -158,12 +158,12 @@ public class FavoriteServiceImpl implements FavoriteService {
         int from = Math.max(0, page * size);
         int to = Math.min(combined.size(), from + size);
         List<FavoriteItem> paginatedItems = from < to ? combined.subList(from, to) : List.of();
-        
+
         // Separate back into type-specific lists
         List<BusinessTO> storesPage = new ArrayList<>();
         List<ProductCreateResponse> productsPage = new ArrayList<>();
         List<OfferTO> offersPage = new ArrayList<>();
-        
+
         for (FavoriteItem item : paginatedItems) {
             switch (item.itemType()) {
                 case DirectoryAppConstants.FAVORITE_TYPE_STORES  -> storesPage.add((BusinessTO) item.item());
@@ -175,6 +175,39 @@ public class FavoriteServiceImpl implements FavoriteService {
 
         FavoritesResponse response = new FavoritesResponse(storesPage, productsPage, offersPage);
         return ResponseEntity.ok(response);
+    }
+
+    @Override
+    @Transactional
+    public ResponseEntity<FavoriteResponse> updateFavorite(String sessionToken, FavoriteUpdateRequest request) {
+        if (Objects.isNull(request) || Objects.isNull(request.id())) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        UUID userId = JwtUtil.getUidFromToken(sessionToken);
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        Optional<UserFavoriteEntity> opt = userFavoriteRepository.findById(request.id());
+        if (opt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        UserFavoriteEntity entity = opt.get();
+        // Authorization: only the owner may update (admins not modeled here)
+        if (Objects.isNull(entity.getUser()) || !userId.equals(entity.getUser().getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        // Apply mutable field: only 'active' can be updated (for soft-delete)
+        if (request.active() != null) {
+            entity.setActive(request.active());
+        }
+
+        entity.setUpdatedAt(LocalDateTime.now());
+        UserFavoriteEntity saved = userFavoriteRepository.save(entity);
+        return ResponseEntity.ok(favoriteMapper.toResponse(saved));
     }
 
     private <T> List<T> paginateList(List<T> list, int page, int size) {

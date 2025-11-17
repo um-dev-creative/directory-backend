@@ -22,6 +22,8 @@ public interface FavoriteMapper {
     @Mapping(target = "itemId", expression = "java(getItemId(entity))")
     @Mapping(target = "userId", expression = "java(getUserId(entity))")
     @Mapping(target = "createdDate", source = "createdAt")
+    @Mapping(target = "updatedDate", source = "updatedAt")
+    @Mapping(target = "active", source = "active")
     FavoriteResponse toResponse(UserFavoriteEntity entity);
 
     default String getType(UserFavoriteEntity entity) {

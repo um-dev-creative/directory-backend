@@ -2,6 +2,7 @@ package com.prx.directory.api.v1.service;
 
 import com.prx.directory.api.v1.to.FavoriteCreateRequest;
 import com.prx.directory.api.v1.to.FavoriteResponse;
+import com.prx.directory.api.v1.to.FavoriteUpdateRequest;
 import com.prx.directory.constant.FavoriteType;
 import com.prx.directory.jpa.entity.BusinessEntity;
 import com.prx.directory.jpa.entity.UserEntity;
@@ -82,7 +83,7 @@ class FavoriteServiceImplTest {
         UUID businessId = UUID.randomUUID();
         var userFavoriteId = UUID.randomUUID();
         UserFavoriteEntity saved = new UserFavoriteEntity();
-        FavoriteResponse favoriteResponse = new FavoriteResponse(userFavoriteId, FavoriteType.STORE.name(), UUID.randomUUID(), userId, LocalDateTime.now());
+        FavoriteResponse favoriteResponse = new FavoriteResponse(userFavoriteId, FavoriteType.STORE.name(), UUID.randomUUID(), userId, LocalDateTime.now(), LocalDateTime.now(), true);
 
         try (MockedStatic<JwtUtil> mockedStatic = Mockito.mockStatic(JwtUtil.class)) {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
@@ -116,7 +117,7 @@ class FavoriteServiceImplTest {
         var userFavoriteId = UUID.randomUUID();
         when(businessRepository.findById(businessId)).thenReturn(Optional.of(new BusinessEntity()));
         UserFavoriteEntity existing = new UserFavoriteEntity();
-        FavoriteResponse favoriteResponse = new FavoriteResponse(userFavoriteId, FavoriteType.STORE.name(), UUID.randomUUID(), UUID.randomUUID(), LocalDateTime.now());
+        FavoriteResponse favoriteResponse = new FavoriteResponse(userFavoriteId, FavoriteType.STORE.name(), UUID.randomUUID(), UUID.randomUUID(), LocalDateTime.now(), LocalDateTime.now(), true);
         existing.setId(userFavoriteId);
         existing.setCreatedAt(LocalDateTime.now());
         existing.setUpdatedAt(LocalDateTime.now());
@@ -132,6 +133,67 @@ class FavoriteServiceImplTest {
             ResponseEntity<FavoriteResponse> resp = favoriteService.createFavorite("token", new FavoriteCreateRequest(FavoriteType.STORE, businessId));
 
             assertEquals(HttpStatus.CONFLICT, resp.getStatusCode());
+        }
+    }
+
+    // New tests for updateFavorite
+
+    @Test
+    @DisplayName("updateFavorite should return NOT_FOUND when favorite missing")
+    void updateFavoriteShouldReturnNotFoundWhenMissing() {
+        UUID favId = UUID.randomUUID();
+        FavoriteUpdateRequest req = new FavoriteUpdateRequest(favId, null);
+        try (MockedStatic<JwtUtil> mockedStatic = Mockito.mockStatic(JwtUtil.class)) {
+            mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
+            when(userFavoriteRepository.findById(favId)).thenReturn(Optional.empty());
+
+            ResponseEntity<FavoriteResponse> resp = favoriteService.updateFavorite("token", req);
+            assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
+        }
+    }
+
+    @Test
+    @DisplayName("updateFavorite should return FORBIDDEN when user is not owner")
+    void updateFavoriteShouldReturnForbiddenWhenNotOwner() {
+        UUID favId = UUID.randomUUID();
+        FavoriteUpdateRequest req = new FavoriteUpdateRequest(favId, null);
+        UserFavoriteEntity existing = new UserFavoriteEntity();
+        var owner = new UserEntity();
+        owner.setId(UUID.randomUUID());
+        existing.setUser(owner);
+
+        try (MockedStatic<JwtUtil> mockedStatic = Mockito.mockStatic(JwtUtil.class)) {
+            mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
+            when(userFavoriteRepository.findById(favId)).thenReturn(Optional.of(existing));
+
+            ResponseEntity<FavoriteResponse> resp = favoriteService.updateFavorite("token", req);
+            assertEquals(HttpStatus.FORBIDDEN, resp.getStatusCode());
+        }
+    }
+
+    @Test
+    @DisplayName("updateFavorite should update and return OK when owner")
+    void updateFavoriteShouldUpdateWhenOwner() {
+        UUID favId = UUID.randomUUID();
+        FavoriteUpdateRequest req = new FavoriteUpdateRequest(favId, false);
+        UserFavoriteEntity existing = new UserFavoriteEntity();
+        var owner = new UserEntity();
+        owner.setId(userId);
+        existing.setUser(owner);
+        existing.setId(favId);
+
+        FavoriteResponse favoriteResponse = new FavoriteResponse(favId, "STORE", UUID.randomUUID(), userId, LocalDateTime.now(), LocalDateTime.now(), false);
+
+        try (MockedStatic<JwtUtil> mockedStatic = Mockito.mockStatic(JwtUtil.class)) {
+            mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
+            when(userFavoriteRepository.findById(favId)).thenReturn(Optional.of(existing));
+            when(userFavoriteRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+            when(favoriteMapper.toResponse(any(UserFavoriteEntity.class))).thenReturn(favoriteResponse);
+
+            ResponseEntity<FavoriteResponse> resp = favoriteService.updateFavorite("token", req);
+            assertEquals(HttpStatus.OK, resp.getStatusCode());
+            Assertions.assertNotNull(resp.getBody());
+            assertEquals(favId, resp.getBody().id());
         }
     }
 }
