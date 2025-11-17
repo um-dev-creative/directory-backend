@@ -3,10 +3,11 @@ package com.prx.directory.jpa.entity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CampaignEntityTest {
 
@@ -41,7 +42,7 @@ class CampaignEntityTest {
     @DisplayName("Get Start Date Test")
     void getStartDateTest() {
         CampaignEntity campaignEntity = new CampaignEntity();
-        Instant startDate = Instant.now();
+        LocalDateTime startDate = LocalDateTime.now();
         campaignEntity.setStartDate(startDate);
         assertEquals(startDate, campaignEntity.getStartDate());
     }
@@ -50,7 +51,7 @@ class CampaignEntityTest {
     @DisplayName("Get End Date Test")
     void getEndDateTest() {
         CampaignEntity campaignEntity = new CampaignEntity();
-        Instant endDate = Instant.now();
+        LocalDateTime endDate = LocalDateTime.now();
         campaignEntity.setEndDate(endDate);
         assertEquals(endDate, campaignEntity.getEndDate());
     }

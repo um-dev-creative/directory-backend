@@ -13,12 +13,14 @@ import org.mockito.Mockito;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class CampaignServiceImplTest {
 
@@ -70,10 +72,10 @@ class CampaignServiceImplTest {
     void update_conflict_throws() {
         UUID id = UUID.randomUUID();
         CampaignUpdateRequest req = Mockito.mock(CampaignUpdateRequest.class);
-        when(req.lastUpdate()).thenReturn(Instant.parse("2025-11-01T00:00:00Z"));
+        when(req.lastUpdate()).thenReturn(LocalDateTime.parse("2025-11-01T00:00:00"));
 
         CampaignEntity existing = new CampaignEntity();
-        existing.setLastUpdate(Instant.parse("2025-11-02T00:00:00Z"));
+        existing.setLastUpdate(LocalDateTime.parse("2025-11-02T00:00:00"));
         when(campaignRepository.findById(id)).thenReturn(Optional.of(existing));
 
         assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> service.update(id, req));

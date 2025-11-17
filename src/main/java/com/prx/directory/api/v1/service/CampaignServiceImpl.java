@@ -22,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -70,7 +72,7 @@ public class CampaignServiceImpl implements CampaignService {
         }
 
         CampaignEntity entity = campaignMapper.toEntity(campaignTO);
-        Instant now = Instant.now();
+        LocalDateTime now = LocalDateTime.now();
         entity.setCreatedDate(now);
         entity.setLastUpdate(now);
         if (Objects.isNull(entity.getActive())) {
@@ -111,10 +113,16 @@ public class CampaignServiceImpl implements CampaignService {
             UUID businessId = filterParser.parseBusinessId(filters);
             Boolean active = filterParser.parseActive(filters);
 
-            Instant startFrom = filterParser.parseStartFrom(filters);
-            Instant startTo = filterParser.parseStartTo(filters);
-            Instant endFrom = filterParser.parseEndFrom(filters);
-            Instant endTo = filterParser.parseEndTo(filters);
+            // Parse instants and convert to UTC LocalDateTime for criteria
+            Instant startFromI = filterParser.parseStartFrom(filters);
+            Instant startToI = filterParser.parseStartTo(filters);
+            Instant endFromI = filterParser.parseEndFrom(filters);
+            Instant endToI = filterParser.parseEndTo(filters);
+
+            LocalDateTime startFrom = startFromI == null ? null : LocalDateTime.ofInstant(startFromI, ZoneOffset.UTC);
+            LocalDateTime startTo = startToI == null ? null : LocalDateTime.ofInstant(startToI, ZoneOffset.UTC);
+            LocalDateTime endFrom = endFromI == null ? null : LocalDateTime.ofInstant(endFromI, ZoneOffset.UTC);
+            LocalDateTime endTo = endToI == null ? null : LocalDateTime.ofInstant(endToI, ZoneOffset.UTC);
 
             // Validate date ranges
             filterParser.validateDateRanges(startFrom, startTo, endFrom, endTo);
@@ -170,7 +178,7 @@ public class CampaignServiceImpl implements CampaignService {
 
         // Update last_update timestamp if any field was updated
         if (updated) {
-            existingCampaign.setLastUpdate(Instant.now());
+            existingCampaign.setLastUpdate(LocalDateTime.now());
         }
 
         CampaignEntity saved = campaignRepository.save(existingCampaign);
@@ -201,8 +209,8 @@ public class CampaignServiceImpl implements CampaignService {
     private boolean applyDateUpdatesWithValidation(CampaignEntity existingCampaign, CampaignUpdateRequest request) {
         boolean updated = false;
         // Handle date updates with validation
-        Instant newStartDate = Objects.nonNull(request.startDate()) ? request.startDate() : existingCampaign.getStartDate();
-        Instant newEndDate = Objects.nonNull(request.endDate()) ? request.endDate() : existingCampaign.getEndDate();
+        LocalDateTime newStartDate = Objects.nonNull(request.startDate()) ? request.startDate() : existingCampaign.getStartDate();
+        LocalDateTime newEndDate = Objects.nonNull(request.endDate()) ? request.endDate() : existingCampaign.getEndDate();
 
         // Validate date constraint
         if (Objects.nonNull(newStartDate) && Objects.nonNull(newEndDate) && newStartDate.isAfter(newEndDate)) {

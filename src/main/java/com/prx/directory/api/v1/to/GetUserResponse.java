@@ -8,7 +8,9 @@ import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
-/// Represents the response object for a user get operation.
+/**
+ * Represents the response object for a user get operation.
+  */
 public record GetUserResponse(
         UUID id,
         String alias,
@@ -23,9 +25,9 @@ public record GetUserResponse(
         Set<UUID> businessIds,
         @JsonFormat(pattern = DateUtil.PATTERN_DATE)
         LocalDate dateOfBirth,
-        @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME)
+        @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_T)
         LocalDateTime createdAt,
-        @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME)
+        @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_T)
         LocalDateTime updatedAt,
         boolean notificationEmail,
         boolean notificationSms,
@@ -34,7 +36,9 @@ public record GetUserResponse(
         UUID roleId,
         UUID applicationId) {
 
-    /// String representation of the UseGetResponse object.
+    /**
+     * String representation of the UseGetResponse object.
+      */
     @Override
     public String toString() {
         return "UseGetResponse{" +

@@ -1,6 +1,10 @@
 package com.prx.directory.api.v1.service;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeParseException;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -43,23 +47,24 @@ public class CampaignFilterParser {
         return parseBoolean(filters.get("active"));
     }
 
+    // Date filter parsers now return Instant
     public Instant parseStartFrom(Map<String, String> filters) {
-        return parseInstant(valueOr(filters, "start_from", "start_date_from"));
+        return parseToInstant(valueOr(filters, "start_from", "start_date_from"));
     }
 
     public Instant parseStartTo(Map<String, String> filters) {
-        return parseInstant(valueOr(filters, "start_to", "start_date_to"));
+        return parseToInstant(valueOr(filters, "start_to", "start_date_to"));
     }
 
     public Instant parseEndFrom(Map<String, String> filters) {
-        return parseInstant(valueOr(filters, "end_from", "end_date_from"));
+        return parseToInstant(valueOr(filters, "end_from", "end_date_from"));
     }
 
     public Instant parseEndTo(Map<String, String> filters) {
-        return parseInstant(valueOr(filters, "end_to", "end_date_to"));
+        return parseToInstant(valueOr(filters, "end_to", "end_date_to"));
     }
 
-    public void validateDateRanges(Instant startFrom, Instant startTo, Instant endFrom, Instant endTo) {
+    public void validateDateRanges(LocalDateTime startFrom, LocalDateTime startTo, LocalDateTime endFrom, LocalDateTime endTo) {
         if (startFrom != null && startTo != null && startFrom.isAfter(startTo)) {
             throw new IllegalArgumentException("start date range is invalid");
         }
@@ -89,9 +94,27 @@ public class CampaignFilterParser {
         throw new IllegalArgumentException("invalid boolean value");
     }
 
-    private Instant parseInstant(String v) {
+    private Instant parseToInstant(String v) {
         if (v == null || v.isBlank()) return null;
-        return Instant.parse(v.trim());
+        String trimmed = v.trim();
+        // Try ISO_INSTANT first (e.g., 2025-11-01T00:00:00Z)
+        try {
+            return Instant.parse(trimmed);
+        } catch (DateTimeParseException ignored) {
+            // continue
+        }
+        // Try OffsetDateTime (e.g., 2025-11-01T00:00:00+01:00)
+        try {
+            return OffsetDateTime.parse(trimmed).toInstant();
+        } catch (DateTimeParseException ignored) {
+            // continue
+        }
+        // Try LocalDateTime (no zone), treat as UTC
+        try {
+            LocalDateTime ldt = LocalDateTime.parse(trimmed);
+            return ldt.toInstant(ZoneOffset.UTC);
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Invalid date format: " + v, e);
+        }
     }
 }
-

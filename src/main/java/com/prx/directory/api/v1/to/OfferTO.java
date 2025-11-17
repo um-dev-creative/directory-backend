@@ -1,7 +1,9 @@
 package com.prx.directory.api.v1.to;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import java.time.Instant;
+import com.prx.commons.util.DateUtil;
+
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -12,10 +14,10 @@ public record OfferTO(
         String name,
         String description,
         UUID businessId,
-        @JsonFormat(shape = JsonFormat.Shape.STRING)
-        Instant startDate,
-        @JsonFormat(shape = JsonFormat.Shape.STRING)
-        Instant endDate,
+        @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_MIL)
+        LocalDateTime startDate,
+        @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_MIL)
+        LocalDateTime endDate,
         boolean active
 ) {
 }

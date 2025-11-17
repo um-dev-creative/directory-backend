@@ -1,18 +1,18 @@
 package com.prx.directory.jpa.spec;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 /**
  * Aggregates optional filters for campaign activity and scheduling windows.
  */
 public class CampaignCriteria {
     private final Boolean active;
-    private final Instant startFrom;
-    private final Instant startTo;
-    private final Instant endFrom;
-    private final Instant endTo;
+    private final LocalDateTime startFrom;
+    private final LocalDateTime startTo;
+    private final LocalDateTime endFrom;
+    private final LocalDateTime endTo;
 
-    public CampaignCriteria(Boolean active, Instant startFrom, Instant startTo, Instant endFrom, Instant endTo) {
+    public CampaignCriteria(Boolean active, LocalDateTime startFrom, LocalDateTime startTo, LocalDateTime endFrom, LocalDateTime endTo) {
         this.active = active;
         this.startFrom = startFrom;
         this.startTo = startTo;
@@ -24,23 +24,23 @@ public class CampaignCriteria {
         return active;
     }
 
-    public Instant getStartFrom() {
+    public LocalDateTime getStartFrom() {
         return startFrom;
     }
 
-    public Instant getStartTo() {
+    public LocalDateTime getStartTo() {
         return startTo;
     }
 
-    public Instant getEndFrom() {
+    public LocalDateTime getEndFrom() {
         return endFrom;
     }
 
-    public Instant getEndTo() {
+    public LocalDateTime getEndTo() {
         return endTo;
     }
 
-    public static CampaignCriteria of(Boolean active, Instant startFrom, Instant startTo, Instant endFrom, Instant endTo) {
+    public static CampaignCriteria of(Boolean active, LocalDateTime startFrom, LocalDateTime startTo, LocalDateTime endFrom, LocalDateTime endTo) {
         return new CampaignCriteria(active, startFrom, startTo, endFrom, endTo);
     }
 }

@@ -12,6 +12,7 @@ import org.mockito.Mockito;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -165,10 +166,10 @@ class CampaignSpecificationsTest {
 
     @Test
     void byFilters_withDateRanges_invokesDatePredicates() {
-        Instant startFrom = Instant.parse("2025-11-01T00:00:00Z");
-        Instant startTo = Instant.parse("2025-11-05T00:00:00Z");
-        Instant endFrom = Instant.parse("2025-11-10T00:00:00Z");
-        Instant endTo = Instant.parse("2025-11-15T00:00:00Z");
+        LocalDateTime startFrom = LocalDateTime.parse("2025-11-01T00:00:00");
+        LocalDateTime startTo = LocalDateTime.parse("2025-11-05T00:00:00");
+        LocalDateTime endFrom = LocalDateTime.parse("2025-11-10T00:00:00");
+        LocalDateTime endTo = LocalDateTime.parse("2025-11-15T00:00:00");
 
         CampaignCriteria criteria = CampaignCriteria.of(null, startFrom, startTo, endFrom, endTo);
         Specification<CampaignEntity> spec = CampaignSpecifications.byFilters(null, null, null, criteria);
@@ -182,22 +183,22 @@ class CampaignSpecificationsTest {
         when(root.get("startDate")).thenReturn((Path) startPath);
         when(root.get("endDate")).thenReturn((Path) endPath);
 
-        when(cb.greaterThanOrEqualTo(any(), any(Instant.class))).thenReturn(Mockito.mock(Predicate.class));
-        when(cb.lessThanOrEqualTo(any(), any(Instant.class))).thenReturn(Mockito.mock(Predicate.class));
+        when(cb.greaterThanOrEqualTo(any(), any(LocalDateTime.class))).thenReturn(Mockito.mock(Predicate.class));
+        when(cb.lessThanOrEqualTo(any(), any(LocalDateTime.class))).thenReturn(Mockito.mock(Predicate.class));
         when(cb.and(any(Predicate[].class))).thenReturn(Mockito.mock(Predicate.class));
 
         Predicate p = spec.toPredicate(root, query, cb);
         assertNotNull(p);
 
         // greaterThanOrEqualTo called twice (startFrom and endFrom)
-        verify(cb, times(2)).greaterThanOrEqualTo(any(), any(Instant.class));
+        verify(cb, times(2)).greaterThanOrEqualTo(any(), any(LocalDateTime.class));
         // lessThanOrEqualTo called twice (startTo and endTo)
-        verify(cb, times(2)).lessThanOrEqualTo(any(), any(Instant.class));
+        verify(cb, times(2)).lessThanOrEqualTo(any(), any(LocalDateTime.class));
     }
 
     @Test
     void byFilters_startFromOnly_invokesSingleGreater() {
-        Instant startFrom = Instant.parse("2025-11-01T00:00:00Z");
+        LocalDateTime startFrom = LocalDateTime.parse("2025-11-01T00:00:00");
         CampaignCriteria criteria = CampaignCriteria.of(null, startFrom, null, null, null);
         Specification<CampaignEntity> spec = CampaignSpecifications.byFilters(null, null, null, criteria);
 
@@ -216,7 +217,7 @@ class CampaignSpecificationsTest {
 
     @Test
     void byFilters_startToOnly_invokesSingleLess() {
-        Instant startTo = Instant.parse("2025-11-05T00:00:00Z");
+        LocalDateTime startTo = LocalDateTime.parse("2025-11-05T00:00:00");
         CampaignCriteria criteria = CampaignCriteria.of(null, null, startTo, null, null);
         Specification<CampaignEntity> spec = CampaignSpecifications.byFilters(null, null, null, criteria);
 
@@ -235,7 +236,7 @@ class CampaignSpecificationsTest {
 
     @Test
     void byFilters_endFromOnly_invokesSingleGreater() {
-        Instant endFrom = Instant.parse("2025-11-10T00:00:00Z");
+        LocalDateTime endFrom = LocalDateTime.parse("2025-11-10T00:00:00");
         CampaignCriteria criteria = CampaignCriteria.of(null, null, null, endFrom, null);
         Specification<CampaignEntity> spec = CampaignSpecifications.byFilters(null, null, null, criteria);
 
@@ -244,7 +245,7 @@ class CampaignSpecificationsTest {
         CriteriaQuery<?> query = Mockito.mock(CriteriaQuery.class);
 
         when(root.get("endDate")).thenReturn((Path) Mockito.mock(Path.class));
-        when(cb.greaterThanOrEqualTo(any(), any(Instant.class))).thenReturn(Mockito.mock(Predicate.class));
+        when(cb.greaterThanOrEqualTo(any(), any(LocalDateTime.class))).thenReturn(Mockito.mock(Predicate.class));
         when(cb.and(any(Predicate[].class))).thenReturn(Mockito.mock(Predicate.class));
 
         Predicate p = spec.toPredicate(root, query, cb);
@@ -254,7 +255,7 @@ class CampaignSpecificationsTest {
 
     @Test
     void byFilters_endToOnly_invokesSingleLess() {
-        Instant endTo = Instant.parse("2025-11-15T00:00:00Z");
+        LocalDateTime endTo = LocalDateTime.parse("2025-11-15T00:00:00");
         CampaignCriteria criteria = CampaignCriteria.of(null, null, null, null, endTo);
         Specification<CampaignEntity> spec = CampaignSpecifications.byFilters(null, null, null, criteria);
 

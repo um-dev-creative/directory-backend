@@ -8,7 +8,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -60,8 +60,8 @@ class CampaignUpdateRequestTest {
 
     @Test
     void startAfterEnd_methodAndValidationFail() {
-        Instant start = Instant.parse("2025-11-10T00:00:00Z");
-        Instant end = Instant.parse("2025-11-02T00:00:00Z");
+        LocalDateTime start = LocalDateTime.parse("2025-11-10T00:00:00");
+        LocalDateTime end = LocalDateTime.parse("2025-11-02T00:00:00");
         CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, start, end, null, null, null, null);
 
         // method should return false
@@ -76,8 +76,8 @@ class CampaignUpdateRequestTest {
 
     @Test
     void startEqualsEnd_methodAndValidationPass() {
-        Instant instant = Instant.parse("2025-11-02T00:00:00Z");
-        CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, instant, instant, null, null, null, null);
+        LocalDateTime localDateTime = LocalDateTime.parse("2025-11-02T00:00:00");
+        CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, localDateTime, localDateTime, null, null, null, null);
         assertTrue(req.isStartBeforeOrEqualEnd());
         Set<ConstraintViolation<CampaignUpdateRequest>> violations = validator.validate(req);
         assertTrue(violations.isEmpty());
@@ -85,8 +85,8 @@ class CampaignUpdateRequestTest {
 
     @Test
     void startBeforeEnd_methodAndValidationPass() {
-        Instant start = Instant.parse("2025-11-01T00:00:00Z");
-        Instant end = Instant.parse("2025-11-02T00:00:00Z");
+        LocalDateTime start = LocalDateTime.parse("2025-11-01T00:00:00");
+        LocalDateTime end = LocalDateTime.parse("2025-11-02T00:00:00");
         CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, start, end, null, null, null, null);
         assertTrue(req.isStartBeforeOrEqualEnd());
         Set<ConstraintViolation<CampaignUpdateRequest>> violations = validator.validate(req);
