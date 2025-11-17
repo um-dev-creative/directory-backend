@@ -25,7 +25,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -62,6 +62,7 @@ class FavoriteServiceImplGetFavoritesTest {
                 businessRepository, productRepository, campaignRepository,
                 favoriteMapper, businessMapper, productMapper, campaignMapper);
     }
+
     @Test
     @DisplayName("401 when token missing or invalid")
     void getFavoritesUnauthorized() {
@@ -96,13 +97,24 @@ class FavoriteServiceImplGetFavoritesTest {
         UUID pId = UUID.randomUUID();
         UUID cId = UUID.randomUUID();
 
-        BusinessEntity be = new BusinessEntity(); be.setId(bId); be.setName("B");
-        ProductEntity pe = new ProductEntity(); pe.setId(pId); pe.setName("P");
-        CampaignEntity ce = new CampaignEntity(); ce.setId(cId); ce.setName("C"); ce.setStartDate(Instant.now()); ce.setEndDate(Instant.now());
+        BusinessEntity be = new BusinessEntity();
+        be.setId(bId);
+        be.setName("B");
+        ProductEntity pe = new ProductEntity();
+        pe.setId(pId);
+        pe.setName("P");
+        CampaignEntity ce = new CampaignEntity();
+        ce.setId(cId);
+        ce.setName("C");
+        ce.setStartDate(LocalDateTime.now());
+        ce.setEndDate(LocalDateTime.now());
 
-        UserFavoriteEntity uf1 = new UserFavoriteEntity(); uf1.setBusiness(be);
-        UserFavoriteEntity uf2 = new UserFavoriteEntity(); uf2.setProduct(pe);
-        UserFavoriteEntity uf3 = new UserFavoriteEntity(); uf3.setCampaign(ce);
+        UserFavoriteEntity uf1 = new UserFavoriteEntity();
+        uf1.setBusiness(be);
+        UserFavoriteEntity uf2 = new UserFavoriteEntity();
+        uf2.setProduct(pe);
+        UserFavoriteEntity uf3 = new UserFavoriteEntity();
+        uf3.setCampaign(ce);
 
         try (MockedStatic<JwtUtil> mocked = Mockito.mockStatic(JwtUtil.class)) {
             mocked.when(() -> JwtUtil.getUidFromToken("token")).thenReturn(userId);
@@ -175,8 +187,8 @@ class FavoriteServiceImplGetFavoritesTest {
             CampaignEntity ce = new CampaignEntity();
             ce.setId(UUID.randomUUID());
             ce.setName("Offer" + i);
-            ce.setStartDate(Instant.now());
-            ce.setEndDate(Instant.now());
+            ce.setStartDate(LocalDateTime.now());
+            ce.setEndDate(LocalDateTime.now());
             campaigns.add(ce);
             UserFavoriteEntity uf = new UserFavoriteEntity();
             uf.setCampaign(ce);
@@ -203,7 +215,7 @@ class FavoriteServiceImplGetFavoritesTest {
             assertTrue(resp.getStatusCode().is2xxSuccessful());
             FavoritesResponse body = resp.getBody();
             assertNotNull(body);
-            
+
             int totalItems = body.stores().size() + body.products().size() + body.offers().size();
             assertEquals(10, totalItems, "Total items should be 10 when requesting page 0 with size 10");
             assertEquals(5, body.stores().size());
@@ -215,7 +227,7 @@ class FavoriteServiceImplGetFavoritesTest {
             assertTrue(resp2.getStatusCode().is2xxSuccessful());
             FavoritesResponse body2 = resp2.getBody();
             assertNotNull(body2);
-            
+
             int totalItems2 = body2.stores().size() + body2.products().size() + body2.offers().size();
             assertEquals(5, totalItems2, "Total items should be 5 when requesting page 1 with size 10");
             assertEquals(0, body2.stores().size());
@@ -227,7 +239,7 @@ class FavoriteServiceImplGetFavoritesTest {
             assertTrue(resp3.getStatusCode().is2xxSuccessful());
             FavoritesResponse body3 = resp3.getBody();
             assertNotNull(body3);
-            
+
             int totalItems3 = body3.stores().size() + body3.products().size() + body3.offers().size();
             assertEquals(0, totalItems3, "Total items should be 0 when requesting page 2 with size 10");
         }

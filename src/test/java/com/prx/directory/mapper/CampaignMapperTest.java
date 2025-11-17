@@ -6,12 +6,13 @@ import com.prx.directory.jpa.entity.CampaignEntity;
 import com.prx.directory.jpa.entity.CategoryEntity;
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class CampaignMapperTest {
+class CampaignMapperTest {
 
     private final CampaignMapper mapper = new CampaignMapperImpl();
 
@@ -22,8 +23,8 @@ public class CampaignMapperTest {
         e.setId(id);
         e.setName("Camp");
         e.setDescription("Desc");
-        e.setStartDate(Instant.parse("2025-01-01T00:00:00Z"));
-        e.setEndDate(Instant.parse("2025-12-31T23:59:59Z"));
+        e.setStartDate(LocalDateTime.parse("2025-01-01T00:00:00"));
+        e.setEndDate(LocalDateTime.parse("2025-12-31T23:59:59"));
         e.setActive(true);
         CategoryEntity c = new CategoryEntity();
         c.setId(UUID.randomUUID());
@@ -31,8 +32,8 @@ public class CampaignMapperTest {
         BusinessEntity b = new BusinessEntity();
         b.setId(UUID.randomUUID());
         e.setBusinessFk(b);
-        e.setCreatedDate(Instant.now());
-        e.setLastUpdate(Instant.now());
+        e.setCreatedDate(LocalDateTime.now());
+        e.setLastUpdate(LocalDateTime.now());
 
         CampaignTO to = mapper.toTO(e);
         assertNotNull(to);
@@ -47,7 +48,8 @@ public class CampaignMapperTest {
 
     @Test
     void testTOToEntity() {
-        CampaignTO to = new CampaignTO(null, "N", "D", Instant.parse("2025-01-01T00:00:00Z"), Instant.parse("2025-12-31T00:00:00Z"), UUID.randomUUID(), UUID.randomUUID(), null, null, true);
+        CampaignTO to = new CampaignTO(null, "N", "D", LocalDateTime.parse("2025-01-01T00:00:00"),
+                LocalDateTime.parse("2025-12-31T00:00:00"), UUID.randomUUID(), UUID.randomUUID(), null, null, true);
         CampaignEntity e = mapper.toEntity(to);
         assertNotNull(e);
         assertEquals("N", e.getName());

@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,7 +39,7 @@ public interface CampaignApi {
     @Operation(
             summary = "Create a new campaign",
             description = "Persists a new campaign. The server generates id, createdDate and lastUpdate.",
-            requestBody = @RequestBody(description = "Campaign create payload", required = true,
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Campaign create payload", required = true,
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = CampaignTO.class),
                             examples = @ExampleObject(
@@ -135,7 +134,7 @@ public interface CampaignApi {
                     "Only provided fields will be updated. Validates field lengths, date constraints, " +
                     "and foreign key references. Updates last_update timestamp automatically. " +
                     "Implements optimistic locking - include the current last_update value to prevent concurrent modifications.",
-            requestBody = @RequestBody(description = "Campaign update payload. All fields are optional.", required = true,
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Campaign update payload. All fields are optional.", required = true,
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = CampaignUpdateRequest.class),
                             examples = @ExampleObject(value = """

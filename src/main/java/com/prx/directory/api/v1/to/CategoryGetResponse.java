@@ -12,9 +12,9 @@ public record CategoryGetResponse(
         String name,
         String description,
         UUID categoryParentId,
-        @NotNull @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_MIL)
+        @NotNull @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_T)
         LocalDateTime lastUpdate,
-        @NotNull @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_MIL)
+        @NotNull @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_T)
         LocalDateTime createdDate,
         boolean active
 ) {

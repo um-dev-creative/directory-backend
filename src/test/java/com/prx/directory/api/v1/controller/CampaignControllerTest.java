@@ -13,7 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -61,12 +61,12 @@ class CampaignControllerTest {
     void updateDelegates() {
         UUID id = UUID.randomUUID();
         CampaignUpdateRequest request = new CampaignUpdateRequest("Updated Name", null, null, null, null, null, null, null);
-        CampaignTO updatedTO = new CampaignTO(id, "Updated Name", "desc", 
-                Instant.parse("2024-01-01T00:00:00Z"), 
-                Instant.parse("2024-12-31T23:59:59Z"), 
-                UUID.randomUUID(), UUID.randomUUID(), 
-                Instant.parse("2024-01-01T00:00:00Z"), 
-                Instant.now(), true);
+        CampaignTO updatedTO = new CampaignTO(id, "Updated Name", "desc",
+                LocalDateTime.parse("2024-01-01T00:00:00"),
+                LocalDateTime.parse("2024-12-31T23:59:59"),
+                UUID.randomUUID(), UUID.randomUUID(),
+                LocalDateTime.parse("2024-01-01T00:00:00"),
+                LocalDateTime.now(), true);
         
         when(campaignService.update(eq(id), eq(request))).thenReturn(ResponseEntity.ok(updatedTO));
 

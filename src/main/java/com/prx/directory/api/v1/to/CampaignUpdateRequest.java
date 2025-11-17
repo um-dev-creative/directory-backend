@@ -2,10 +2,11 @@ package com.prx.directory.api.v1.to;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.prx.commons.util.DateUtil;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Size;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -17,15 +18,15 @@ public record CampaignUpdateRequest(
         String name,
         @Size(max = 1200, message = "description must not exceed 1200 characters")
         String description,
-        @JsonFormat(shape = JsonFormat.Shape.STRING)
-        Instant startDate,
-        @JsonFormat(shape = JsonFormat.Shape.STRING)
-        Instant endDate,
+        @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_T)
+        LocalDateTime startDate,
+        @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_T)
+        LocalDateTime endDate,
         UUID categoryId,
         UUID businessId,
         Boolean active,
-        @JsonFormat(shape = JsonFormat.Shape.STRING)
-        Instant lastUpdate
+        @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_T)
+        LocalDateTime lastUpdate
 ) {
     @AssertTrue(message = "startDate must be before or equal to endDate")
     @JsonIgnore

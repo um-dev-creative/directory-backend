@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping({"/api/v1/campaigns", "/api/campaigns"})
+@RequestMapping("/api/v1/campaigns")
 public class CampaignController implements CampaignApi {
 
     private final CampaignService campaignService;

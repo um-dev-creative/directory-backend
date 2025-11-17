@@ -7,7 +7,7 @@ import org.hibernate.annotations.ColumnDefault;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -55,7 +55,7 @@ public class CampaignEntity implements Serializable {
      */
     @NotNull
     @Column(name = "start_date", nullable = false)
-    private Instant startDate;
+    private LocalDateTime startDate;
 
     /**
      * The end date of the campaign.
@@ -63,7 +63,7 @@ public class CampaignEntity implements Serializable {
      */
     @NotNull
     @Column(name = "end_date", nullable = false)
-    private Instant endDate;
+    private LocalDateTime endDate;
 
     /**
      * Indicates whether the campaign is active.
@@ -85,11 +85,11 @@ public class CampaignEntity implements Serializable {
 
     @NotNull
     @Column(name = "created_date", nullable = false)
-    private Instant createdDate;
+    private LocalDateTime createdDate;
 
     @NotNull
     @Column(name = "last_update", nullable = false)
-    private Instant lastUpdate;
+    private LocalDateTime lastUpdate;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -104,19 +104,19 @@ public class CampaignEntity implements Serializable {
         this.businessFk = businessFk;
     }
 
-    public Instant getLastUpdate() {
+    public LocalDateTime getLastUpdate() {
         return lastUpdate;
     }
 
-    public void setLastUpdate(Instant lastUpdate) {
+    public void setLastUpdate(LocalDateTime lastUpdate) {
         this.lastUpdate = lastUpdate;
     }
 
-    public Instant getCreatedDate() {
+    public LocalDateTime getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(Instant createdDate) {
+    public void setCreatedDate(LocalDateTime createdDate) {
         this.createdDate = createdDate;
     }
 
@@ -183,7 +183,7 @@ public class CampaignEntity implements Serializable {
      *
      * @return the start date of the campaign
      */
-    public Instant getStartDate() {
+    public LocalDateTime getStartDate() {
         return startDate;
     }
 
@@ -192,7 +192,7 @@ public class CampaignEntity implements Serializable {
      *
      * @param startDate the start date of the campaign
      */
-    public void setStartDate(Instant startDate) {
+    public void setStartDate(LocalDateTime startDate) {
         this.startDate = startDate;
     }
 
@@ -201,7 +201,7 @@ public class CampaignEntity implements Serializable {
      *
      * @return the end date of the campaign
      */
-    public Instant getEndDate() {
+    public LocalDateTime getEndDate() {
         return endDate;
     }
 
@@ -210,7 +210,7 @@ public class CampaignEntity implements Serializable {
      *
      * @param endDate the end date of the campaign
      */
-    public void setEndDate(Instant endDate) {
+    public void setEndDate(LocalDateTime endDate) {
         this.endDate = endDate;
     }
 

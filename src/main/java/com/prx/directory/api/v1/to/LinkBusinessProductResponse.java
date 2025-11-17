@@ -9,9 +9,9 @@ import java.util.UUID;
 public record LinkBusinessProductResponse(
         UUID businessId,
         UUID productId,
-        @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_MIL)
+        @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_T)
         LocalDateTime createdAt,
-        @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_MIL)
+        @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_T)
         LocalDateTime  lastUpdate,
         Boolean active) {
 

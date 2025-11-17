@@ -11,9 +11,9 @@ public record FavoriteResponse(
         String type,
         UUID itemId,
         UUID userId,
-        @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_MIL)
+        @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_T)
         LocalDateTime createdDate,
-        @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_MIL)
+        @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_T)
         LocalDateTime updatedDate,
         Boolean active
 ) {

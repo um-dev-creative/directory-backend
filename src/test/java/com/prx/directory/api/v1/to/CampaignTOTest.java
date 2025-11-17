@@ -2,10 +2,11 @@ package com.prx.directory.api.v1.to;
 
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CampaignTOTest {
 
@@ -29,8 +30,8 @@ class CampaignTOTest {
 
     @Test
     void isStartBeforeOrEqualEnd_startBeforeEnd_returnsTrue() {
-        Instant start = Instant.parse("2025-11-01T00:00:00Z");
-        Instant end = Instant.parse("2025-11-02T00:00:00Z");
+        LocalDateTime start = LocalDateTime.parse("2025-11-01T00:00:00");
+        LocalDateTime end = LocalDateTime.parse("2025-11-02T00:00:00");
 
         CampaignTO t = new CampaignTO(
                 UUID.randomUUID(),
@@ -50,14 +51,14 @@ class CampaignTOTest {
 
     @Test
     void isStartBeforeOrEqualEnd_startEqualsEnd_returnsTrue() {
-        Instant instant = Instant.parse("2025-11-01T00:00:00Z");
+        LocalDateTime localDateTime = LocalDateTime.parse("2025-11-01T00:00:00");
 
         CampaignTO t = new CampaignTO(
                 UUID.randomUUID(),
                 "Campaign",
                 "desc",
-                instant,
-                instant,
+                localDateTime,
+                localDateTime,
                 null,
                 null,
                 null,
@@ -70,8 +71,8 @@ class CampaignTOTest {
 
     @Test
     void isStartBeforeOrEqualEnd_startAfterEnd_returnsFalse() {
-        Instant start = Instant.parse("2025-11-03T00:00:00Z");
-        Instant end = Instant.parse("2025-11-02T00:00:00Z");
+        LocalDateTime start = LocalDateTime.parse("2025-11-03T00:00:00");
+        LocalDateTime end = LocalDateTime.parse("2025-11-02T00:00:00");
 
         CampaignTO t = new CampaignTO(
                 UUID.randomUUID(),

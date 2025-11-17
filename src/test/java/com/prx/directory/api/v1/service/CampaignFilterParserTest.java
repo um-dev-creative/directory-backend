@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -224,18 +225,18 @@ class CampaignFilterParserTest {
 
     @Test
     void validateDateRanges_validRanges_doesNotThrow() {
-        Instant start1 = Instant.parse("2025-11-01T00:00:00Z");
-        Instant start2 = Instant.parse("2025-11-30T23:59:59Z");
-        Instant end1 = Instant.parse("2025-12-01T00:00:00Z");
-        Instant end2 = Instant.parse("2025-12-31T23:59:59Z");
+        LocalDateTime start1 = LocalDateTime.parse("2025-11-01T00:00:00");
+        LocalDateTime start2 = LocalDateTime.parse("2025-11-30T23:59:59");
+        LocalDateTime end1 = LocalDateTime.parse("2025-12-01T00:00:00");
+        LocalDateTime end2 = LocalDateTime.parse("2025-12-31T23:59:59");
 
         assertDoesNotThrow(() -> parser.validateDateRanges(start1, start2, end1, end2));
     }
 
     @Test
     void validateDateRanges_startFromAfterStartTo_throwsException() {
-        Instant start1 = Instant.parse("2025-11-30T23:59:59Z");
-        Instant start2 = Instant.parse("2025-11-01T00:00:00Z");
+        LocalDateTime start1 = LocalDateTime.parse("2025-11-30T23:59:59");
+        LocalDateTime start2 = LocalDateTime.parse("2025-11-01T00:00:00");
 
         assertThrows(IllegalArgumentException.class,
                 () -> parser.validateDateRanges(start1, start2, null, null));
@@ -243,8 +244,8 @@ class CampaignFilterParserTest {
 
     @Test
     void validateDateRanges_endFromAfterEndTo_throwsException() {
-        Instant end1 = Instant.parse("2025-12-31T23:59:59Z");
-        Instant end2 = Instant.parse("2025-12-01T00:00:00Z");
+        LocalDateTime end1 = LocalDateTime.parse("2025-12-31T23:59:59");
+        LocalDateTime end2 = LocalDateTime.parse("2025-12-01T00:00:00");
 
         assertThrows(IllegalArgumentException.class,
                 () -> parser.validateDateRanges(null, null, end1, end2));
@@ -257,14 +258,13 @@ class CampaignFilterParserTest {
 
     @Test
     void validateDateRanges_onlyStartFrom_doesNotThrow() {
-        Instant start = Instant.parse("2025-11-01T00:00:00Z");
+        LocalDateTime start = LocalDateTime.parse("2025-11-01T00:00:00");
         assertDoesNotThrow(() -> parser.validateDateRanges(start, null, null, null));
     }
 
     @Test
     void validateDateRanges_equalDates_doesNotThrow() {
-        Instant instant = Instant.parse("2025-11-01T00:00:00Z");
+        LocalDateTime instant = LocalDateTime.parse("2025-11-01T00:00:00");
         assertDoesNotThrow(() -> parser.validateDateRanges(instant, instant, instant, instant));
     }
 }
-

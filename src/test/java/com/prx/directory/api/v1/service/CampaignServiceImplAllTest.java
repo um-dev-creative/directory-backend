@@ -20,7 +20,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -184,8 +184,9 @@ class CampaignServiceImplAllTest {
         CampaignEntity e = new CampaignEntity();
         List<CampaignEntity> content = List.of(e);
         Page<CampaignEntity> page = new PageImpl<>(content);
-        when(campaignRepository.findAll((org.springframework.data.jpa.domain.Specification<CampaignEntity>) any(), (Pageable) any())).thenReturn(page);
-        when(campaignMapper.toOfferTO(e)).thenReturn(new OfferTO(UUID.randomUUID(), "title", "desc", UUID.randomUUID(), Instant.now(), Instant.now().plusSeconds(3600), true));
+        when(campaignRepository.findAll((Specification<CampaignEntity>) any(), (Pageable) any())).thenReturn(page);
+        when(campaignMapper.toOfferTO(e)).thenReturn(new OfferTO(UUID.randomUUID(), "title",
+                "desc", UUID.randomUUID(), LocalDateTime.now(), LocalDateTime.now().plusSeconds(3600), true));
 
         ResponseEntity<CampaignListResponse> resp = service.list(null, 10, "name", Map.of());
         assertEquals(200, resp.getStatusCode().value());
@@ -196,8 +197,9 @@ class CampaignServiceImplAllTest {
         CampaignEntity e = new CampaignEntity();
         List<CampaignEntity> content = List.of(e);
         Page<CampaignEntity> page = new PageImpl<>(content);
-        when(campaignRepository.findAll((org.springframework.data.jpa.domain.Specification<CampaignEntity>) any(), (Pageable) any())).thenReturn(page);
-        when(campaignMapper.toOfferTO(e)).thenReturn(new OfferTO(UUID.randomUUID(), "title", "desc", UUID.randomUUID(), Instant.now(), Instant.now().plusSeconds(3600), true));
+        when(campaignRepository.findAll((Specification<CampaignEntity>) any(), (Pageable) any())).thenReturn(page);
+        when(campaignMapper.toOfferTO(e)).thenReturn(new OfferTO(UUID.randomUUID(), "title",
+                "desc", UUID.randomUUID(), LocalDateTime.now(), LocalDateTime.now().plusSeconds(3600), true));
 
         ResponseEntity<CampaignListResponse> resp = service.list(0, 10, "name", Map.of());
         assertEquals(200, resp.getStatusCode().value());
@@ -208,8 +210,9 @@ class CampaignServiceImplAllTest {
         CampaignEntity e = new CampaignEntity();
         List<CampaignEntity> content = List.of(e);
         Page<CampaignEntity> page = new PageImpl<>(content);
-        when(campaignRepository.findAll((org.springframework.data.jpa.domain.Specification<CampaignEntity>) any(), (Pageable) any())).thenReturn(page);
-        when(campaignMapper.toOfferTO(e)).thenReturn(new OfferTO(UUID.randomUUID(), "title", "desc", UUID.randomUUID(), Instant.now(), Instant.now().plusSeconds(3600), true));
+        when(campaignRepository.findAll((Specification<CampaignEntity>) any(), (Pageable) any())).thenReturn(page);
+        when(campaignMapper.toOfferTO(e)).thenReturn(new OfferTO(UUID.randomUUID(), "title",
+                "desc", UUID.randomUUID(), LocalDateTime.now(), LocalDateTime.now().plusSeconds(3600), true));
 
         ResponseEntity<CampaignListResponse> resp = service.list(1, null, "name", Map.of());
         assertEquals(200, resp.getStatusCode().value());
@@ -242,10 +245,11 @@ class CampaignServiceImplAllTest {
     void update_conflictOnLastUpdate_throwsConflict() {
         UUID id = UUID.randomUUID();
         CampaignEntity existing = new CampaignEntity();
-        existing.setLastUpdate(Instant.parse("2025-11-02T00:00:00Z"));
+        existing.setLastUpdate(LocalDateTime.parse("2025-11-02T00:00:00"));
         when(campaignRepository.findById(id)).thenReturn(Optional.of(existing));
 
-        CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, null, null, null, null, null, Instant.parse("2025-11-01T00:00:00Z"));
+        CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, null, null,
+                null, null, null, LocalDateTime.parse("2025-11-01T00:00:00"));
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.update(id, req));
         assertEquals(409, ex.getStatusCode().value());
     }
@@ -254,12 +258,13 @@ class CampaignServiceImplAllTest {
     void update_dateValidation_throwsBadRequest() {
         UUID id = UUID.randomUUID();
         CampaignEntity existing = new CampaignEntity();
-        existing.setStartDate(Instant.parse("2025-11-01T00:00:00Z"));
-        existing.setEndDate(Instant.parse("2025-11-05T00:00:00Z"));
+        existing.setStartDate(LocalDateTime.parse("2025-11-01T00:00:00"));
+        existing.setEndDate(LocalDateTime.parse("2025-11-05T00:00:00"));
         when(campaignRepository.findById(id)).thenReturn(Optional.of(existing));
 
         // Provide request that makes newStartDate > newEndDate
-        CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, Instant.parse("2025-11-10T00:00:00Z"), Instant.parse("2025-11-02T00:00:00Z"), null, null, null, null);
+        CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, LocalDateTime.parse("2025-11-10T00:00:00"),
+                LocalDateTime.parse("2025-11-02T00:00:00"), null, null, null, null);
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.update(id, req));
         assertEquals(400, ex.getStatusCode().value());
     }
@@ -306,7 +311,8 @@ class CampaignServiceImplAllTest {
 
         CampaignUpdateRequest req = new CampaignUpdateRequest("newName", "newDesc", null, null, null, null, true, null);
         when(campaignRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        when(campaignMapper.toTO(any())).thenReturn(new CampaignTO(id, "newName", "newDesc", null, null, null, null, null, null, true));
+        when(campaignMapper.toTO(any())).thenReturn(new CampaignTO(id, "newName", "newDesc", null, null,
+                null, null, null, null, true));
 
         ResponseEntity<CampaignTO> resp = service.update(id, req);
         assertEquals(200, resp.getStatusCode().value());
@@ -322,14 +328,15 @@ class CampaignServiceImplAllTest {
     void update_noFieldsChanged_doesNotUpdateTimestamp() {
         UUID id = UUID.randomUUID();
         CampaignEntity existing = new CampaignEntity();
-        existing.setLastUpdate(Instant.parse("2025-11-01T00:00:00Z"));
+        existing.setLastUpdate(LocalDateTime.parse("2025-11-01T00:00:00"));
         existing.setName("oldName");
         when(campaignRepository.findById(id)).thenReturn(Optional.of(existing));
 
         // Empty request - no fields to update
         CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, null, null, null, null, null, null);
         when(campaignRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        when(campaignMapper.toTO(any())).thenReturn(new CampaignTO(id, "oldName", null, null, null, null, null, null, null, true));
+        when(campaignMapper.toTO(any())).thenReturn(new CampaignTO(id, "oldName", null, null, null,
+                null, null, null, null, true));
 
         ResponseEntity<CampaignTO> resp = service.update(id, req);
         assertEquals(200, resp.getStatusCode().value());
@@ -338,7 +345,7 @@ class CampaignServiceImplAllTest {
         verify(campaignRepository).save(captor.capture());
         CampaignEntity saved = captor.getValue();
         // lastUpdate should not change when no fields updated
-        assertEquals(Instant.parse("2025-11-01T00:00:00Z"), saved.getLastUpdate());
+        assertEquals(LocalDateTime.parse("2025-11-01T00:00:00"), saved.getLastUpdate());
     }
 
     @Test
@@ -350,7 +357,8 @@ class CampaignServiceImplAllTest {
         existing.setEndDate(null);
         when(campaignRepository.findById(id)).thenReturn(Optional.of(existing));
 
-        CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, Instant.parse("2025-11-01T00:00:00Z"), Instant.parse("2025-11-05T00:00:00Z"), null, null, null, null);
+        CampaignUpdateRequest req = new CampaignUpdateRequest(null, null,
+                LocalDateTime.parse("2025-11-01T00:00:00"), LocalDateTime.parse("2025-11-05T00:00:00"), null, null, null, null);
         when(campaignRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(campaignMapper.toTO(any())).thenReturn(new CampaignTO(id, null, null, null, null, null, null, null, null, true));
 
@@ -361,8 +369,8 @@ class CampaignServiceImplAllTest {
         verify(campaignRepository).save(captor.capture());
         CampaignEntity saved = captor.getValue();
         assertNotNull(saved.getLastUpdate());
-        assertEquals(Instant.parse("2025-11-01T00:00:00Z"), saved.getStartDate());
-        assertEquals(Instant.parse("2025-11-05T00:00:00Z"), saved.getEndDate());
+        assertEquals(LocalDateTime.parse("2025-11-01T00:00:00"), saved.getStartDate());
+        assertEquals(LocalDateTime.parse("2025-11-05T00:00:00"), saved.getEndDate());
     }
 
     @Test
@@ -422,13 +430,14 @@ class CampaignServiceImplAllTest {
         filters.put("active", "true");
         filters.put("category_fk", UUID.randomUUID().toString());
         filters.put("business_fk", UUID.randomUUID().toString());
-        filters.put("start_from", "2025-11-01T00:00:00Z");
-        filters.put("start_to", "2025-11-30T23:59:59Z");
+        filters.put("start_from", "2025-11-01T00:00:00");
+        filters.put("start_to", "2025-11-30T23:59:59");
+        var localDateTime = LocalDateTime.now();
 
         CampaignEntity e = new CampaignEntity();
         Page<CampaignEntity> page = new PageImpl<>(List.of(e));
         when(campaignRepository.findAll((Specification<CampaignEntity>) any(), (Pageable) any())).thenReturn(page);
-        when(campaignMapper.toOfferTO(e)).thenReturn(new OfferTO(UUID.randomUUID(), "title", "desc", UUID.randomUUID(), Instant.now(), Instant.now().plusSeconds(3600), true));
+        when(campaignMapper.toOfferTO(e)).thenReturn(new OfferTO(UUID.randomUUID(), "title", "desc", UUID.randomUUID(), localDateTime, localDateTime.plusSeconds(3600), true));
 
         ResponseEntity<CampaignListResponse> resp = service.list(1, 10, "name", filters);
         assertEquals(200, resp.getStatusCode().value());
