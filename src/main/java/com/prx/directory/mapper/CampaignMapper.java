@@ -20,14 +20,17 @@ public interface CampaignMapper {
     @Mapping(target = "startDate", source = "startDate")
     @Mapping(target = "endDate", source = "endDate")
     @Mapping(target = "active", source = "active")
+    @Mapping(target = "discount", source = "discount")
     OfferTO toOfferTO(CampaignEntity campaignEntity);
 
     @Mapping(target = "businessId", source = "businessFk.id")
     @Mapping(target = "categoryId", source = "categoryFk.id")
+    @Mapping(target = "discount", source = "discount")
     CampaignTO toTO(CampaignEntity entity);
 
     @Mapping(target = "businessFk", source = "businessId", qualifiedByName = "toBusinessEntity")
     @Mapping(target = "categoryFk", source = "categoryId", qualifiedByName = "toCategoryEntity")
+    @Mapping(target = "discount", source = "discount")
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "lastUpdate", ignore = true)
     CampaignEntity toEntity(CampaignTO to);

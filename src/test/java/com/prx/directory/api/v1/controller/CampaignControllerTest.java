@@ -48,7 +48,7 @@ class CampaignControllerTest {
     @DisplayName("getById: delegates to service and returns result")
     void getByIdDelegates() {
         UUID id = UUID.randomUUID();
-        CampaignTO to = new CampaignTO(id, "n", null, null, null, null, null, null, null, true);
+        CampaignTO to = new CampaignTO(id, "n", null, null, null, null, null, null, null, null, true);
         when(campaignService.find(id)).thenReturn(ResponseEntity.ok(to));
 
         ResponseEntity<CampaignTO> resp = campaignController.getById(id);
@@ -66,8 +66,8 @@ class CampaignControllerTest {
                 LocalDateTime.parse("2024-12-31T23:59:59"),
                 UUID.randomUUID(), UUID.randomUUID(),
                 LocalDateTime.parse("2024-01-01T00:00:00"),
-                LocalDateTime.now(), true);
-        
+                LocalDateTime.now(), null, true);
+
         when(campaignService.update(eq(id), eq(request))).thenReturn(ResponseEntity.ok(updatedTO));
 
         ResponseEntity<CampaignTO> resp = campaignController.update(id, request);

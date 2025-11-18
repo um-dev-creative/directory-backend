@@ -90,4 +90,3 @@ class CampaignTOTest {
         assertFalse(t.isStartBeforeOrEqualEnd());
     }
 }
-

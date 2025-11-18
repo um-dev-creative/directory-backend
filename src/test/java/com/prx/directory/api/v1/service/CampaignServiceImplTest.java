@@ -52,7 +52,7 @@ class CampaignServiceImplTest {
     void create_savesAndReturnsCreated() {
         UUID cat = UUID.randomUUID();
         UUID biz = UUID.randomUUID();
-        CampaignTO to = new CampaignTO(null, "n", "d", null, null, cat, biz, null, null, true);
+        CampaignTO to = new CampaignTO(null, "n", "d", null, null, cat, biz, null, null, null, true);
 
         when(categoryRepository.existsById(cat)).thenReturn(true);
         when(businessRepository.existsById(biz)).thenReturn(true);
@@ -61,7 +61,7 @@ class CampaignServiceImplTest {
         when(campaignMapper.toEntity(to)).thenReturn(entity);
         CampaignEntity saved = new CampaignEntity();
         when(campaignRepository.save(entity)).thenReturn(saved);
-        when(campaignMapper.toTO(saved)).thenReturn(new CampaignTO(UUID.randomUUID(), "n", "d", null, null, cat, biz, null, null, true));
+        when(campaignMapper.toTO(saved)).thenReturn(new CampaignTO(UUID.randomUUID(), "n", "d", null, null, cat, biz, null, null, null, true));
 
         ResponseEntity<CampaignTO> result = service.create(to);
         assertEquals(HttpStatus.CREATED, result.getStatusCode());

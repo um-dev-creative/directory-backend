@@ -8,6 +8,7 @@ import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -35,6 +36,7 @@ public record CampaignTO(
         LocalDateTime createdDate,
         @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_T)
         LocalDateTime lastUpdate,
+        BigDecimal discount,
         Boolean active
 ) {
     @AssertTrue(message = "startDate must be before or equal to endDate")
@@ -42,5 +44,12 @@ public record CampaignTO(
     public boolean isStartBeforeOrEqualEnd() {
         if (startDate == null || endDate == null) return true;
         return !startDate.isAfter(endDate);
+    }
+
+    // Backwards-compatible constructor used in tests and existing code that didn't include discount
+    public CampaignTO(UUID id, String name, String description, LocalDateTime startDate,
+                      LocalDateTime endDate, UUID categoryId, UUID businessId,
+                      LocalDateTime createdDate, LocalDateTime lastUpdate, Boolean active) {
+        this(id, name, description, startDate, endDate, categoryId, businessId, createdDate, lastUpdate, null, active);
     }
 }
