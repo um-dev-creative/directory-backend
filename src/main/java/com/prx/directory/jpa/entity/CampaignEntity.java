@@ -7,6 +7,7 @@ import org.hibernate.annotations.ColumnDefault;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -91,6 +92,10 @@ public class CampaignEntity implements Serializable {
     @Column(name = "last_update", nullable = false)
     private LocalDateTime lastUpdate;
 
+    // New discount column (nullable). Uses BigDecimal to represent monetary or percentage values.
+    @Column(name = "discount")
+    private BigDecimal discount;
+
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "business_fk", nullable = false)
@@ -110,6 +115,14 @@ public class CampaignEntity implements Serializable {
 
     public void setLastUpdate(LocalDateTime lastUpdate) {
         this.lastUpdate = lastUpdate;
+    }
+
+    public BigDecimal getDiscount() {
+        return discount;
+    }
+
+    public void setDiscount(BigDecimal discount) {
+        this.discount = discount;
     }
 
     public LocalDateTime getCreatedDate() {

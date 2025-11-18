@@ -122,7 +122,7 @@ class FavoriteServiceImplGetFavoritesTest {
             when(userFavoriteRepository.findByUserId(userId)).thenReturn(List.of(uf1, uf2, uf3));
 
             BusinessTO bto = new BusinessTO(bId, "B", null, null, null, null, null, null, null, null, null, false, null);
-            OfferTO oto = new OfferTO(cId, "C", null, null, ce.getStartDate(), ce.getEndDate(), false);
+            OfferTO oto = new OfferTO(cId, "C", null, null, ce.getStartDate(), ce.getEndDate(), null, false);
 
             when(businessMapper.toBusinessTO(any(BusinessEntity.class))).thenReturn(bto);
             when(campaignMapper.toOfferTO(any(CampaignEntity.class))).thenReturn(oto);
@@ -207,7 +207,7 @@ class FavoriteServiceImplGetFavoritesTest {
             when(campaignMapper.toOfferTO(any(CampaignEntity.class)))
                     .thenAnswer(inv -> {
                         CampaignEntity c = inv.getArgument(0);
-                        return new OfferTO(c.getId(), c.getName(), null, null, c.getStartDate(), c.getEndDate(), false);
+                        return new OfferTO(c.getId(), c.getName(), null, null, c.getStartDate(), c.getEndDate(), null, false);
                     });
 
             // Request page 0 with size 10 - should return exactly 10 items total (5 stores + 5 products)

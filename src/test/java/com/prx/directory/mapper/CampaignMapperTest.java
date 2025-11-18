@@ -6,6 +6,7 @@ import com.prx.directory.jpa.entity.CampaignEntity;
 import com.prx.directory.jpa.entity.CategoryEntity;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -34,9 +35,11 @@ class CampaignMapperTest {
         e.setBusinessFk(b);
         e.setCreatedDate(LocalDateTime.now());
         e.setLastUpdate(LocalDateTime.now());
+        e.setDiscount(BigDecimal.valueOf(12.5));
 
         CampaignTO to = mapper.toTO(e);
         assertNotNull(to);
+        assertEquals(BigDecimal.valueOf(12.5), to.discount());
         assertEquals(id, to.id());
         assertEquals("Camp", to.name());
         assertEquals("Desc", to.description());
@@ -49,9 +52,10 @@ class CampaignMapperTest {
     @Test
     void testTOToEntity() {
         CampaignTO to = new CampaignTO(null, "N", "D", LocalDateTime.parse("2025-01-01T00:00:00"),
-                LocalDateTime.parse("2025-12-31T00:00:00"), UUID.randomUUID(), UUID.randomUUID(), null, null, true);
+                LocalDateTime.parse("2025-12-31T00:00:00"), UUID.randomUUID(), UUID.randomUUID(), null, null, BigDecimal.valueOf(5.0), true);
         CampaignEntity e = mapper.toEntity(to);
         assertNotNull(e);
+        assertEquals(BigDecimal.valueOf(5.0), e.getDiscount());
         assertEquals("N", e.getName());
         assertEquals("D", e.getDescription());
         assertEquals(to.startDate(), e.getStartDate());

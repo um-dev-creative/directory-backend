@@ -49,7 +49,7 @@ class CampaignServiceImplAllTest {
 
     @Test
     void create_missingCategory_throwsBadRequest() {
-        CampaignTO to = new CampaignTO(null, "n", "d", null, null, null, UUID.randomUUID(), null, null, true);
+        CampaignTO to = new CampaignTO(null, "n", "d", null, null, null, UUID.randomUUID(), null, null, null, true);
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.create(to));
         assertEquals(400, ex.getStatusCode().value());
     }
@@ -58,7 +58,7 @@ class CampaignServiceImplAllTest {
     void create_categoryNotFound_throwsBadRequest() {
         UUID cat = UUID.randomUUID();
         UUID biz = UUID.randomUUID();
-        CampaignTO to = new CampaignTO(null, "n", "d", null, null, cat, biz, null, null, null);
+        CampaignTO to = new CampaignTO(null, "n", "d", null, null, cat, biz, null, null, null, null);
         when(categoryRepository.existsById(cat)).thenReturn(false);
         when(businessRepository.existsById(biz)).thenReturn(true);
 
@@ -68,7 +68,7 @@ class CampaignServiceImplAllTest {
 
     @Test
     void create_missingBusiness_throwsBadRequest() {
-        CampaignTO to = new CampaignTO(null, "n", "d", null, null, UUID.randomUUID(), null, null, null, true);
+        CampaignTO to = new CampaignTO(null, "n", "d", null, null, null, UUID.randomUUID(), null, null, null, true);
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.create(to));
         assertEquals(400, ex.getStatusCode().value());
     }
@@ -77,7 +77,7 @@ class CampaignServiceImplAllTest {
     void create_businessNotFound_throwsBadRequest() {
         UUID cat = UUID.randomUUID();
         UUID biz = UUID.randomUUID();
-        CampaignTO to = new CampaignTO(null, "n", "d", null, null, cat, biz, null, null, null);
+        CampaignTO to = new CampaignTO(null, "n", "d", null, null, cat, biz, null, null, null, null);
         when(categoryRepository.existsById(cat)).thenReturn(true);
         when(businessRepository.existsById(biz)).thenReturn(false);
 
@@ -89,7 +89,7 @@ class CampaignServiceImplAllTest {
     void create_success_setsTimestampsAndActive() {
         UUID cat = UUID.randomUUID();
         UUID biz = UUID.randomUUID();
-        CampaignTO to = new CampaignTO(null, "n", "d", null, null, cat, biz, null, null, null);
+        CampaignTO to = new CampaignTO(null, "n", "d", null, null, cat, biz, null, null, null, null);
         when(categoryRepository.existsById(cat)).thenReturn(true);
         when(businessRepository.existsById(biz)).thenReturn(true);
 
@@ -98,7 +98,7 @@ class CampaignServiceImplAllTest {
         when(campaignMapper.toEntity(to)).thenReturn(entity);
         CampaignEntity savedEntity = new CampaignEntity();
         when(campaignRepository.save(entity)).thenReturn(savedEntity);
-        when(campaignMapper.toTO(savedEntity)).thenReturn(new CampaignTO(UUID.randomUUID(), "n", "d", null, null, cat, biz, null, null, true));
+        when(campaignMapper.toTO(savedEntity)).thenReturn(new CampaignTO(UUID.randomUUID(), "n", "d", null, null, cat, biz, null, null, null, true));
 
         ResponseEntity<CampaignTO> resp = service.create(to);
         assertEquals(201, resp.getStatusCode().value());
@@ -115,7 +115,7 @@ class CampaignServiceImplAllTest {
     void create_activeAlreadySet_doesNotOverride() {
         UUID cat = UUID.randomUUID();
         UUID biz = UUID.randomUUID();
-        CampaignTO to = new CampaignTO(null, "n", "d", null, null, cat, biz, null, null, false);
+        CampaignTO to = new CampaignTO(null, "n", "d", null, null, cat, biz, null, null, null, false);
         when(categoryRepository.existsById(cat)).thenReturn(true);
         when(businessRepository.existsById(biz)).thenReturn(true);
 
@@ -124,7 +124,7 @@ class CampaignServiceImplAllTest {
         when(campaignMapper.toEntity(to)).thenReturn(entity);
         CampaignEntity savedEntity = new CampaignEntity();
         when(campaignRepository.save(entity)).thenReturn(savedEntity);
-        when(campaignMapper.toTO(savedEntity)).thenReturn(new CampaignTO(UUID.randomUUID(), "n", "d", null, null, cat, biz, null, null, false));
+        when(campaignMapper.toTO(savedEntity)).thenReturn(new CampaignTO(UUID.randomUUID(), "n", "d", null, null, cat, biz, null, null, null, false));
 
         ResponseEntity<CampaignTO> resp = service.create(to);
         assertEquals(201, resp.getStatusCode().value());
@@ -142,7 +142,7 @@ class CampaignServiceImplAllTest {
         UUID id = UUID.randomUUID();
         CampaignEntity entity = new CampaignEntity();
         when(campaignRepository.findById(id)).thenReturn(Optional.of(entity));
-        when(campaignMapper.toTO(entity)).thenReturn(new CampaignTO(id, "n", "d", null, null, UUID.randomUUID(), UUID.randomUUID(), null, null, true));
+        when(campaignMapper.toTO(entity)).thenReturn(new CampaignTO(id, "n", "d", null, null, UUID.randomUUID(), UUID.randomUUID(), null, null, null, true));
 
         ResponseEntity<CampaignTO> resp = service.find(id);
         assertEquals(200, resp.getStatusCode().value());
@@ -186,7 +186,7 @@ class CampaignServiceImplAllTest {
         Page<CampaignEntity> page = new PageImpl<>(content);
         when(campaignRepository.findAll((Specification<CampaignEntity>) any(), (Pageable) any())).thenReturn(page);
         when(campaignMapper.toOfferTO(e)).thenReturn(new OfferTO(UUID.randomUUID(), "title",
-                "desc", UUID.randomUUID(), LocalDateTime.now(), LocalDateTime.now().plusSeconds(3600), true));
+                "desc", UUID.randomUUID(), LocalDateTime.now(), LocalDateTime.now().plusSeconds(3600), null, true));
 
         ResponseEntity<CampaignListResponse> resp = service.list(null, 10, "name", Map.of());
         assertEquals(200, resp.getStatusCode().value());
@@ -199,7 +199,7 @@ class CampaignServiceImplAllTest {
         Page<CampaignEntity> page = new PageImpl<>(content);
         when(campaignRepository.findAll((Specification<CampaignEntity>) any(), (Pageable) any())).thenReturn(page);
         when(campaignMapper.toOfferTO(e)).thenReturn(new OfferTO(UUID.randomUUID(), "title",
-                "desc", UUID.randomUUID(), LocalDateTime.now(), LocalDateTime.now().plusSeconds(3600), true));
+                "desc", UUID.randomUUID(), LocalDateTime.now(), LocalDateTime.now().plusSeconds(3600), null, true));
 
         ResponseEntity<CampaignListResponse> resp = service.list(0, 10, "name", Map.of());
         assertEquals(200, resp.getStatusCode().value());
@@ -212,7 +212,7 @@ class CampaignServiceImplAllTest {
         Page<CampaignEntity> page = new PageImpl<>(content);
         when(campaignRepository.findAll((Specification<CampaignEntity>) any(), (Pageable) any())).thenReturn(page);
         when(campaignMapper.toOfferTO(e)).thenReturn(new OfferTO(UUID.randomUUID(), "title",
-                "desc", UUID.randomUUID(), LocalDateTime.now(), LocalDateTime.now().plusSeconds(3600), true));
+                "desc", UUID.randomUUID(), LocalDateTime.now(), LocalDateTime.now().plusSeconds(3600), null, true));
 
         ResponseEntity<CampaignListResponse> resp = service.list(1, null, "name", Map.of());
         assertEquals(200, resp.getStatusCode().value());
@@ -312,7 +312,7 @@ class CampaignServiceImplAllTest {
         CampaignUpdateRequest req = new CampaignUpdateRequest("newName", "newDesc", null, null, null, null, true, null);
         when(campaignRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(campaignMapper.toTO(any())).thenReturn(new CampaignTO(id, "newName", "newDesc", null, null,
-                null, null, null, null, true));
+                null, null, null, null, null, true));
 
         ResponseEntity<CampaignTO> resp = service.update(id, req);
         assertEquals(200, resp.getStatusCode().value());
@@ -336,7 +336,7 @@ class CampaignServiceImplAllTest {
         CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, null, null, null, null, null, null);
         when(campaignRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(campaignMapper.toTO(any())).thenReturn(new CampaignTO(id, "oldName", null, null, null,
-                null, null, null, null, true));
+                null, null, null, null, null, true));
 
         ResponseEntity<CampaignTO> resp = service.update(id, req);
         assertEquals(200, resp.getStatusCode().value());
@@ -360,7 +360,7 @@ class CampaignServiceImplAllTest {
         CampaignUpdateRequest req = new CampaignUpdateRequest(null, null,
                 LocalDateTime.parse("2025-11-01T00:00:00"), LocalDateTime.parse("2025-11-05T00:00:00"), null, null, null, null);
         when(campaignRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        when(campaignMapper.toTO(any())).thenReturn(new CampaignTO(id, null, null, null, null, null, null, null, null, true));
+        when(campaignMapper.toTO(any())).thenReturn(new CampaignTO(id, null, null, null, null, null, null, null, null, null, true));
 
         ResponseEntity<CampaignTO> resp = service.update(id, req);
         assertEquals(200, resp.getStatusCode().value());
@@ -387,7 +387,7 @@ class CampaignServiceImplAllTest {
         when(categoryRepository.existsById(newCat)).thenReturn(true);
         when(businessRepository.existsById(newBiz)).thenReturn(true);
         when(campaignRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        when(campaignMapper.toTO(any())).thenReturn(new CampaignTO(id, null, null, null, null, newCat, newBiz, null, null, true));
+        when(campaignMapper.toTO(any())).thenReturn(new CampaignTO(id, null, null, null, null, newCat, newBiz, null, null, null, true));
 
         ResponseEntity<CampaignTO> resp = service.update(id, req);
         assertEquals(200, resp.getStatusCode().value());
@@ -437,7 +437,7 @@ class CampaignServiceImplAllTest {
         CampaignEntity e = new CampaignEntity();
         Page<CampaignEntity> page = new PageImpl<>(List.of(e));
         when(campaignRepository.findAll((Specification<CampaignEntity>) any(), (Pageable) any())).thenReturn(page);
-        when(campaignMapper.toOfferTO(e)).thenReturn(new OfferTO(UUID.randomUUID(), "title", "desc", UUID.randomUUID(), localDateTime, localDateTime.plusSeconds(3600), true));
+        when(campaignMapper.toOfferTO(e)).thenReturn(new OfferTO(UUID.randomUUID(), "title", "desc", UUID.randomUUID(), localDateTime, localDateTime.plusSeconds(3600), null, true));
 
         ResponseEntity<CampaignListResponse> resp = service.list(1, 10, "name", filters);
         assertEquals(200, resp.getStatusCode().value());
