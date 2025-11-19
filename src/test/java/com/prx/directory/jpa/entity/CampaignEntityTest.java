@@ -24,9 +24,9 @@ class CampaignEntityTest {
     @DisplayName("Get Name Test")
     void getNameTest() {
         CampaignEntity campaignEntity = new CampaignEntity();
-        String name = "Test Campaign";
-        campaignEntity.setName(name);
-        assertEquals(name, campaignEntity.getName());
+        String title = "Test Campaign";
+        campaignEntity.setTitle(title);
+        assertEquals(title, campaignEntity.getTitle());
     }
 
     @Test

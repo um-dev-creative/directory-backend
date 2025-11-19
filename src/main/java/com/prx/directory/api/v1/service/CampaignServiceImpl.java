@@ -3,12 +3,13 @@ package com.prx.directory.api.v1.service;
 import com.prx.directory.api.v1.to.CampaignListResponse;
 import com.prx.directory.api.v1.to.CampaignTO;
 import com.prx.directory.api.v1.to.CampaignUpdateRequest;
-import com.prx.directory.api.v1.to.OfferTO;
 import com.prx.directory.constant.DirectoryAppConstants;
 import com.prx.directory.jpa.entity.CampaignEntity;
 import com.prx.directory.jpa.repository.BusinessRepository;
 import com.prx.directory.jpa.repository.CampaignRepository;
 import com.prx.directory.jpa.repository.CategoryRepository;
+import com.prx.directory.jpa.spec.CampaignCriteria;
+import com.prx.directory.jpa.spec.CampaignSpecifications;
 import com.prx.directory.mapper.CampaignMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -128,13 +129,12 @@ public class CampaignServiceImpl implements CampaignService {
             filterParser.validateDateRanges(startFrom, startTo, endFrom, endTo);
 
             Pageable pageable = PageRequest.of(p - 1, pp, sortObj);
-            var criteria = com.prx.directory.jpa.spec.CampaignCriteria.of(active, startFrom, startTo, endFrom, endTo);
-            Specification<CampaignEntity> spec = com.prx.directory.jpa.spec.CampaignSpecifications
+            var criteria = CampaignCriteria.of(active, startFrom, startTo, endFrom, endTo);
+            Specification<CampaignEntity> spec = CampaignSpecifications
                     .byFilters(name, categoryId, businessId, criteria);
             Page<CampaignEntity> result = campaignRepository.findAll(spec, pageable);
 
-            List<OfferTO> items = result.getContent().stream()
-                    .map(campaignMapper::toOfferTO)
+            List<CampaignTO> items = result.getContent().stream().map(campaignMapper::toTO)
                     .toList();
 
             CampaignListResponse response = new CampaignListResponse(
@@ -191,8 +191,8 @@ public class CampaignServiceImpl implements CampaignService {
 
     private boolean applyBasicFieldUpdates(CampaignEntity existingCampaign, CampaignUpdateRequest request) {
         boolean updated = false;
-        if (Objects.nonNull(request.name())) {
-            existingCampaign.setName(request.name());
+        if (Objects.nonNull(request.title())) {
+            existingCampaign.setTitle(request.title());
             updated = true;
         }
         if (Objects.nonNull(request.description())) {

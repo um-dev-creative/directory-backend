@@ -160,7 +160,7 @@ class CampaignServiceImplAllTest {
 
     @Test
     void list_perPageTooLarge_returnsBadRequest() {
-        ResponseEntity<CampaignListResponse> resp = service.list(1, 1000, "name", Map.of());
+        ResponseEntity<CampaignListResponse> resp = service.list(1, 1000, "title", Map.of());
         assertEquals(400, resp.getStatusCode().value());
     }
 
@@ -175,7 +175,7 @@ class CampaignServiceImplAllTest {
     void list_filterParseThrows_returnsBadRequest() {
         Map<String, String> filters = new HashMap<>();
         filters.put("active", "notabool"); // will cause parseActive to throw
-        ResponseEntity<CampaignListResponse> resp = service.list(1, 10, "name", filters);
+        ResponseEntity<CampaignListResponse> resp = service.list(1, 10, "title", filters);
         assertEquals(400, resp.getStatusCode().value());
     }
 
@@ -201,7 +201,7 @@ class CampaignServiceImplAllTest {
         when(campaignMapper.toOfferTO(e)).thenReturn(new OfferTO(UUID.randomUUID(), "title",
                 "desc", UUID.randomUUID(), LocalDateTime.now(), LocalDateTime.now().plusSeconds(3600), null, true));
 
-        ResponseEntity<CampaignListResponse> resp = service.list(0, 10, "name", Map.of());
+        ResponseEntity<CampaignListResponse> resp = service.list(0, 10, "title", Map.of());
         assertEquals(200, resp.getStatusCode().value());
     }
 
@@ -214,7 +214,7 @@ class CampaignServiceImplAllTest {
         when(campaignMapper.toOfferTO(e)).thenReturn(new OfferTO(UUID.randomUUID(), "title",
                 "desc", UUID.randomUUID(), LocalDateTime.now(), LocalDateTime.now().plusSeconds(3600), null, true));
 
-        ResponseEntity<CampaignListResponse> resp = service.list(1, null, "name", Map.of());
+        ResponseEntity<CampaignListResponse> resp = service.list(1, null, "title", Map.of());
         assertEquals(200, resp.getStatusCode().value());
     }
 
@@ -306,7 +306,7 @@ class CampaignServiceImplAllTest {
         UUID id = UUID.randomUUID();
         CampaignEntity existing = new CampaignEntity();
         existing.setLastUpdate(null);
-        existing.setName("old");
+        existing.setTitle("old");
         when(campaignRepository.findById(id)).thenReturn(Optional.of(existing));
 
         CampaignUpdateRequest req = new CampaignUpdateRequest("newName", "newDesc", null, null, null, null, true, null);
@@ -319,7 +319,7 @@ class CampaignServiceImplAllTest {
         ArgumentCaptor<CampaignEntity> captor = ArgumentCaptor.forClass(CampaignEntity.class);
         verify(campaignRepository).save(captor.capture());
         CampaignEntity saved = captor.getValue();
-        assertEquals("newName", saved.getName());
+        assertEquals("newName", saved.getTitle());
         assertEquals("newDesc", saved.getDescription());
         assertNotNull(saved.getLastUpdate());
     }
@@ -329,7 +329,7 @@ class CampaignServiceImplAllTest {
         UUID id = UUID.randomUUID();
         CampaignEntity existing = new CampaignEntity();
         existing.setLastUpdate(LocalDateTime.parse("2025-11-01T00:00:00"));
-        existing.setName("oldName");
+        existing.setTitle("oldName");
         when(campaignRepository.findById(id)).thenReturn(Optional.of(existing));
 
         // Empty request - no fields to update
@@ -407,7 +407,7 @@ class CampaignServiceImplAllTest {
         Page<CampaignEntity> emptyPage = new PageImpl<>(Collections.emptyList());
         when(campaignRepository.findAll((Specification<CampaignEntity>) any(), (Pageable) any())).thenReturn(emptyPage);
 
-        ResponseEntity<CampaignListResponse> resp = service.list(1, 10, "name", Map.of());
+        ResponseEntity<CampaignListResponse> resp = service.list(1, 10, "title", Map.of());
         assertEquals(200, resp.getStatusCode().value());
         CampaignListResponse body = resp.getBody();
         assertNotNull(body);
@@ -420,7 +420,7 @@ class CampaignServiceImplAllTest {
         when(campaignRepository.findAll((Specification<CampaignEntity>) any(), (Pageable) any()))
                 .thenThrow(new RuntimeException("Database connection failed"));
 
-        assertThrows(RuntimeException.class, () -> service.list(1, 10, "name", Map.of()));
+        assertThrows(RuntimeException.class, () -> service.list(1, 10, "title", Map.of()));
     }
 
     @Test
@@ -439,7 +439,7 @@ class CampaignServiceImplAllTest {
         when(campaignRepository.findAll((Specification<CampaignEntity>) any(), (Pageable) any())).thenReturn(page);
         when(campaignMapper.toOfferTO(e)).thenReturn(new OfferTO(UUID.randomUUID(), "title", "desc", UUID.randomUUID(), localDateTime, localDateTime.plusSeconds(3600), null, true));
 
-        ResponseEntity<CampaignListResponse> resp = service.list(1, 10, "name", filters);
+        ResponseEntity<CampaignListResponse> resp = service.list(1, 10, "title", filters);
         assertEquals(200, resp.getStatusCode().value());
     }
 }

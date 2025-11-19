@@ -34,13 +34,13 @@ public class CampaignEntity implements Serializable {
     private UUID id;
 
     /**
-     * The name of the campaign.
+     * The title of the campaign.
      * This field is required and has a maximum length of 120 characters.
      */
     @Size(max = 120)
     @NotNull
-    @Column(name = "name", nullable = false, length = 120)
-    private String name;
+    @Column(name = "title", nullable = false, length = 120)
+    private String title;
 
     /**
      * The description of the campaign.
@@ -95,6 +95,15 @@ public class CampaignEntity implements Serializable {
     // New discount column (nullable). Uses BigDecimal to represent monetary or percentage values.
     @Column(name = "discount")
     private BigDecimal discount;
+
+    // New terms column (nullable) to store campaign terms and conditions
+    @Column(name = "terms", length = 4000)
+    private String terms;
+
+    // New terms column (nullable) to store campaign terms and conditions
+    @Column(name = "status", length = 12)
+    private String status;
+
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -156,21 +165,21 @@ public class CampaignEntity implements Serializable {
     }
 
     /**
-     * Gets the name of the campaign.
+     * Gets the title of the campaign.
      *
-     * @return the name of the campaign
+     * @return the title of the campaign
      */
-    public String getName() {
-        return name;
+    public String getTitle() {
+        return title;
     }
 
     /**
-     * Sets the name of the campaign.
+     * Sets the title of the campaign.
      *
-     * @param name the name of the campaign
+     * @param title the title of the campaign
      */
-    public void setName(String name) {
-        this.name = name;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     /**
@@ -263,4 +272,19 @@ public class CampaignEntity implements Serializable {
         this.categoryFk = categoryFk;
     }
 
+    public String getTerms() {
+        return terms;
+    }
+
+    public void setTerms(String terms) {
+        this.terms = terms;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 }

@@ -19,9 +19,9 @@ import java.util.UUID;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record CampaignTO(
         UUID id,
-        @NotNull(message = "name is required")
+        @NotNull(message = "title is required")
         @Size(max = 120)
-        String name,
+        String title,
         @Size(max = 1200)
         String description,
         @NotNull(message = "startDate is required")
@@ -37,7 +37,11 @@ public record CampaignTO(
         @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_T)
         LocalDateTime lastUpdate,
         BigDecimal discount,
-        Boolean active
+        Boolean active,
+        // New fields required by the feature
+        String categoryName,
+        String status,
+        String terms
 ) {
     @AssertTrue(message = "startDate must be before or equal to endDate")
     @JsonIgnore
@@ -47,9 +51,16 @@ public record CampaignTO(
     }
 
     // Backwards-compatible constructor used in tests and existing code that didn't include discount
-    public CampaignTO(UUID id, String name, String description, LocalDateTime startDate,
+    public CampaignTO(UUID id, String title, String description, LocalDateTime startDate,
                       LocalDateTime endDate, UUID categoryId, UUID businessId,
                       LocalDateTime createdDate, LocalDateTime lastUpdate, Boolean active) {
-        this(id, name, description, startDate, endDate, categoryId, businessId, createdDate, lastUpdate, null, active);
+        this(id, title, description, startDate, endDate, categoryId, businessId, createdDate, lastUpdate, null, active, null, null, null);
+    }
+
+    // Backwards-compatible constructor matching previous canonical (included discount)
+    public CampaignTO(UUID id, String title, String description, LocalDateTime startDate,
+                      LocalDateTime endDate, UUID categoryId, UUID businessId,
+                      LocalDateTime createdDate, LocalDateTime lastUpdate, BigDecimal discount, Boolean active) {
+        this(id, title, description, startDate, endDate, categoryId, businessId, createdDate, lastUpdate, discount, active, null, null, null);
     }
 }

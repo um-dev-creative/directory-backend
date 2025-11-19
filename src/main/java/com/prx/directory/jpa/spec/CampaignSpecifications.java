@@ -36,7 +36,7 @@ public final class CampaignSpecifications {
                                          CriteriaBuilder cb,
                                          String name) {
         if (name != null && !name.isBlank()) {
-            predicates.add(cb.like(cb.lower(root.get("name")), "%" + name.toLowerCase(Locale.ROOT) + "%"));
+            predicates.add(cb.like(cb.lower(root.get("title")), "%" + name.toLowerCase(Locale.ROOT) + "%"));
         }
     }
 

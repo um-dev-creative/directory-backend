@@ -5,6 +5,7 @@ import com.prx.directory.jpa.entity.BusinessEntity;
 import com.prx.directory.jpa.entity.CampaignEntity;
 import com.prx.directory.jpa.entity.CategoryEntity;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,20 +16,21 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class CampaignMapperTest {
 
-    private final CampaignMapper mapper = new CampaignMapperImpl();
+    private final CampaignMapper mapper = Mappers.getMapper(CampaignMapper.class);
 
     @Test
     void testEntityToTO() {
         CampaignEntity e = new CampaignEntity();
         UUID id = UUID.randomUUID();
         e.setId(id);
-        e.setName("Camp");
+        e.setTitle("Camp");
         e.setDescription("Desc");
         e.setStartDate(LocalDateTime.parse("2025-01-01T00:00:00"));
         e.setEndDate(LocalDateTime.parse("2025-12-31T23:59:59"));
         e.setActive(true);
         CategoryEntity c = new CategoryEntity();
         c.setId(UUID.randomUUID());
+        c.setName("CategoryName");
         e.setCategoryFk(c);
         BusinessEntity b = new BusinessEntity();
         b.setId(UUID.randomUUID());
@@ -36,27 +38,33 @@ class CampaignMapperTest {
         e.setCreatedDate(LocalDateTime.now());
         e.setLastUpdate(LocalDateTime.now());
         e.setDiscount(BigDecimal.valueOf(12.5));
+        e.setTerms("These are the terms");
+        e.setActive(true);
+        e.setStatus("active");
 
         CampaignTO to = mapper.toTO(e);
         assertNotNull(to);
         assertEquals(BigDecimal.valueOf(12.5), to.discount());
         assertEquals(id, to.id());
-        assertEquals("Camp", to.name());
+        assertEquals("Camp", to.title());
         assertEquals("Desc", to.description());
         assertEquals(e.getStartDate(), to.startDate());
         assertEquals(e.getEndDate(), to.endDate());
         assertEquals(b.getId(), to.businessId());
         assertEquals(c.getId(), to.categoryId());
+        assertEquals("CategoryName", to.categoryName());
+        assertEquals("These are the terms", to.terms());
+        assertEquals("active", to.status());
     }
 
     @Test
     void testTOToEntity() {
         CampaignTO to = new CampaignTO(null, "N", "D", LocalDateTime.parse("2025-01-01T00:00:00"),
                 LocalDateTime.parse("2025-12-31T00:00:00"), UUID.randomUUID(), UUID.randomUUID(), null, null, BigDecimal.valueOf(5.0), true);
-        CampaignEntity e = mapper.toEntity(to);
+        var e = mapper.toEntity(to);
         assertNotNull(e);
         assertEquals(BigDecimal.valueOf(5.0), e.getDiscount());
-        assertEquals("N", e.getName());
+        assertEquals("N", e.getTitle());
         assertEquals("D", e.getDescription());
         assertEquals(to.startDate(), e.getStartDate());
         assertEquals(to.endDate(), e.getEndDate());

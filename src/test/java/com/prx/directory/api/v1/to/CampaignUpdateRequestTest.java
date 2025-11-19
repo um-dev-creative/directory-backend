@@ -44,8 +44,8 @@ class CampaignUpdateRequestTest {
         CampaignUpdateRequest req = new CampaignUpdateRequest(longName, null, null, null, null, null, null, null);
         Set<ConstraintViolation<CampaignUpdateRequest>> violations = validator.validate(req);
         assertFalse(violations.isEmpty());
-        boolean found = violations.stream().anyMatch(v -> v.getMessage().contains("name must not exceed"));
-        assertTrue(found, "Expected a name length violation");
+        boolean found = violations.stream().anyMatch(v -> v.getMessage().contains("title must not exceed"));
+        assertTrue(found, "Expected a title length violation");
     }
 
     @Test

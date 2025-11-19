@@ -105,7 +105,7 @@ class FavoriteServiceImplGetFavoritesTest {
         pe.setName("P");
         CampaignEntity ce = new CampaignEntity();
         ce.setId(cId);
-        ce.setName("C");
+        ce.setTitle("C");
         ce.setStartDate(LocalDateTime.now());
         ce.setEndDate(LocalDateTime.now());
 
@@ -186,7 +186,7 @@ class FavoriteServiceImplGetFavoritesTest {
         for (int i = 0; i < 5; i++) {
             CampaignEntity ce = new CampaignEntity();
             ce.setId(UUID.randomUUID());
-            ce.setName("Offer" + i);
+            ce.setTitle("Offer" + i);
             ce.setStartDate(LocalDateTime.now());
             ce.setEndDate(LocalDateTime.now());
             campaigns.add(ce);
@@ -207,7 +207,7 @@ class FavoriteServiceImplGetFavoritesTest {
             when(campaignMapper.toOfferTO(any(CampaignEntity.class)))
                     .thenAnswer(inv -> {
                         CampaignEntity c = inv.getArgument(0);
-                        return new OfferTO(c.getId(), c.getName(), null, null, c.getStartDate(), c.getEndDate(), null, false);
+                        return new OfferTO(c.getId(), c.getTitle(), null, null, c.getStartDate(), c.getEndDate(), null, false);
                     });
 
             // Request page 0 with size 10 - should return exactly 10 items total (5 stores + 5 products)
