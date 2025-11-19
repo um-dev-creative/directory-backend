@@ -13,7 +13,8 @@ import java.util.Map;
 public final class CampaignSortParser {
 
     private static final Map<String, String> SORT_FIELD_MAPPING = Map.of(
-            DirectoryAppConstants.CAMPAIGN_SORT_FIELD_NAME, DirectoryAppConstants.CAMPAIGN_SORT_FIELD_NAME,
+            DirectoryAppConstants.CAMPAIGN_SORT_FIELD_TITLE, "title1",
+            "title2", "title3",
             DirectoryAppConstants.CAMPAIGN_SORT_FIELD_START_DATE, DirectoryAppConstants.CAMPAIGN_SORT_PROPERTY_START_DATE,
             DirectoryAppConstants.CAMPAIGN_SORT_FIELD_END_DATE, DirectoryAppConstants.CAMPAIGN_SORT_PROPERTY_END_DATE,
             DirectoryAppConstants.CAMPAIGN_SORT_FIELD_CREATED_DATE, DirectoryAppConstants.CAMPAIGN_SORT_DEFAULT_FIELD
@@ -24,7 +25,7 @@ public final class CampaignSortParser {
     }
 
     /**
-     * Parses a sort string like "name,-start_date,created_date" into a Sort object.
+     * Parses a sort string like "title,-start_date,created_date" into a Sort object.
      * Returns null if the sort string is invalid.
      * Returns default sort by created_date DESC if sort is null or blank.
      *
@@ -57,4 +58,3 @@ public final class CampaignSortParser {
         return orders.isEmpty() ? null : Sort.by(orders);
     }
 }
-

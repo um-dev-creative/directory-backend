@@ -3,18 +3,19 @@ package com.prx.directory.mapper;
 import com.prx.commons.services.config.mapper.MapperAppConfig;
 import com.prx.directory.api.v1.to.CampaignTO;
 import com.prx.directory.api.v1.to.OfferTO;
+import com.prx.directory.jpa.entity.BusinessEntity;
 import com.prx.directory.jpa.entity.CampaignEntity;
 import com.prx.directory.jpa.entity.CategoryEntity;
-import com.prx.directory.jpa.entity.BusinessEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
+
 
 @Mapper(config = MapperAppConfig.class)
 public interface CampaignMapper {
 
     @Mapping(target = "id", source = "id")
-    @Mapping(target = "name", source = "name")
+    @Mapping(target = "name", source = "title")
     @Mapping(target = "description", source = "description")
     @Mapping(target = "businessId", source = "businessFk.id")
     @Mapping(target = "startDate", source = "startDate")
@@ -25,6 +26,10 @@ public interface CampaignMapper {
 
     @Mapping(target = "businessId", source = "businessFk.id")
     @Mapping(target = "categoryId", source = "categoryFk.id")
+    @Mapping(target = "categoryName", source = "categoryFk.name")
+    @Mapping(target = "terms", source = "terms")
+    @Mapping(target = "active", source = "active")
+    @Mapping(target = "status", source = "status")
     @Mapping(target = "discount", source = "discount")
     CampaignTO toTO(CampaignEntity entity);
 

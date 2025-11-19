@@ -10,6 +10,6 @@ public record CampaignListResponse(
         int page,
         int per_page,
         int total_pages,
-        List<OfferTO> items
+        List<CampaignTO> items
 ) {}
 

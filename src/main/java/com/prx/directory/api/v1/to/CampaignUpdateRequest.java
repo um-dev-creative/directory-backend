@@ -14,8 +14,8 @@ import java.util.UUID;
  * Validations apply only to fields that are provided.
  */
 public record CampaignUpdateRequest(
-        @Size(max = 120, message = "name must not exceed 120 characters")
-        String name,
+        @Size(max = 120, message = "title must not exceed 120 characters")
+        String title,
         @Size(max = 1200, message = "description must not exceed 1200 characters")
         String description,
         @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_T)

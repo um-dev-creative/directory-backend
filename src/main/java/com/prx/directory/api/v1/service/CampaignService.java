@@ -30,7 +30,7 @@ public interface CampaignService {
      *   <li>400 BAD REQUEST when validation fails (missing required fields, invalid dates, missing FKs)</li>
      *   <li>404 NOT FOUND optionally if related entities are looked up and not found (implementation-specific)</li>
      * </ul>
-     * @param campaignTO inbound campaign transfer object; must include name, startDate, endDate, businessId, categoryId
+     * @param campaignTO inbound campaign transfer object; must include title, startDate, endDate, businessId, categoryId
      * @return ResponseEntity containing the persisted CampaignTO (including generated id, timestamps) or error status
      */
     default ResponseEntity<CampaignTO> create(CampaignTO campaignTO) {
@@ -60,7 +60,7 @@ public interface CampaignService {
      * </ul>
      * @param page 1-based page number (default 1)
      * @param perPage page size (default 20, max 100)
-     * @param sort comma-separated sort fields, prefix with '-' for DESC. Allowed: name, start_date, end_date, created_date
+     * @param sort comma-separated sort fields, prefix with '-' for DESC. Allowed: title, start_date, end_date, created_date
      * @param filters optional filters map (e.g., q, active, business_id, category_id, *_from, *_to)
      * @return ResponseEntity with CampaignListResponse
      */

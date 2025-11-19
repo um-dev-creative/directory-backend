@@ -42,18 +42,7 @@ public interface CampaignApi {
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Campaign create payload", required = true,
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = CampaignTO.class),
-                            examples = @ExampleObject(
-                                    value = """
-                                                {
-                                                    "name": "Holiday Sale",
-                                                    "description": "Seasonal discount campaign",
-                                                    "startDate": "2025-11-25T00:00:00Z",
-                                                     "endDate": "2025-12-31T23:59:59Z",
-                                                     "categoryId": "11111111-2222-3333-4444-555555555555",
-                                                    "businessId": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
-                                                    "active": true
-                                                }
-                                            """)
+                            examples = @ExampleObject(value = "{\"title\":\"Holiday Sale\",\"description\":\"Seasonal discount campaign\",\"startDate\":\"2025-11-25T00:00:00Z\",\"endDate\":\"2025-12-31T23:59:59Z\",\"categoryId\":\"11111111-2222-3333-4444-555555555555\",\"businessId\":\"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\",\"active\":true}")
                     )))
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Campaign created",
@@ -86,31 +75,14 @@ public interface CampaignApi {
     @Operation(summary = "Search campaigns",
             description = """
                     Returns a paginated list of campaigns matching optional filters. \
-                    Filters: name (partial, case-insensitive), category_fk (UUID), business_fk (UUID), active (boolean), \
+                    Filters: title (partial, case-insensitive), category_fk (UUID), business_fk (UUID), active (boolean), \
                     start_from/start_to (ISO datetime), end_from/end_to (ISO datetime). \
                     Pagination: page (1-based, default 1), per_page (default 20, max 100). \
-                    Sorting: sort by name,start_date,end_date,created_date; prefix with '-' for desc. Default -created_date.""")
+                    Sorting: sort by title,start_date,end_date,created_date; prefix with '-' for desc. Default -created_date.""")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful response",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = CampaignListResponse.class),
-                            examples = @ExampleObject(
-                                    value = """
-                                            {
-                                              "total_count": 1,
-                                              "page": 1,
-                                              "per_page": 20,
-                                              "total_pages": 1,
-                                              "items": [{
-                                                "id": "...",
-                                                "name": "Holiday Sale",
-                                                "description": "...",
-                                                "businessId": "...",
-                                                "startDate": "2025-11-25T00:00:00Z",
-                                                "endDate": "2025-12-31T23:59:59Z",
-                                                "active": true
-                                              }]
-                                            }"""))),
+                            schema = @Schema(implementation = CampaignListResponse.class))),
             @ApiResponse(responseCode = HTTP_400, description = "Invalid pagination, sort or filter parameters", content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
@@ -118,11 +90,11 @@ public interface CampaignApi {
     default ResponseEntity<CampaignListResponse> listCampaigns(
             @Parameter(description = "Page number (1-based). Default 1") @RequestParam(name = "page", required = false) Integer page,
             @Parameter(description = "Items per page. Default 20, max 100") @RequestParam(name = "per_page", required = false) Integer perPage,
-            @Parameter(description = "Comma-separated sort fields. Prefix with '-' for descending. Allowed: name, start_date, end_date, created_date") @RequestParam(name = "sort", required = false) String sort,
+            @Parameter(description = "Comma-separated sort fields. Prefix with '-' for descending. Allowed: title, start_date, end_date, created_date") @RequestParam(name = "sort", required = false) String sort,
             @Parameter(description = """
-                    Additional search filters (preferred): name (partial, case-insensitive), category_fk (UUID), business_fk (UUID), active (boolean), \
+                    Additional search filters (preferred): title (partial, case-insensitive), category_fk (UUID), business_fk (UUID), active (boolean), \
                     start_from/start_to (ISO datetime), end_from/end_to (ISO datetime). \
-                    Legacy/deprecated filter parameters (supported for backward compatibility, avoid using in new integrations): q (use 'name'), category_id (use 'category_fk'), business_id (use 'business_fk'), \
+                    Legacy/deprecated filter parameters (supported for backward compatibility, avoid using in new integrations): q (use 'title'), category_id (use 'category_fk'), business_id (use 'business_fk'), \
                     start_date_from/start_date_to (use 'start_from'/'start_to'), end_date_from/end_date_to (use 'end_from'/'end_to').""") @RequestParam Map<String, String> filters
     ) {
         return getService().list(page, perPage, sort, filters);
@@ -136,19 +108,8 @@ public interface CampaignApi {
                     "Implements optimistic locking - include the current last_update value to prevent concurrent modifications.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Campaign update payload. All fields are optional.", required = true,
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = CampaignUpdateRequest.class),
-                            examples = @ExampleObject(value = """
-                                    {
-                                      "name": "Updated Holiday Sale",
-                                      "description": "Extended seasonal discount campaign",
-                                      "startDate": "2025-11-25T00:00:00Z",
-                                      "endDate": "2026-01-15T23:59:59Z",
-                                      "categoryId": "11111111-2222-3333-4444-555555555555",
-                                      "businessId": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
-                                      "active": true,
-                                      "lastUpdate": "2025-11-15T10:30:00Z"
-                                    }""")
-                    )))
+                            schema = @Schema(implementation = CampaignUpdateRequest.class)))
+                    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Campaign updated successfully",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,

@@ -35,7 +35,7 @@ class CampaignSpecificationsTest {
         Predicate p = spec.toPredicate(root, query, cb);
         assertNotNull(p);
 
-        // no name/category/business/criteria predicates should be invoked
+        // no title/category/business/criteria predicates should be invoked
         verify(cb, never()).like(any(), anyString());
         verify(cb, never()).equal(any(), anyBoolean());
         verify(cb, never()).greaterThanOrEqualTo(any(), any(Instant.class));
@@ -52,7 +52,7 @@ class CampaignSpecificationsTest {
         CriteriaQuery<?> query = Mockito.mock(CriteriaQuery.class);
 
         Path<Object> namePath = Mockito.mock(Path.class);
-        when(root.get("name")).thenReturn(namePath);
+        when(root.get("title")).thenReturn(namePath);
         Expression lowered = Mockito.mock(Expression.class);
         when(cb.lower(any(Expression.class))).thenReturn(lowered);
         when(cb.like(any(Expression.class), anyString())).thenReturn(Mockito.mock(Predicate.class));

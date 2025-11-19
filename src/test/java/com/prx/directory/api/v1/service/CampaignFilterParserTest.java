@@ -24,7 +24,7 @@ class CampaignFilterParserTest {
 
     @Test
     void parseName_withValidName_returnsName() {
-        Map<String, String> filters = Map.of("name", "Holiday Sale");
+        Map<String, String> filters = Map.of("title", "Holiday Sale");
         assertEquals("Holiday Sale", parser.parseName(filters));
     }
 
@@ -44,8 +44,8 @@ class CampaignFilterParserTest {
 
     @Test
     void parseName_exceedsMaxLength_throwsException() {
-        String longName = "x".repeat(121);
-        Map<String, String> filters = Map.of("name", longName);
+        String longTitle = "x".repeat(121);
+        Map<String, String> filters = Map.of("title", longTitle);
         assertThrows(IllegalArgumentException.class, () -> parser.parseName(filters));
     }
 
