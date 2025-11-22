@@ -5,9 +5,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.prx.commons.util.DateUtil;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.DecimalMax;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.math.BigDecimal;
 
 /**
  * DTO for updating an existing campaign. All fields are optional to support partial updates (PATCH semantics).
@@ -25,6 +28,11 @@ public record CampaignUpdateRequest(
         UUID categoryId,
         UUID businessId,
         Boolean active,
+        @DecimalMin(value = "0", message = "discount must be >= 0")
+        @DecimalMax(value = "100", message = "discount must be <= 100")
+        BigDecimal discount,
+        @Size(max = 2500, message = "terms must not exceed 2500 characters")
+        String terms,
         @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_T)
         LocalDateTime lastUpdate
 ) {

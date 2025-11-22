@@ -3,6 +3,7 @@ package com.prx.directory.api.v1.service;
 import com.prx.directory.api.v1.to.CampaignListResponse;
 import com.prx.directory.api.v1.to.CampaignTO;
 import com.prx.directory.api.v1.to.CampaignUpdateRequest;
+import com.prx.directory.api.v1.to.CampaignUpdateResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -79,9 +80,9 @@ public interface CampaignService {
      * </ul>
      * @param id unique identifier of the campaign to update
      * @param request update request with optional fields (only provided fields will be updated)
-     * @return ResponseEntity containing the updated CampaignTO (including updated lastUpdate) or error status
+     * @return ResponseEntity containing a minimal CampaignUpdateResponse (id + lastUpdate) with HTTP 202 Accepted on success, or an error status
      */
-    default ResponseEntity<CampaignTO> update(UUID id, CampaignUpdateRequest request) {
+    default ResponseEntity<CampaignUpdateResponse> update(UUID id, CampaignUpdateRequest request) {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 }

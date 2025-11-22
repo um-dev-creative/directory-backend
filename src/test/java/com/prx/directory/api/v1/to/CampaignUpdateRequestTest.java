@@ -32,7 +32,7 @@ class CampaignUpdateRequestTest {
 
     @Test
     void validRequest_noViolations() {
-        CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, null, null, null, null, null, null);
+        CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, null, null, null, null, null, null, null, null);
         Set<ConstraintViolation<CampaignUpdateRequest>> violations = validator.validate(req);
         assertTrue(violations.isEmpty(), "Expected no validation violations for null/optional fields");
         assertTrue(req.isStartBeforeOrEqualEnd(), "When dates are null the method should return true");
@@ -41,7 +41,7 @@ class CampaignUpdateRequestTest {
     @Test
     void nameTooLong_causesViolation() {
         String longName = "x".repeat(121);
-        CampaignUpdateRequest req = new CampaignUpdateRequest(longName, null, null, null, null, null, null, null);
+        CampaignUpdateRequest req = new CampaignUpdateRequest(longName, null, null, null, null, null, null, null, null, null);
         Set<ConstraintViolation<CampaignUpdateRequest>> violations = validator.validate(req);
         assertFalse(violations.isEmpty());
         boolean found = violations.stream().anyMatch(v -> v.getMessage().contains("title must not exceed"));
@@ -51,7 +51,7 @@ class CampaignUpdateRequestTest {
     @Test
     void descriptionTooLong_causesViolation() {
         String longDesc = "x".repeat(1201);
-        CampaignUpdateRequest req = new CampaignUpdateRequest(null, longDesc, null, null, null, null, null, null);
+        CampaignUpdateRequest req = new CampaignUpdateRequest(null, longDesc, null, null, null, null, null, null, null, null);
         Set<ConstraintViolation<CampaignUpdateRequest>> violations = validator.validate(req);
         assertFalse(violations.isEmpty());
         boolean found = violations.stream().anyMatch(v -> v.getMessage().contains("description must not exceed"));
@@ -62,7 +62,7 @@ class CampaignUpdateRequestTest {
     void startAfterEnd_methodAndValidationFail() {
         LocalDateTime start = LocalDateTime.parse("2025-11-10T00:00:00");
         LocalDateTime end = LocalDateTime.parse("2025-11-02T00:00:00");
-        CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, start, end, null, null, null, null);
+        CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, start, end, null, null, null, null, null, null);
 
         // method should return false
         assertFalse(req.isStartBeforeOrEqualEnd());
@@ -77,7 +77,7 @@ class CampaignUpdateRequestTest {
     @Test
     void startEqualsEnd_methodAndValidationPass() {
         LocalDateTime localDateTime = LocalDateTime.parse("2025-11-02T00:00:00");
-        CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, localDateTime, localDateTime, null, null, null, null);
+        CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, localDateTime, localDateTime, null, null, null, null, null, null);
         assertTrue(req.isStartBeforeOrEqualEnd());
         Set<ConstraintViolation<CampaignUpdateRequest>> violations = validator.validate(req);
         assertTrue(violations.isEmpty());
@@ -87,7 +87,7 @@ class CampaignUpdateRequestTest {
     void startBeforeEnd_methodAndValidationPass() {
         LocalDateTime start = LocalDateTime.parse("2025-11-01T00:00:00");
         LocalDateTime end = LocalDateTime.parse("2025-11-02T00:00:00");
-        CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, start, end, null, null, null, null);
+        CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, start, end, null, null, null, null, null, null);
         assertTrue(req.isStartBeforeOrEqualEnd());
         Set<ConstraintViolation<CampaignUpdateRequest>> violations = validator.validate(req);
         assertTrue(violations.isEmpty());
@@ -95,9 +95,8 @@ class CampaignUpdateRequestTest {
 
     @Test
     void nullNameAndDescription_areAllowed() {
-        CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, null, null, null, null, null, null);
+        CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, null, null, null, null, null, null, null, null);
         Set<ConstraintViolation<CampaignUpdateRequest>> violations = validator.validate(req);
         assertTrue(violations.isEmpty());
     }
 }
-
