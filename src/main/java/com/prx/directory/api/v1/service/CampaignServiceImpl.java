@@ -3,6 +3,7 @@ package com.prx.directory.api.v1.service;
 import com.prx.directory.api.v1.to.CampaignListResponse;
 import com.prx.directory.api.v1.to.CampaignTO;
 import com.prx.directory.api.v1.to.CampaignUpdateRequest;
+import com.prx.directory.api.v1.to.CampaignUpdateResponse;
 import com.prx.directory.constant.DirectoryAppConstants;
 import com.prx.directory.jpa.entity.CampaignEntity;
 import com.prx.directory.jpa.repository.BusinessRepository;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -33,6 +35,7 @@ import java.util.UUID;
 @Service
 public class CampaignServiceImpl implements CampaignService {
 
+    private static final int TERM_LENGTH = 2500;
 
     private final CampaignRepository campaignRepository;
     private final CategoryRepository categoryRepository;
@@ -153,7 +156,7 @@ public class CampaignServiceImpl implements CampaignService {
 
     @Override
     @Transactional
-    public ResponseEntity<CampaignTO> update(UUID id, CampaignUpdateRequest request) {
+    public ResponseEntity<CampaignUpdateResponse> update(UUID id, CampaignUpdateRequest request) {
         if (Objects.isNull(id)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, DirectoryAppConstants.CAMPAIGN_ID_REQUIRED);
         }
@@ -182,9 +185,17 @@ public class CampaignServiceImpl implements CampaignService {
         }
 
         CampaignEntity saved = campaignRepository.save(existingCampaign);
-        CampaignTO result = campaignMapper.toTO(saved);
+        // Ensure category/business associations exist on returned instance (defensive for some JPA/mock behaviors)
+        if (saved.getCategoryFk() == null && existingCampaign.getCategoryFk() != null) {
+            saved.setCategoryFk(existingCampaign.getCategoryFk());
+        }
+        if (saved.getBusinessFk() == null && existingCampaign.getBusinessFk() != null) {
+            saved.setBusinessFk(existingCampaign.getBusinessFk());
+        }
 
-        return ResponseEntity.ok(result);
+        // Build minimal response and return 202 Accepted
+        CampaignUpdateResponse resp = new CampaignUpdateResponse(saved.getId(), saved.getLastUpdate());
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(resp);
     }
 
     // --- helpers to reduce cognitive complexity ---
@@ -201,6 +212,24 @@ public class CampaignServiceImpl implements CampaignService {
         }
         if (Objects.nonNull(request.active())) {
             existingCampaign.setActive(request.active());
+            updated = true;
+        }
+        // Apply discount if provided
+        if (Objects.nonNull(request.discount())) {
+            // Validate range defensively (DTO has annotations, but enforce here for service-level safety)
+            if (request.discount().compareTo(BigDecimal.ZERO) < 0 || request.discount().compareTo(new BigDecimal("100")) > 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "discount must be between 0 and 100");
+            }
+            existingCampaign.setDiscount(request.discount());
+            updated = true;
+        }
+        // Apply terms if provided
+        if (Objects.nonNull(request.terms())) {
+            if (request.terms().length() > TERM_LENGTH) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "terms must not exceed "
+                        + TERM_LENGTH + " characters");
+            }
+            existingCampaign.setTerms(request.terms());
             updated = true;
         }
         return updated;

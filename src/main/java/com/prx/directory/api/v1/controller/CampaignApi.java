@@ -4,6 +4,7 @@ import com.prx.directory.api.v1.service.CampaignService;
 import com.prx.directory.api.v1.to.CampaignListResponse;
 import com.prx.directory.api.v1.to.CampaignTO;
 import com.prx.directory.api.v1.to.CampaignUpdateRequest;
+import com.prx.directory.api.v1.to.CampaignUpdateResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -111,18 +112,19 @@ public interface CampaignApi {
                             schema = @Schema(implementation = CampaignUpdateRequest.class)))
                     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Campaign updated successfully",
+            @ApiResponse(responseCode = "202", description = "Campaign update accepted; returns id and lastUpdate",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = CampaignTO.class))),
+                            schema = @Schema(implementation = CampaignUpdateResponse.class))),
             @ApiResponse(responseCode = HTTP_400, description = "Invalid payload data (validation error)", content = @Content),
             @ApiResponse(responseCode = "404", description = "Campaign not found or referenced entity (category/business) not found", content = @Content),
             @ApiResponse(responseCode = "409", description = "Concurrency conflict - campaign was modified by another request", content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     @PatchMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    default ResponseEntity<CampaignTO> update(
+    default ResponseEntity<CampaignUpdateResponse> update(
             @Parameter(description = "Campaign UUID") @PathVariable("id") UUID id,
             @Valid @RequestBody CampaignUpdateRequest request) {
+        // Delegate entirely to the service implementation. Service controls status and body.
         return getService().update(id, request);
     }
 }

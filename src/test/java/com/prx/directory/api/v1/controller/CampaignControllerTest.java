@@ -4,6 +4,7 @@ import com.prx.directory.api.v1.service.CampaignService;
 import com.prx.directory.api.v1.to.CampaignListResponse;
 import com.prx.directory.api.v1.to.CampaignTO;
 import com.prx.directory.api.v1.to.CampaignUpdateRequest;
+import com.prx.directory.api.v1.to.CampaignUpdateResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -60,18 +61,14 @@ class CampaignControllerTest {
     @DisplayName("update: delegates to service and returns result")
     void updateDelegates() {
         UUID id = UUID.randomUUID();
-        CampaignUpdateRequest request = new CampaignUpdateRequest("Updated Name", null, null, null, null, null, null, null);
-        CampaignTO updatedTO = new CampaignTO(id, "Updated Name", "desc",
-                LocalDateTime.parse("2024-01-01T00:00:00"),
-                LocalDateTime.parse("2024-12-31T23:59:59"),
-                UUID.randomUUID(), UUID.randomUUID(),
-                LocalDateTime.parse("2024-01-01T00:00:00"),
-                LocalDateTime.now(), null, true);
+        CampaignUpdateRequest request = new CampaignUpdateRequest("Updated Name", null, null, null, null, null, null, null, null, null);
+        LocalDateTime lastUpdate = LocalDateTime.now();
+        CampaignUpdateResponse updatedResp = new CampaignUpdateResponse(id, lastUpdate);
 
-        when(campaignService.update(eq(id), eq(request))).thenReturn(ResponseEntity.ok(updatedTO));
+        when(campaignService.update(eq(id), eq(request))).thenReturn(ResponseEntity.status(HttpStatus.ACCEPTED).body(updatedResp));
 
-        ResponseEntity<CampaignTO> resp = campaignController.update(id, request);
-        assertEquals(HttpStatus.OK, resp.getStatusCode());
-        assertEquals(updatedTO, resp.getBody());
+        ResponseEntity<CampaignUpdateResponse> resp = campaignController.update(id, request);
+        assertEquals(HttpStatus.ACCEPTED, resp.getStatusCode());
+        assertEquals(updatedResp, resp.getBody());
     }
 }

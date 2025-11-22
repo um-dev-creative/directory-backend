@@ -4,6 +4,7 @@ import com.prx.directory.api.v1.service.CampaignService;
 import com.prx.directory.api.v1.to.CampaignListResponse;
 import com.prx.directory.api.v1.to.CampaignTO;
 import com.prx.directory.api.v1.to.CampaignUpdateRequest;
+import com.prx.directory.api.v1.to.CampaignUpdateResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,7 +38,7 @@ public class CampaignController implements CampaignApi {
     }
 
     @Override
-    public ResponseEntity<CampaignTO> update(UUID id, CampaignUpdateRequest request) {
+    public ResponseEntity<CampaignUpdateResponse> update(UUID id, CampaignUpdateRequest request) {
         return campaignService.update(id, request);
     }
 }
