@@ -10,9 +10,6 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-
 
 @Mapper(config = MapperAppConfig.class)
 public interface CampaignMapper {
@@ -24,7 +21,7 @@ public interface CampaignMapper {
     @Mapping(target = "startDate", source = "startDate")
     @Mapping(target = "endDate", source = "endDate")
     @Mapping(target = "active", source = "active")
-    @Mapping(target = "discount", source = "discount", qualifiedByName = "scaleTwo")
+    @Mapping(target = "discount", source = "discount")
     OfferTO toOfferTO(CampaignEntity campaignEntity);
 
     @Mapping(target = "businessId", source = "businessFk.id")
@@ -33,7 +30,7 @@ public interface CampaignMapper {
     @Mapping(target = "terms", source = "terms")
     @Mapping(target = "active", source = "active")
     @Mapping(target = "status", source = "status")
-    @Mapping(target = "discount", source = "discount", qualifiedByName = "scaleTwo")
+    @Mapping(target = "discount", source = "discount")
     CampaignTO toTO(CampaignEntity entity);
 
     @Mapping(target = "businessFk", source = "businessId", qualifiedByName = "toBusinessEntity")
@@ -57,15 +54,5 @@ public interface CampaignMapper {
         BusinessEntity b = new BusinessEntity();
         b.setId(id);
         return b;
-    }
-
-    @Named("scaleTwo")
-    default BigDecimal scaleTwo(BigDecimal value) {
-        if (value == null) return null;
-        try {
-            return value.setScale(2, RoundingMode.HALF_UP);
-        } catch (ArithmeticException ex) {
-            return value.round(java.math.MathContext.DECIMAL64).setScale(2, RoundingMode.HALF_UP);
-        }
     }
 }
