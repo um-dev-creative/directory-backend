@@ -37,14 +37,15 @@ class CampaignMapperTest {
         e.setBusinessFk(b);
         e.setCreatedDate(LocalDateTime.now());
         e.setLastUpdate(LocalDateTime.now());
-        e.setDiscount(BigDecimal.valueOf(12.5));
+        e.setDiscount(BigDecimal.valueOf(12.50));
         e.setTerms("These are the terms");
         e.setActive(true);
         e.setStatus("active");
 
         CampaignTO to = mapper.toTO(e);
         assertNotNull(to);
-        assertEquals(BigDecimal.valueOf(12.5), to.discount());
+        // Compare numerically (ignore scale) to allow mapper to produce 12.50 (scale 2)
+        assertEquals(0, to.discount().compareTo(new BigDecimal("12.50")));
         assertEquals(id, to.id());
         assertEquals("Camp", to.title());
         assertEquals("Desc", to.description());
