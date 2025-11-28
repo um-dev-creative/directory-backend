@@ -25,14 +25,25 @@ import java.util.UUID;
 )
 public interface UserCreateMapper {
 
+    /**
+     * Maps a UserCreateRequest to a BackboneUserCreateRequest.
+     * The password should be pre-hashed using BCrypt before calling this method.
+     *
+     * @param userCreateRequest the user creation request
+     * @param applicationId the application UUID
+     * @param roleId the role UUID
+     * @param alias the user alias
+     * @param hashedPassword the BCrypt-hashed password (includes salt)
+     * @return the backbone user creation request
+     */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "active", ignore = true)
     @Mapping(target = "alias", source = "alias")
     @Mapping(target = "applicationId", source = "applicationId")
     @Mapping(target = "email", source = "userCreateRequest.email")
-    @Mapping(target = "password", source = "userCreateRequest.password")
+    @Mapping(target = "password", source = "hashedPassword")
     @Mapping(target = "person", expression = "java(getPerson(userCreateRequest))")
-    BackboneUserCreateRequest toBackbone(UserCreateRequest userCreateRequest, UUID applicationId, UUID roleId, String alias);
+    BackboneUserCreateRequest toBackbone(UserCreateRequest userCreateRequest, UUID applicationId, UUID roleId, String alias, String hashedPassword);
 
     @Mapping(target = "id", source = "id")
     @Mapping(target = "alias", source = "alias")
