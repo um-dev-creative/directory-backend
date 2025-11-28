@@ -142,11 +142,12 @@ class PasswordServiceImplTest {
     @DisplayName("BCrypt hash format should contain cost factor")
     void hashPassword_shouldContainCostFactor() {
         String rawPassword = "testPassword";
+        // BCrypt format pattern: $2a$10$... where 2a/2b/2y are BCrypt versions and 10 is the cost factor
+        String bcryptFormatPattern = "\\$2[aby]\\$\\d{2}\\$.+";
 
         String hashedPassword = passwordService.hashPassword(rawPassword);
 
-        // BCrypt format: $2a$10$... where 10 is the cost factor
-        assertTrue(hashedPassword.matches("\\$2[aby]\\$\\d{2}\\$.+"),
+        assertTrue(hashedPassword.matches(bcryptFormatPattern),
                 "BCrypt hash should match expected format with cost factor");
     }
 

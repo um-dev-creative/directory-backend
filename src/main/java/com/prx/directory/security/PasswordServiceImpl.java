@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
  * <p>
  * BCrypt is a password hashing function designed for password storage. It includes:
  * <ul>
- *   <li><b>Automatic salting</b>: A random 16-byte salt is generated and embedded in the hash</li>
+ *   <li><b>Automatic salting</b>: A random 128-bit salt is generated and stored as part of the hash</li>
  *   <li><b>Adaptive cost factor</b>: Configurable work factor to slow down brute-force attacks</li>
  *   <li><b>Protection against Rainbow Tables</b>: Unique salt per password prevents precomputed attacks</li>
  * </ul>
