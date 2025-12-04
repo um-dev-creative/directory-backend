@@ -41,7 +41,8 @@ public record CampaignTO(
         // New fields required by the feature
         String categoryName,
         String status,
-        String terms
+        String terms,
+        String type
 ) {
     @AssertTrue(message = "startDate must be before or equal to endDate")
     @JsonIgnore
@@ -54,13 +55,13 @@ public record CampaignTO(
     public CampaignTO(UUID id, String title, String description, LocalDateTime startDate,
                       LocalDateTime endDate, UUID categoryId, UUID businessId,
                       LocalDateTime createdDate, LocalDateTime lastUpdate, Boolean active) {
-        this(id, title, description, startDate, endDate, categoryId, businessId, createdDate, lastUpdate, null, active, null, null, null);
+        this(id, title, description, startDate, endDate, categoryId, businessId, createdDate, lastUpdate, null, active, null, null, null, null);
     }
 
     // Backwards-compatible constructor matching previous canonical (included discount)
     public CampaignTO(UUID id, String title, String description, LocalDateTime startDate,
                       LocalDateTime endDate, UUID categoryId, UUID businessId,
                       LocalDateTime createdDate, LocalDateTime lastUpdate, BigDecimal discount, Boolean active) {
-        this(id, title, description, startDate, endDate, categoryId, businessId, createdDate, lastUpdate, discount, active, null, null, null);
+        this(id, title, description, startDate, endDate, categoryId, businessId, createdDate, lastUpdate, discount, active, null, null, null, null);
     }
 }

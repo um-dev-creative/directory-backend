@@ -1,6 +1,7 @@
 package com.prx.directory.mapper;
 
 import com.prx.commons.services.config.mapper.MapperAppConfig;
+import com.prx.directory.api.v1.to.CampaignResumeTO;
 import com.prx.directory.api.v1.to.CampaignTO;
 import com.prx.directory.api.v1.to.OfferTO;
 import com.prx.directory.jpa.entity.BusinessEntity;
@@ -34,6 +35,7 @@ public interface CampaignMapper {
     @Mapping(target = "active", source = "active")
     @Mapping(target = "status", source = "status")
     @Mapping(target = "discount", source = "discount", qualifiedByName = "scaleTwo")
+    @Mapping(target = "type", source = "type")
     CampaignTO toTO(CampaignEntity entity);
 
     @Mapping(target = "businessFk", source = "businessId", qualifiedByName = "toBusinessEntity")
@@ -41,7 +43,13 @@ public interface CampaignMapper {
     @Mapping(target = "discount", source = "discount")
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "lastUpdate", ignore = true)
+    @Mapping(target = "type", source = "type")
     CampaignEntity toEntity(CampaignTO to);
+
+    // New lightweight mapping for list summaries
+    @Mapping(target = "categoryName", source = "categoryFk.name")
+    @Mapping(target = "discount", source = "discount", qualifiedByName = "scaleTwo")
+    CampaignResumeTO toResumeTO(CampaignEntity entity);
 
     @Named("toCategoryEntity")
     default CategoryEntity toCategoryEntity(java.util.UUID id) {
