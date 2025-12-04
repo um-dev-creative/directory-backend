@@ -10,6 +10,8 @@ public record CampaignListResponse(
         int page,
         int per_page,
         int total_pages,
-        List<CampaignTO> items
+        long actives,
+        long inactives,
+        long expired,
+        List<CampaignResumeTO> items
 ) {}
-

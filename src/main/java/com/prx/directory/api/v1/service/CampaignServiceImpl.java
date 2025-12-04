@@ -137,14 +137,31 @@ public class CampaignServiceImpl implements CampaignService {
                     .byFilters(name, categoryId, businessId, criteria);
             Page<CampaignEntity> result = campaignRepository.findAll(spec, pageable);
 
-            List<CampaignTO> items = result.getContent().stream().map(campaignMapper::toTO)
+            List<com.prx.directory.api.v1.to.CampaignResumeTO> items = result.getContent().stream().map(campaignMapper::toResumeTO)
                     .toList();
+
+            // Compute counts for root-level distribution fields
+            LocalDateTime now = LocalDateTime.now();
+            // Use the same specification with additional predicates so counts respect filters
+            Specification<CampaignEntity> activesSpec = Specification.where(spec)
+                    .and((root, query, cb) -> cb.equal(root.get("status"), "ACTIVE"));
+            Specification<CampaignEntity> inactivesSpec = Specification.where(spec)
+                    .and((root, query, cb) -> cb.equal(root.get("status"), "INACTIVE"));
+            Specification<CampaignEntity> expiredSpec = Specification.where(spec)
+                    .and((root, query, cb) -> cb.lessThan(root.get("endDate"), now));
+
+            long actives = campaignRepository.count(activesSpec);
+            long inactives = campaignRepository.count(inactivesSpec);
+            long expired = campaignRepository.count(expiredSpec);
 
             CampaignListResponse response = new CampaignListResponse(
                     result.getTotalElements(),
                     p,
                     pp,
                     result.getTotalPages(),
+                    actives,
+                    inactives,
+                    expired,
                     items
             );
             return ResponseEntity.ok(response);

@@ -100,10 +100,13 @@ public class CampaignEntity implements Serializable {
     @Column(name = "terms", length = 4000)
     private String terms;
 
-    // New terms column (nullable) to store campaign terms and conditions
+    // New status column (nullable) to store campaign status
     @Column(name = "status", length = 12)
     private String status;
 
+    // New type column (nullable) to store campaign type (e.g. "On-line")
+    @Column(name = "type", length = 50)
+    private String type;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -286,5 +289,13 @@ public class CampaignEntity implements Serializable {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }
