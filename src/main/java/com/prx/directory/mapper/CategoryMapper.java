@@ -14,7 +14,6 @@ import java.util.Collection;
 
 @Mapper(
         // Specifies that the mapper should be a Spring bean.
-        uses = {CategoryGetResponse.class},
         // Specifies the configuration class to use for this mapper.
         config = MapperAppConfig.class
 )
