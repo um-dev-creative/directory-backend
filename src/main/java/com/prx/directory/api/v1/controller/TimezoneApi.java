@@ -3,6 +3,7 @@ package com.prx.directory.api.v1.controller;
 import com.prx.directory.api.v1.service.TimezoneService;
 import com.prx.directory.api.v1.to.GetTimezoneCollectionResponse;
 import com.prx.directory.api.v1.to.TimezoneTO;
+import com.prx.directory.constant.DirectoryAppConstants;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -43,7 +44,7 @@ public interface TimezoneApi {
     @Operation(summary = "Get all supported timezones (paginated)", description = "Returns a paginated list of all supported timezones.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Page of timezones returned successfully"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = DirectoryAppConstants.INTERNAL_SERVER_ERROR_CODE, description = DirectoryAppConstants.INTERNAL_SERVER_ERROR_MESSAGE)
     })
     @GetMapping
     default ResponseEntity<Page<TimezoneTO>> getTimezones(Pageable pageable) {

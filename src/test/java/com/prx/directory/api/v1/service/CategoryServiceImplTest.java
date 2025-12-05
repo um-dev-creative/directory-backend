@@ -1,5 +1,7 @@
 package com.prx.directory.api.v1.service;
 
+import com.prx.directory.api.v1.to.CategoryCreateRequest;
+import com.prx.directory.api.v1.to.CategoryCreateResponse;
 import com.prx.directory.api.v1.to.CategoryGetResponse;
 import com.prx.directory.jpa.entity.CategoryEntity;
 import com.prx.directory.jpa.repository.CategoryRepository;
@@ -108,5 +110,63 @@ class CategoryServiceImplTest {
     void findCategoriesByParentIdNullId() {
         ResponseEntity<Collection<CategoryGetResponse>> response = categoryServiceImpl.findByParentId(null);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Create category - Success")
+    void createCategorySuccess() {
+        UUID categoryId = UUID.randomUUID();
+        CategoryEntity savedEntity = new CategoryEntity();
+        savedEntity.setId(categoryId);
+        savedEntity.setName("New Category");
+        savedEntity.setDescription("Desc");
+        savedEntity.setCreatedDate(java.time.LocalDateTime.now());
+        savedEntity.setLastUpdate(java.time.LocalDateTime.now());
+        savedEntity.setActive(true);
+
+        when(categoryRepository.existsById(any(UUID.class))).thenReturn(true); // safe default
+        when(categoryMapper.toCategoryEntity(any(CategoryCreateRequest.class))).thenReturn(savedEntity);
+        when(categoryRepository.save(any(CategoryEntity.class))).thenReturn(savedEntity);
+        when(categoryMapper.toCategoryCreateResponse(any(CategoryEntity.class))).thenReturn(new CategoryCreateResponse(categoryId, savedEntity.getCreatedDate()));
+
+        CategoryCreateRequest request = new CategoryCreateRequest("New Category", "Desc", null, true);
+        var response = categoryServiceImpl.create(request);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(categoryId, response.getBody().id());
+    }
+
+    @Test
+    @DisplayName("Create category - Parent not found")
+    void createCategoryParentNotFound() {
+        UUID parentId = UUID.randomUUID();
+        CategoryCreateRequest request = new CategoryCreateRequest("Child", "Desc", parentId, true);
+        when(categoryRepository.existsById(parentId)).thenReturn(false);
+
+        var response = categoryServiceImpl.create(request);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Create category - With parent success")
+    void createCategoryWithParentSuccess() {
+        UUID parentId = UUID.randomUUID();
+        UUID categoryId = UUID.randomUUID();
+        CategoryEntity savedEntity = new CategoryEntity();
+        savedEntity.setId(categoryId);
+        savedEntity.setName("Child");
+        savedEntity.setDescription("Desc");
+        savedEntity.setCreatedDate(java.time.LocalDateTime.now());
+        savedEntity.setLastUpdate(java.time.LocalDateTime.now());
+        savedEntity.setActive(true);
+
+        when(categoryRepository.existsById(parentId)).thenReturn(true);
+        when(categoryMapper.toCategoryEntity(any(CategoryCreateRequest.class))).thenReturn(savedEntity);
+        when(categoryRepository.save(any(CategoryEntity.class))).thenReturn(savedEntity);
+        when(categoryMapper.toCategoryCreateResponse(any(CategoryEntity.class))).thenReturn(new CategoryCreateResponse(categoryId, savedEntity.getCreatedDate()));
+
+        CategoryCreateRequest request = new CategoryCreateRequest("Child", "Desc", parentId, true);
+        var response = categoryServiceImpl.create(request);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(categoryId, response.getBody().id());
     }
 }

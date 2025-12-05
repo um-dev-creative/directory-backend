@@ -1,15 +1,21 @@
 package com.prx.directory.api.v1.service;
 
+import com.prx.directory.api.v1.to.CategoryCreateRequest;
+import com.prx.directory.api.v1.to.CategoryCreateResponse;
 import com.prx.directory.api.v1.to.CategoryGetResponse;
 import com.prx.directory.jpa.entity.CategoryEntity;
 import com.prx.directory.jpa.repository.CategoryRepository;
 import com.prx.directory.mapper.CategoryMapper;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.UUID;
 
 // Service implementation for category-related operations.
@@ -53,5 +59,24 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public ResponseEntity<Collection<CategoryGetResponse>> findAll() {
         return ResponseEntity.ok(categoryMapper.toCategoryGetResponse(categoryRepository.findAll()));
+    }
+
+    @Override
+    @Transactional
+    public ResponseEntity<CategoryCreateResponse> create(@Valid CategoryCreateRequest request) {
+        if (Objects.isNull(request)) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        // If parent ID provided, ensure parent exists
+        if (request.categoryParentId() != null && !categoryRepository.existsById(request.categoryParentId())) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        // Map to entity, save, map to response
+        CategoryEntity entityToSave = categoryMapper.toCategoryEntity(request);
+        CategoryEntity saved = categoryRepository.save(entityToSave);
+        CategoryCreateResponse response = categoryMapper.toCategoryCreateResponse(saved);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 }

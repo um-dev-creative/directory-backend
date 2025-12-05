@@ -5,6 +5,7 @@ import com.prx.directory.api.v1.to.CampaignListResponse;
 import com.prx.directory.api.v1.to.CampaignTO;
 import com.prx.directory.api.v1.to.CampaignUpdateRequest;
 import com.prx.directory.api.v1.to.CampaignUpdateResponse;
+import com.prx.directory.constant.DirectoryAppConstants;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -51,7 +52,7 @@ public interface CampaignApi {
                             schema = @Schema(implementation = CampaignTO.class))),
             @ApiResponse(responseCode = HTTP_400, description = "Validation error", content = @Content),
             @ApiResponse(responseCode = "404", description = "Related entity not found (category/business)", content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+            @ApiResponse(responseCode = DirectoryAppConstants.INTERNAL_SERVER_ERROR_CODE, description = DirectoryAppConstants.INTERNAL_SERVER_ERROR_MESSAGE, content = @Content)
     })
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     default ResponseEntity<CampaignTO> create(@RequestBody CampaignTO campaignTO) {
@@ -85,7 +86,7 @@ public interface CampaignApi {
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = CampaignListResponse.class))),
             @ApiResponse(responseCode = HTTP_400, description = "Invalid pagination, sort or filter parameters", content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+            @ApiResponse(responseCode = DirectoryAppConstants.INTERNAL_SERVER_ERROR_CODE, description = DirectoryAppConstants.INTERNAL_SERVER_ERROR_MESSAGE, content = @Content)
     })
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     default ResponseEntity<CampaignListResponse> listCampaigns(
@@ -118,7 +119,7 @@ public interface CampaignApi {
             @ApiResponse(responseCode = HTTP_400, description = "Invalid payload data (validation error)", content = @Content),
             @ApiResponse(responseCode = "404", description = "Campaign not found or referenced entity (category/business) not found", content = @Content),
             @ApiResponse(responseCode = "409", description = "Concurrency conflict - campaign was modified by another request", content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+            @ApiResponse(responseCode = DirectoryAppConstants.INTERNAL_SERVER_ERROR_CODE, description = DirectoryAppConstants.INTERNAL_SERVER_ERROR_MESSAGE, content = @Content)
     })
     @PatchMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     default ResponseEntity<CampaignUpdateResponse> update(

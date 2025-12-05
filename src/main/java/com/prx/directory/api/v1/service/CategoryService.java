@@ -1,5 +1,7 @@
 package com.prx.directory.api.v1.service;
 
+import com.prx.directory.api.v1.to.CategoryCreateRequest;
+import com.prx.directory.api.v1.to.CategoryCreateResponse;
 import com.prx.directory.api.v1.to.CategoryGetResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +34,15 @@ public interface CategoryService {
     // @return a ResponseEntity containing the response object and HTTP status
     // @see CategoryGetResponse
     default ResponseEntity<Collection<CategoryGetResponse>> findAll() {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    }
+
+    /**
+     * Creates a new category.
+     * @param request the create request
+     * @return ResponseEntity with CategoryCreateResponse or error status
+     */
+    default ResponseEntity<CategoryCreateResponse> create(CategoryCreateRequest request) {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 }

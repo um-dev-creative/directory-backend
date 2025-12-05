@@ -23,6 +23,10 @@ public final class DirectoryAppConstants {
     public static final String CATEGORY_NOT_FOUND = "Category not found";
     public static final String BUSINESS_NOT_FOUND = "Business not found";
 
+    // Standard API error messages and codes
+    public static final String INTERNAL_SERVER_ERROR_CODE = "500";
+    public static final String INTERNAL_SERVER_ERROR_MESSAGE = "Internal server error";
+
     // Campaign sort fields
     public static final String CAMPAIGN_SORT_DEFAULT_FIELD = "createdDate";
     public static final String CAMPAIGN_SORT_FIELD_NAME = "name";

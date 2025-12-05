@@ -2,6 +2,9 @@ package com.prx.directory.api.v1.controller;
 
 import com.prx.directory.api.v1.service.CategoryService;
 import com.prx.directory.api.v1.to.CategoryGetResponse;
+import com.prx.directory.api.v1.to.CategoryCreateRequest;
+import com.prx.directory.api.v1.to.CategoryCreateResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,5 +35,10 @@ public class CategoryController implements CategoryApi {
     @Override
     public ResponseEntity<Collection<CategoryGetResponse>> findAll() {
         return categoryService.findAll();
+    }
+
+    @Override
+    public ResponseEntity<CategoryCreateResponse> createCategory(@Valid CategoryCreateRequest request) {
+        return categoryService.create(request);
     }
 }
