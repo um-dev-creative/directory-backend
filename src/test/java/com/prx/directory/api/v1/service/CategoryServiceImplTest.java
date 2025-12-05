@@ -181,7 +181,6 @@ class CategoryServiceImplTest {
         entityToSave.setDescription("Desc");
         entityToSave.setActive(true);
 
-        when(categoryRepository.existsById(any(UUID.class))).thenReturn(true);
         when(categoryMapper.toCategoryEntity(any(CategoryCreateRequest.class))).thenReturn(entityToSave);
         when(categoryRepository.save(any(CategoryEntity.class))).thenThrow(new DataIntegrityViolationException("Unique constraint violation"));
 
@@ -197,7 +196,6 @@ class CategoryServiceImplTest {
         entityToSave.setDescription("Desc");
         entityToSave.setActive(true);
 
-        when(categoryRepository.existsById(any(UUID.class))).thenReturn(true);
         when(categoryMapper.toCategoryEntity(any(CategoryCreateRequest.class))).thenReturn(entityToSave);
         when(categoryRepository.save(any(CategoryEntity.class))).thenThrow(new DataAccessException("Database connection error") {});
 
