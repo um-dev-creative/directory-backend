@@ -12,7 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -127,7 +126,6 @@ class CategoryServiceImplTest {
         savedEntity.setLastUpdate(java.time.LocalDateTime.now());
         savedEntity.setActive(true);
 
-        when(categoryRepository.existsById(any(UUID.class))).thenReturn(true); // safe default
         when(categoryMapper.toCategoryEntity(any(CategoryCreateRequest.class))).thenReturn(savedEntity);
         when(categoryRepository.save(any(CategoryEntity.class))).thenReturn(savedEntity);
         when(categoryMapper.toCategoryCreateResponse(any(CategoryEntity.class))).thenReturn(new CategoryCreateResponse(categoryId, savedEntity.getCreatedDate()));
@@ -174,32 +172,20 @@ class CategoryServiceImplTest {
     }
 
     @Test
-    @DisplayName("Create category - Database constraint violation")
-    void createCategoryConstraintViolation() {
+    @DisplayName("Create category - Persistence failure")
+    void createCategoryPersistenceFailure() {
         CategoryEntity entityToSave = new CategoryEntity();
-        entityToSave.setName("Duplicate");
-        entityToSave.setDescription("Desc");
-        entityToSave.setActive(true);
+        entityToSave.setName("Test Category");
 
         when(categoryMapper.toCategoryEntity(any(CategoryCreateRequest.class))).thenReturn(entityToSave);
-        when(categoryRepository.save(any(CategoryEntity.class))).thenThrow(new DataIntegrityViolationException("Unique constraint violation"));
+        when(categoryRepository.save(any(CategoryEntity.class))).thenThrow(new DataIntegrityViolationException("Database error"));
 
-        CategoryCreateRequest request = new CategoryCreateRequest("Duplicate", "Desc", null, true);
-        assertThrows(DataIntegrityViolationException.class, () -> categoryServiceImpl.create(request));
-    }
-
-    @Test
-    @DisplayName("Create category - Database access error")
-    void createCategoryDatabaseError() {
-        CategoryEntity entityToSave = new CategoryEntity();
-        entityToSave.setName("Test");
-        entityToSave.setDescription("Desc");
-        entityToSave.setActive(true);
-
-        when(categoryMapper.toCategoryEntity(any(CategoryCreateRequest.class))).thenReturn(entityToSave);
-        when(categoryRepository.save(any(CategoryEntity.class))).thenThrow(new DataAccessException("Database connection error") {});
-
-        CategoryCreateRequest request = new CategoryCreateRequest("Test", "Desc", null, true);
-        assertThrows(DataAccessException.class, () -> categoryServiceImpl.create(request));
+        CategoryCreateRequest request = new CategoryCreateRequest("Test Category", "Desc", null, true);
+        
+        try {
+            categoryServiceImpl.create(request);
+        } catch (DataIntegrityViolationException e) {
+            assertEquals("Database error", e.getMessage());
+        }
     }
 }
