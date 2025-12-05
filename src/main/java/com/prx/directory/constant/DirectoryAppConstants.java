@@ -29,7 +29,7 @@ public final class DirectoryAppConstants {
 
     // Campaign sort fields
     public static final String CAMPAIGN_SORT_DEFAULT_FIELD = "createdDate";
-    public static final String CAMPAIGN_SORT_FIELD_NAME = "name";
+    public static final String CAMPAIGN_SORT_FIELD_TITLE = "title";
     public static final String CAMPAIGN_SORT_FIELD_START_DATE = "start_date";
     public static final String CAMPAIGN_SORT_FIELD_END_DATE = "end_date";
     public static final String CAMPAIGN_SORT_FIELD_CREATED_DATE = "created_date";
