@@ -7,7 +7,7 @@ import java.util.UUID;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record CategoryCreateRequest(
-        @NotBlank(message = "Empty value invalid,name required")
+        @NotBlank(message = "Empty value is invalid, name is required")
         String name,
         String description,
         UUID categoryParentId,
