@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -124,7 +125,6 @@ class CategoryServiceImplTest {
         savedEntity.setLastUpdate(java.time.LocalDateTime.now());
         savedEntity.setActive(true);
 
-        when(categoryRepository.existsById(any(UUID.class))).thenReturn(true); // safe default
         when(categoryMapper.toCategoryEntity(any(CategoryCreateRequest.class))).thenReturn(savedEntity);
         when(categoryRepository.save(any(CategoryEntity.class))).thenReturn(savedEntity);
         when(categoryMapper.toCategoryCreateResponse(any(CategoryEntity.class))).thenReturn(new CategoryCreateResponse(categoryId, savedEntity.getCreatedDate()));
@@ -168,5 +168,23 @@ class CategoryServiceImplTest {
         var response = categoryServiceImpl.create(request);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(categoryId, response.getBody().id());
+    }
+
+    @Test
+    @DisplayName("Create category - Persistence failure")
+    void createCategoryPersistenceFailure() {
+        CategoryEntity entityToSave = new CategoryEntity();
+        entityToSave.setName("Test Category");
+
+        when(categoryMapper.toCategoryEntity(any(CategoryCreateRequest.class))).thenReturn(entityToSave);
+        when(categoryRepository.save(any(CategoryEntity.class))).thenThrow(new DataIntegrityViolationException("Database error"));
+
+        CategoryCreateRequest request = new CategoryCreateRequest("Test Category", "Desc", null, true);
+        
+        try {
+            categoryServiceImpl.create(request);
+        } catch (DataIntegrityViolationException e) {
+            assertEquals("Database error", e.getMessage());
+        }
     }
 }

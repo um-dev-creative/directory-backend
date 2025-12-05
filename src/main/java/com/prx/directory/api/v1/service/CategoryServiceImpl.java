@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
-import java.util.Objects;
 import java.util.UUID;
 
 // Service implementation for category-related operations.
@@ -64,10 +63,6 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public ResponseEntity<CategoryCreateResponse> create(@Valid CategoryCreateRequest request) {
-        if (Objects.isNull(request)) {
-            return ResponseEntity.badRequest().build();
-        }
-
         // If parent ID provided, ensure parent exists
         if (request.categoryParentId() != null && !categoryRepository.existsById(request.categoryParentId())) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
