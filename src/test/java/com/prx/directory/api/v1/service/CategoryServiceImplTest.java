@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -176,13 +177,13 @@ class CategoryServiceImplTest {
         entityToSave.setName("Test Category");
 
         when(categoryMapper.toCategoryEntity(any(CategoryCreateRequest.class))).thenReturn(entityToSave);
-        when(categoryRepository.save(any(CategoryEntity.class))).thenThrow(new RuntimeException("Database error"));
+        when(categoryRepository.save(any(CategoryEntity.class))).thenThrow(new DataAccessException("Database error") {});
 
         CategoryCreateRequest request = new CategoryCreateRequest("Test Category", "Desc", null, true);
         
         try {
             categoryServiceImpl.create(request);
-        } catch (RuntimeException e) {
+        } catch (DataAccessException e) {
             assertEquals("Database error", e.getMessage());
         }
     }
