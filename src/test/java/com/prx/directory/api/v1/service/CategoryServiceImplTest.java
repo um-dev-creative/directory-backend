@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -156,8 +157,8 @@ class CategoryServiceImplTest {
     @DisplayName("Find categories by parent ID - Pagination")
     void findCategoriesByParentIdPagination() {
         UUID parentId = UUID.randomUUID();
-        List<CategoryEntity> entities = new java.util.ArrayList<>();
-        List<CategoryGetResponse> responses = new java.util.ArrayList<>();
+        List<CategoryEntity> entities = new ArrayList<>();
+        List<CategoryGetResponse> responses = new ArrayList<>();
         
         for (int i = 0; i < 25; i++) {
             UUID categoryId = UUID.randomUUID();
