@@ -82,7 +82,7 @@ public class CategoryServiceImpl implements CategoryService {
             // Query categories by parent
             var categoryEntities = categoryRepository.findByCategoryParentFk(categoryEntity);
             
-            if (categoryEntities.isEmpty()) {
+            if (!categoryEntities.isPresent() || categoryEntities.get().isEmpty()) {
                 logger.info("No categories found for parent ID: {}", parentId);
                 return ResponseEntity.ok(categoryMapper.toCategoryGetResponse(java.util.Collections.emptyList()));
             }
