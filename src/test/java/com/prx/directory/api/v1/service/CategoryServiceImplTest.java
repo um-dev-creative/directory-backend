@@ -13,6 +13,10 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -100,8 +104,10 @@ class CategoryServiceImplTest {
         categoryEntity.setActive(true);
 
         Collection<CategoryGetResponse> categoryGetResponses = List.of(categoryGetResponse);
+        Page<CategoryEntity> page = new PageImpl<>(List.of(categoryEntity));
+        
         when(categoryRepository.existsById(parentId)).thenReturn(true);
-        when(categoryRepository.findByCategoryParentFk(any(CategoryEntity.class))).thenReturn(Optional.of(List.of(categoryEntity)));
+        when(categoryRepository.findByCategoryParentFk(any(CategoryEntity.class), any(Pageable.class))).thenReturn(page);
         when(categoryMapper.toCategoryGetResponse(ArgumentMatchers.anyCollection())).thenReturn(categoryGetResponses);
 
         ResponseEntity<Collection<CategoryGetResponse>> response = categoryServiceImpl.findByParentId(parentId, 0, 20);
@@ -144,8 +150,10 @@ class CategoryServiceImplTest {
     @DisplayName("Find categories by parent ID - Empty result")
     void findCategoriesByParentIdEmpty() {
         UUID parentId = UUID.randomUUID();
+        Page<CategoryEntity> emptyPage = new PageImpl<>(List.of());
+        
         when(categoryRepository.existsById(parentId)).thenReturn(true);
-        when(categoryRepository.findByCategoryParentFk(any(CategoryEntity.class))).thenReturn(Optional.empty());
+        when(categoryRepository.findByCategoryParentFk(any(CategoryEntity.class), any(Pageable.class))).thenReturn(emptyPage);
         when(categoryMapper.toCategoryGetResponse(ArgumentMatchers.anyCollection())).thenReturn(List.of());
 
         ResponseEntity<Collection<CategoryGetResponse>> response = categoryServiceImpl.findByParentId(parentId, 0, 20);
@@ -157,9 +165,12 @@ class CategoryServiceImplTest {
     @DisplayName("Find categories by parent ID - Pagination")
     void findCategoriesByParentIdPagination() {
         UUID parentId = UUID.randomUUID();
-        List<CategoryEntity> entities = new ArrayList<>();
-        List<CategoryGetResponse> responses = new ArrayList<>();
+        List<CategoryEntity> entitiesPage1 = new ArrayList<>();
+        List<CategoryEntity> entitiesPage2 = new ArrayList<>();
+        List<CategoryGetResponse> responsesPage1 = new ArrayList<>();
+        List<CategoryGetResponse> responsesPage2 = new ArrayList<>();
         
+        // Create 25 entities total
         for (int i = 0; i < 25; i++) {
             UUID categoryId = UUID.randomUUID();
             CategoryEntity entity = new CategoryEntity();
@@ -169,23 +180,36 @@ class CategoryServiceImplTest {
             entity.setCreatedDate(LocalDateTime.now());
             entity.setLastUpdate(LocalDateTime.now());
             entity.setActive(true);
-            entities.add(entity);
             
-            responses.add(new CategoryGetResponse(categoryId, "Category " + i, "Description " + i, 
-                                                   null, LocalDateTime.now(), LocalDateTime.now(), true));
+            CategoryGetResponse response = new CategoryGetResponse(categoryId, "Category " + i, "Description " + i, 
+                                                   null, LocalDateTime.now(), LocalDateTime.now(), true);
+            
+            if (i < 20) {
+                entitiesPage1.add(entity);
+                responsesPage1.add(response);
+            } else {
+                entitiesPage2.add(entity);
+                responsesPage2.add(response);
+            }
         }
 
+        // Mock first page
+        Page<CategoryEntity> page1 = new PageImpl<>(entitiesPage1, PageRequest.of(0, 20), 25);
         when(categoryRepository.existsById(parentId)).thenReturn(true);
-        when(categoryRepository.findByCategoryParentFk(any(CategoryEntity.class))).thenReturn(Optional.of(entities));
-        when(categoryMapper.toCategoryGetResponse(ArgumentMatchers.anyCollection())).thenAnswer(invocation -> {
-            Collection<CategoryEntity> input = invocation.getArgument(0);
-            return responses.subList(0, input.size());
-        });
+        when(categoryRepository.findByCategoryParentFk(any(CategoryEntity.class), ArgumentMatchers.eq(PageRequest.of(0, 20))))
+            .thenReturn(page1);
+        when(categoryMapper.toCategoryGetResponse(entitiesPage1)).thenReturn(responsesPage1);
 
         // Test first page
         ResponseEntity<Collection<CategoryGetResponse>> response = categoryServiceImpl.findByParentId(parentId, 0, 20);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(20, response.getBody().size());
+        
+        // Mock second page
+        Page<CategoryEntity> page2 = new PageImpl<>(entitiesPage2, PageRequest.of(1, 20), 25);
+        when(categoryRepository.findByCategoryParentFk(any(CategoryEntity.class), ArgumentMatchers.eq(PageRequest.of(1, 20))))
+            .thenReturn(page2);
+        when(categoryMapper.toCategoryGetResponse(entitiesPage2)).thenReturn(responsesPage2);
         
         // Test second page
         response = categoryServiceImpl.findByParentId(parentId, 1, 20);

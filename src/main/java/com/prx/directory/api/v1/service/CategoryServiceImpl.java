@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -17,7 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
 
@@ -81,30 +81,15 @@ public class CategoryServiceImpl implements CategoryService {
             CategoryEntity categoryEntity = new CategoryEntity();
             categoryEntity.setId(parentId);
             
-            // Query categories by parent
-            var categoryEntities = categoryRepository.findByCategoryParentFk(categoryEntity);
+            // Query categories by parent with pagination at database level
+            Pageable pageable = PageRequest.of(page, size);
+            Page<CategoryEntity> categoryPage = categoryRepository.findByCategoryParentFk(categoryEntity, pageable);
             
-            if (!categoryEntities.isPresent() || categoryEntities.get().isEmpty()) {
-                logger.info("No categories found for parent ID: {}", parentId);
-                return ResponseEntity.ok(categoryMapper.toCategoryGetResponse(emptyList()));
-            }
+            // Map entities to responses
+            Collection<CategoryGetResponse> response = categoryMapper.toCategoryGetResponse(categoryPage.getContent());
             
-            // Apply pagination manually since repository returns Optional<Collection>
-            Collection<CategoryEntity> entities = categoryEntities.get();
-            var list = new ArrayList<>(entities);
-            int start = page * size;
-            int end = Math.min(start + size, list.size());
-            
-            if (start >= list.size()) {
-                logger.info("Page {} exceeds available data for parent ID: {}", page, parentId);
-                return ResponseEntity.ok(categoryMapper.toCategoryGetResponse(emptyList()));
-            }
-            
-            var paginatedList = list.subList(start, end);
-            var response = categoryMapper.toCategoryGetResponse(paginatedList);
-            
-            logger.info("Successfully retrieved {} categories for parent ID: {} (page: {}, size: {})", 
-                       paginatedList.size(), parentId, page, size);
+            logger.info("Successfully retrieved {} categories for parent ID: {} (page: {}, size: {}, total: {})", 
+                       categoryPage.getNumberOfElements(), parentId, page, size, categoryPage.getTotalElements());
             
             return ResponseEntity.ok(response);
             
