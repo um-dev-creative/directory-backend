@@ -23,9 +23,12 @@ public interface CategoryService {
 
     // Retrieves all categories that have a parent category with the specified ID.
     //
+    // @param parentId the parent ID to find categories by
+    // @param page the page number (0-based, default 0)
+    // @param size the page size (default 20, max 100)
     // @return a ResponseEntity containing the response object and HTTP status
     // @see CategoryGetResponse
-    default ResponseEntity<Collection<CategoryGetResponse>> findByParentId(UUID parentId) {
+    default ResponseEntity<Collection<CategoryGetResponse>> findByParentId(UUID parentId, int page, int size) {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 

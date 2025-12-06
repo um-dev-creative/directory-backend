@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Collection;
 import java.util.UUID;
@@ -57,21 +58,28 @@ public interface CategoryApi {
         return getService().find(categoryId);
     }
 
-    // Finds categories by their parent ID.
+    // Finds categories by their parent ID with pagination support.
     //
     // @param parentId the parent ID of the categories to find
-    // @return a ResponseEntity containing the response of the categories find operation
-    @Operation(summary = "Find categories by parent ID", description = "Finds categories by their parent ID.")
+    // @param page the page number (0-based, default 0)
+    // @param size the page size (default 20, max 100)
+    // @return a ResponseEntity containing the paginated response of the categories find operation
+    @Operation(summary = "Find categories by parent ID", 
+               description = "Finds all categories that have the specified parent ID. Supports pagination for handling large datasets.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Categories found",
+            @ApiResponse(responseCode = "200", description = "Categories found successfully",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = Collection.class))),
-            @ApiResponse(responseCode = "404", description = "Categories not found", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Invalid parent ID format", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Parent category not found", content = @Content),
             @ApiResponse(responseCode = DirectoryAppConstants.INTERNAL_SERVER_ERROR_CODE, description = DirectoryAppConstants.INTERNAL_SERVER_ERROR_MESSAGE, content = @Content)
     })
     @GetMapping(path = "/parent/{parentId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    default ResponseEntity<Collection<CategoryGetResponse>> findByParentId(@NotNull @PathVariable UUID parentId) {
-        return getService().findByParentId(parentId);
+    default ResponseEntity<Collection<CategoryGetResponse>> findByParentId(
+            @NotNull @PathVariable UUID parentId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return getService().findByParentId(parentId, page, size);
     }
 
     /**

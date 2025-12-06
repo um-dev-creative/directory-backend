@@ -9,6 +9,10 @@ import com.prx.directory.mapper.CategoryMapper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -22,6 +26,10 @@ import java.util.UUID;
 // @see CategoryService
 @Service
 public class CategoryServiceImpl implements CategoryService {
+
+    private static final Logger logger = LoggerFactory.getLogger(CategoryServiceImpl.class);
+    private static final int MAX_PAGE_SIZE = 100;
+    private static final int DEFAULT_PAGE_SIZE = 20;
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
@@ -46,13 +54,62 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public ResponseEntity<Collection<CategoryGetResponse>> findByParentId(@NotNull @NotEmpty UUID parentId) {
-        CategoryEntity categoryEntity = new CategoryEntity();
-        categoryEntity.setId(parentId);
-        var categoryEntities = categoryRepository.findByCategoryParentFk(categoryEntity);
-        return categoryEntities.map(entities ->
-                        ResponseEntity.ok(categoryMapper.toCategoryGetResponse(entities)))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<Collection<CategoryGetResponse>> findByParentId(@NotNull @NotEmpty UUID parentId, int page, int size) {
+        logger.info("Request to find categories by parent ID: {} with page: {}, size: {}", parentId, page, size);
+        
+        try {
+            // Validate pagination parameters
+            if (page < 0) {
+                logger.warn("Invalid page number: {}. Page must be non-negative.", page);
+                return ResponseEntity.badRequest().build();
+            }
+            
+            if (size <= 0 || size > MAX_PAGE_SIZE) {
+                logger.warn("Invalid page size: {}. Size must be between 1 and {}.", size, MAX_PAGE_SIZE);
+                return ResponseEntity.badRequest().build();
+            }
+            
+            // Check if parent category exists
+            if (!categoryRepository.existsById(parentId)) {
+                logger.warn("Parent category not found with ID: {}", parentId);
+                return ResponseEntity.notFound().build();
+            }
+            
+            // Create parent entity reference for query
+            CategoryEntity categoryEntity = new CategoryEntity();
+            categoryEntity.setId(parentId);
+            
+            // Query categories by parent
+            var categoryEntities = categoryRepository.findByCategoryParentFk(categoryEntity);
+            
+            if (categoryEntities.isEmpty()) {
+                logger.info("No categories found for parent ID: {}", parentId);
+                return ResponseEntity.ok(categoryMapper.toCategoryGetResponse(java.util.Collections.emptyList()));
+            }
+            
+            // Apply pagination manually since repository returns Optional<Collection>
+            Collection<CategoryEntity> entities = categoryEntities.get();
+            var list = new java.util.ArrayList<>(entities);
+            int start = page * size;
+            int end = Math.min(start + size, list.size());
+            
+            if (start >= list.size()) {
+                logger.info("Page {} exceeds available data for parent ID: {}", page, parentId);
+                return ResponseEntity.ok(categoryMapper.toCategoryGetResponse(java.util.Collections.emptyList()));
+            }
+            
+            var paginatedList = list.subList(start, end);
+            var response = categoryMapper.toCategoryGetResponse(paginatedList);
+            
+            logger.info("Successfully retrieved {} categories for parent ID: {} (page: {}, size: {})", 
+                       paginatedList.size(), parentId, page, size);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            logger.error("Error finding categories by parent ID: {}", parentId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @Override

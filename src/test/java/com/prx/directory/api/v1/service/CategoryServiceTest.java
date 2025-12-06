@@ -27,7 +27,7 @@ class CategoryServiceTest {
     @DisplayName("Find categories by parent ID - Success")
     void findCategoriesByParentIdSuccess() {
         UUID parentId = UUID.randomUUID();
-        ResponseEntity<Collection<CategoryGetResponse>> response = categoryService.findByParentId(parentId);
+        ResponseEntity<Collection<CategoryGetResponse>> response = categoryService.findByParentId(parentId, 0, 20);
         assertEquals(HttpStatus.NOT_IMPLEMENTED, response.getStatusCode());
     }
 

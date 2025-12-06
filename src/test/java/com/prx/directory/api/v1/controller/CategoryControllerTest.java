@@ -17,6 +17,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
@@ -42,8 +43,8 @@ class CategoryControllerTest {
     @DisplayName("findByParentId returns OK")
     void findByParent_ok() {
         var list = List.of(new CategoryGetResponse(UUID.randomUUID(), "name", null, null, null, null, true));
-        when(categoryService.findByParentId(any(UUID.class))).thenReturn(ResponseEntity.ok(list));
-        ResponseEntity<Collection<CategoryGetResponse>> out = controller.findByParentId(UUID.randomUUID());
+        when(categoryService.findByParentId(any(UUID.class), anyInt(), anyInt())).thenReturn(ResponseEntity.ok(list));
+        ResponseEntity<Collection<CategoryGetResponse>> out = controller.findByParentId(UUID.randomUUID(), 0, 20);
         assertEquals(HttpStatus.OK, out.getStatusCode());
         assertEquals(1, out.getBody().size());
     }
