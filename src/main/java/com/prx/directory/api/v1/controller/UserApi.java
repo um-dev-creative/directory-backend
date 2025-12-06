@@ -2,6 +2,7 @@ package com.prx.directory.api.v1.controller;
 
 import com.prx.directory.api.v1.service.UserService;
 import com.prx.directory.api.v1.to.*;
+import com.prx.directory.constant.DirectoryAppConstants;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -18,21 +19,21 @@ import java.util.UUID;
 
 import static com.prx.security.constant.ConstantApp.SESSION_TOKEN_KEY;
 
-/// User API interface for handling user-related operations.
+// User API interface for handling user-related operations.
 @Tag(name="user", description="The user API")
 public interface UserApi {
 
-    /// Provides an instance of UserService.
-    ///
-    /// @return an instance of UserService
+    // Provides an instance of UserService.
+    //
+    // @return an instance of UserService
     default UserService getService() {
         return new UserService() {};
     }
 
-    /// Handles the creation of a new user.
-    ///
-    /// @param userCreateRequest the request object containing user creation details
-    /// @return a ResponseEntity containing the response of the user creation operation
+    // Handles the creation of a new user.
+    //
+    // @param userCreateRequest the request object containing user creation details
+    // @return a ResponseEntity containing the response of the user creation operation
     @Operation(summary = "Create a new user", description = "Creates a new user in the system with the provided details.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "User createdAt successfully",
@@ -46,17 +47,17 @@ public interface UserApi {
         return this.getService().create(userCreateRequest);
     }
 
-    /// Handles the retrieval of a user by ID.
-    ///
-    /// @param id the ID of the user to retrieve
-    /// @return a ResponseEntity containing the response of the user retrieval operation
-    /// @see GetUserResponse
-    /// @see ResponseEntity
-    /// @see UUID
-    /// @see UserService
-    /// @see UserApi
-    /// @see UserCreateRequest
-    /// @see UserCreateResponse
+    // Handles the retrieval of a user by ID.
+    //
+    // @param id the ID of the user to retrieve
+    // @return a ResponseEntity containing the response of the user retrieval operation
+    // @see GetUserResponse
+    // @see ResponseEntity
+    // @see UUID
+    // @see UserService
+    // @see UserApi
+    // @see UserCreateRequest
+    // @see UserCreateResponse
     @Operation(summary = "Get a user by ID", description = "Retrieves a user in the system with the provided ID.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "User retrieved successfully",
@@ -73,11 +74,11 @@ public interface UserApi {
         return this.getService().findUser(token, id);
     }
 
-    /// Updates a user by ID.
-    ///
-    /// @param userId the ID of the user to update
-    /// @param request the patch user request
-    /// @return the patch user response
+    // Updates a user by ID.
+    //
+    // @param userId the ID of the user to update
+    // @param request the patch user request
+    // @return the patch user response
     @Operation(summary = "Update a user by ID", description = "Updates a user in the system with the provided ID.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "202", description = "User lastUpdate successfully",
@@ -93,16 +94,16 @@ public interface UserApi {
         return this.getService().update(userId, request);
     }
 
-    /// Deletes a user by user ID and application ID.
-    ///
-    /// @param userId the ID of the user to delete
-    /// @return a ResponseEntity with appropriate status
+    // Deletes a user by user ID and application ID.
+    //
+    // @param userId the ID of the user to delete
+    // @return a ResponseEntity with appropriate status
     @Operation(summary = "Delete a user by ID", description = "Deletes a user from the system with the provided user ID. Requires admin or appropriate authorization.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "204", description = "User deleted successfully", content = @Content),
         @ApiResponse(responseCode = "403", description = "Forbidden: Access denied", content = @Content),
         @ApiResponse(responseCode = "404", description = "User not found", content = @Content),
-        @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+        @ApiResponse(responseCode = DirectoryAppConstants.INTERNAL_SERVER_ERROR_CODE, description = DirectoryAppConstants.INTERNAL_SERVER_ERROR_MESSAGE, content = @Content)
     })
     @DeleteMapping(value = "/{userId}")
     default ResponseEntity<Void> deleteUserByUserId(@NotNull @PathVariable UUID userId) {

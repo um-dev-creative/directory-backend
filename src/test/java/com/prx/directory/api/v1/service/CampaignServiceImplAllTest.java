@@ -185,7 +185,7 @@ class CampaignServiceImplAllTest {
         when(campaignMapper.toOfferTO(e)).thenReturn(new OfferTO(UUID.randomUUID(), "title",
                 "desc", UUID.randomUUID(), LocalDateTime.now(), LocalDateTime.now().plusSeconds(3600), null, true));
 
-        ResponseEntity<CampaignListResponse> resp = service.list(null, 10, "name", Map.of());
+        ResponseEntity<CampaignListResponse> resp = service.list(null, 10, "title", Map.of());
         assertEquals(200, resp.getStatusCode().value());
     }
 

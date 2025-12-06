@@ -2,6 +2,7 @@ package com.prx.directory.api.v1.controller;
 
 import com.prx.directory.api.v1.service.ProfileImageService;
 import com.prx.directory.api.v1.to.PostProfileImageResponse;
+import com.prx.directory.constant.DirectoryAppConstants;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -36,7 +37,7 @@ public interface ProfileImageApi {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Profile image saved successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid input data"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = DirectoryAppConstants.INTERNAL_SERVER_ERROR_CODE, description = DirectoryAppConstants.INTERNAL_SERVER_ERROR_MESSAGE)
     })
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
     default ResponseEntity<PostProfileImageResponse> saveProfileImage(@Parameter(description = "Token session", required = true) @RequestHeader(SESSION_TOKEN_KEY) String token, @RequestPart byte[] imageData) {
