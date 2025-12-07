@@ -2,11 +2,10 @@ package com.prx.directory.api.v1.controller;
 
 import com.prx.commons.util.HttpStatusUtil;
 import com.prx.directory.api.v1.service.BusinessService;
-import com.prx.directory.api.v1.to.BusinessCreateRequest;
-import com.prx.directory.api.v1.to.BusinessCreateResponse;
-import com.prx.directory.api.v1.to.BusinessTO;
+import com.prx.directory.api.v1.to.*;
 import com.prx.directory.constant.DirectoryAppConstants;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -81,6 +80,40 @@ public interface BusinessApi {
     @GetMapping(path = "/user/{userId}")
     default ResponseEntity<Set<BusinessTO>> findByUserId(@PathVariable UUID userId) {
         return this.getService().findByUserId(userId);
+    }
+
+    /**
+     * Updates an existing business by its ID.
+     *
+     * @param id the UUID of the business to update
+     * @param request the request object containing updated business details
+     * @return a ResponseEntity containing the update response with updatedDate
+     */
+    @Operation(
+            summary = "Update an existing business",
+            description = "Updates an existing business. Supports partial updates (PATCH semantics). " +
+                    "Only provided fields will be updated. Validates field lengths, email formats, " +
+                    "URL format, and foreign key references. Updates lastUpdate timestamp automatically.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Business update payload. All fields are optional.",
+                    required = true,
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = BusinessUpdateRequest.class))
+            )
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Business updated successfully",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = BusinessUpdateResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request data (validation error)", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Business not found or referenced entity (category/user) not found", content = @Content),
+            @ApiResponse(responseCode = DirectoryAppConstants.INTERNAL_SERVER_ERROR_CODE, description = DirectoryAppConstants.INTERNAL_SERVER_ERROR_MESSAGE, content = @Content)
+    })
+    @PatchMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    default ResponseEntity<BusinessUpdateResponse> update(
+            @Parameter(description = "Business UUID") @PathVariable("id") UUID id,
+            @RequestBody BusinessUpdateRequest request) {
+        return getService().update(id, request);
     }
 
     /**

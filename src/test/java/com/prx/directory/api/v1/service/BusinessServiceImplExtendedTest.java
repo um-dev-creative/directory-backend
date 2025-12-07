@@ -7,6 +7,8 @@ import com.prx.directory.client.backbone.to.BackboneUserUpdateRequest;
 import com.prx.directory.jpa.entity.BusinessEntity;
 import com.prx.directory.jpa.entity.UserEntity;
 import com.prx.directory.jpa.repository.BusinessRepository;
+import com.prx.directory.jpa.repository.CategoryRepository;
+import com.prx.directory.jpa.repository.DigitalContactRepository;
 import com.prx.directory.mapper.BusinessMapper;
 import com.prx.directory.util.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,13 +34,17 @@ import static org.mockito.Mockito.*;
 class BusinessServiceImplExtendedTest {
 
     @Mock
-    private UserService userService;
+     UserService userService;
     @Mock
-    private BusinessRepository businessRepository;
+     BusinessRepository businessRepository;
     @Mock
-    private BusinessMapper businessMapper;
+     BusinessMapper businessMapper;
     @Mock
-    private BackboneClient backboneClient;
+    BackboneClient backboneClient;
+    @Mock
+    CategoryRepository categoryRepository;
+    @Mock
+    DigitalContactRepository digitalContactRepository;
 
     private BusinessServiceImpl service;
     private static final UUID APPLICATION_ID = UUID.randomUUID();
@@ -46,7 +52,7 @@ class BusinessServiceImplExtendedTest {
 
     @BeforeEach
     void setUp() {
-        service = new BusinessServiceImpl(userService, businessRepository, businessMapper, backboneClient);
+        service = new BusinessServiceImpl(userService, businessRepository,categoryRepository, digitalContactRepository, businessMapper, backboneClient);
         ReflectionTestUtils.setField(service, "applicationId", APPLICATION_ID);
         ReflectionTestUtils.setField(service, "initialRoleId", INITIAL_ROLE_ID);
     }
