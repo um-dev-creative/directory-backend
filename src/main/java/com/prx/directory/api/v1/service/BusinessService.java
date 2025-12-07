@@ -1,9 +1,6 @@
 package com.prx.directory.api.v1.service;
 
-import com.prx.directory.api.v1.to.BusinessCreateRequest;
-import com.prx.directory.api.v1.to.BusinessCreateResponse;
-import com.prx.directory.api.v1.to.BusinessTO;
-import com.prx.directory.api.v1.to.LinkBusinessProductResponse;
+import com.prx.directory.api.v1.to.*;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,6 +41,15 @@ public interface BusinessService {
     /// @param userId the UUID of the user
     /// @return a ResponseEntity containing a page of business transfer objects and HTTP status
     default ResponseEntity<Set<BusinessTO>> findByUserId(UUID userId) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    }
+
+    /// Updates an existing business.
+    ///
+    /// @param id the UUID of the business to update
+    /// @param request the request object containing updated business details
+    /// @return a ResponseEntity containing the update response with updatedDate
+    default ResponseEntity<BusinessUpdateResponse> update(@NotNull UUID id, @NotNull BusinessUpdateRequest request) {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
