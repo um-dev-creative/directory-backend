@@ -4,6 +4,7 @@ import com.prx.directory.api.v1.service.CategoryService;
 import com.prx.directory.api.v1.to.CategoryGetResponse;
 import com.prx.directory.api.v1.to.CategoryCreateRequest;
 import com.prx.directory.api.v1.to.CategoryCreateResponse;
+import com.prx.directory.api.v1.to.PaginatedResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,8 +29,8 @@ public class CategoryController implements CategoryApi {
     }
 
     @Override
-    public ResponseEntity<Collection<CategoryGetResponse>> findByParentId(UUID parentId) {
-        return categoryService.findByParentId(parentId);
+    public ResponseEntity<PaginatedResponse<CategoryGetResponse>> findByParentId(UUID parentId, int page, int size) {
+        return categoryService.findByParentId(parentId, page, size);
     }
 
     @Override
