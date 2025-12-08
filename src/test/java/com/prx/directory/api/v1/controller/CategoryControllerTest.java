@@ -2,6 +2,7 @@ package com.prx.directory.api.v1.controller;
 
 import com.prx.directory.api.v1.service.CategoryService;
 import com.prx.directory.api.v1.to.CategoryGetResponse;
+import com.prx.directory.api.v1.to.PaginatedResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,10 +44,11 @@ class CategoryControllerTest {
     @DisplayName("findByParentId returns OK")
     void findByParent_ok() {
         var list = List.of(new CategoryGetResponse(UUID.randomUUID(), "name", null, null, null, null, true));
-        when(categoryService.findByParentId(any(UUID.class), anyInt(), anyInt())).thenReturn(ResponseEntity.ok(list));
-        ResponseEntity<Collection<CategoryGetResponse>> out = controller.findByParentId(UUID.randomUUID(), 0, 20);
+        var paged = new PaginatedResponse<>(1L, 0, 20, 1, list);
+        when(categoryService.findByParentId(any(UUID.class), anyInt(), anyInt())).thenReturn(ResponseEntity.ok(paged));
+        ResponseEntity<PaginatedResponse<CategoryGetResponse>> out = controller.findByParentId(UUID.randomUUID(), 0, 20);
         assertEquals(HttpStatus.OK, out.getStatusCode());
-        assertEquals(1, out.getBody().size());
+        assertEquals(1, out.getBody().items().size());
     }
 
     @Test
@@ -59,4 +61,3 @@ class CategoryControllerTest {
         assertEquals(1, out.getBody().size());
     }
 }
-

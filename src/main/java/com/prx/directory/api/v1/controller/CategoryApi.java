@@ -4,6 +4,7 @@ import com.prx.directory.api.v1.service.CategoryService;
 import com.prx.directory.api.v1.to.CategoryCreateRequest;
 import com.prx.directory.api.v1.to.CategoryCreateResponse;
 import com.prx.directory.api.v1.to.CategoryGetResponse;
+import com.prx.directory.api.v1.to.PaginatedResponse;
 import com.prx.directory.constant.DirectoryAppConstants;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -69,13 +70,13 @@ public interface CategoryApi {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Categories found successfully",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = Collection.class))),
+                            schema = @Schema(implementation = PaginatedResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid parent ID format", content = @Content),
             @ApiResponse(responseCode = "404", description = "Parent category not found", content = @Content),
             @ApiResponse(responseCode = DirectoryAppConstants.INTERNAL_SERVER_ERROR_CODE, description = DirectoryAppConstants.INTERNAL_SERVER_ERROR_MESSAGE, content = @Content)
     })
     @GetMapping(path = "/parent/{parentId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    default ResponseEntity<Collection<CategoryGetResponse>> findByParentId(
+    default ResponseEntity<PaginatedResponse<CategoryGetResponse>> findByParentId(
             @NotNull @PathVariable UUID parentId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {

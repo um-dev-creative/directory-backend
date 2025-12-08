@@ -3,6 +3,7 @@ package com.prx.directory.api.v1.service;
 import com.prx.directory.api.v1.to.CategoryCreateRequest;
 import com.prx.directory.api.v1.to.CategoryCreateResponse;
 import com.prx.directory.api.v1.to.CategoryGetResponse;
+import com.prx.directory.api.v1.to.PaginatedResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -28,7 +29,7 @@ public interface CategoryService {
     // @param size the page size (default 20, max 100)
     // @return a ResponseEntity containing the response object and HTTP status
     // @see CategoryGetResponse
-    default ResponseEntity<Collection<CategoryGetResponse>> findByParentId(UUID parentId, int page, int size) {
+    default ResponseEntity<PaginatedResponse<CategoryGetResponse>> findByParentId(UUID parentId, int page, int size) {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 

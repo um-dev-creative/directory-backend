@@ -3,6 +3,7 @@ package com.prx.directory.api.v1.service;
 import com.prx.directory.api.v1.to.CategoryCreateRequest;
 import com.prx.directory.api.v1.to.CategoryCreateResponse;
 import com.prx.directory.api.v1.to.CategoryGetResponse;
+import com.prx.directory.api.v1.to.PaginatedResponse;
 import com.prx.directory.jpa.entity.CategoryEntity;
 import com.prx.directory.jpa.repository.CategoryRepository;
 import com.prx.directory.mapper.CategoryMapper;
@@ -110,9 +111,9 @@ class CategoryServiceImplTest {
         when(categoryRepository.findByCategoryParentFk(any(CategoryEntity.class), any(Pageable.class))).thenReturn(page);
         when(categoryMapper.toCategoryGetResponse(ArgumentMatchers.anyCollection())).thenReturn(categoryGetResponses);
 
-        ResponseEntity<Collection<CategoryGetResponse>> response = categoryServiceImpl.findByParentId(parentId, 0, 20);
+        ResponseEntity<PaginatedResponse<CategoryGetResponse>> response = categoryServiceImpl.findByParentId(parentId, 0, 20);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(categoryGetResponses, response.getBody());
+        assertEquals(categoryGetResponses, response.getBody().items());
     }
 
     @Test
@@ -121,7 +122,7 @@ class CategoryServiceImplTest {
         UUID parentId = UUID.randomUUID();
         when(categoryRepository.existsById(parentId)).thenReturn(false);
         
-        ResponseEntity<Collection<CategoryGetResponse>> response = categoryServiceImpl.findByParentId(parentId, 0, 20);
+        ResponseEntity<PaginatedResponse<CategoryGetResponse>> response = categoryServiceImpl.findByParentId(parentId, 0, 20);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
@@ -130,7 +131,7 @@ class CategoryServiceImplTest {
     void findCategoriesByParentIdInvalidPage() {
         UUID parentId = UUID.randomUUID();
         
-        ResponseEntity<Collection<CategoryGetResponse>> response = categoryServiceImpl.findByParentId(parentId, -1, 20);
+        ResponseEntity<PaginatedResponse<CategoryGetResponse>> response = categoryServiceImpl.findByParentId(parentId, -1, 20);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
@@ -139,7 +140,7 @@ class CategoryServiceImplTest {
     void findCategoriesByParentIdInvalidSize() {
         UUID parentId = UUID.randomUUID();
         
-        ResponseEntity<Collection<CategoryGetResponse>> response = categoryServiceImpl.findByParentId(parentId, 0, 0);
+        ResponseEntity<PaginatedResponse<CategoryGetResponse>> response = categoryServiceImpl.findByParentId(parentId, 0, 0);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         
         response = categoryServiceImpl.findByParentId(parentId, 0, 101);
@@ -156,9 +157,9 @@ class CategoryServiceImplTest {
         when(categoryRepository.findByCategoryParentFk(any(CategoryEntity.class), any(Pageable.class))).thenReturn(emptyPage);
         when(categoryMapper.toCategoryGetResponse(ArgumentMatchers.anyCollection())).thenReturn(List.of());
 
-        ResponseEntity<Collection<CategoryGetResponse>> response = categoryServiceImpl.findByParentId(parentId, 0, 20);
+        ResponseEntity<PaginatedResponse<CategoryGetResponse>> response = categoryServiceImpl.findByParentId(parentId, 0, 20);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(0, response.getBody().size());
+        assertEquals(0, response.getBody().items().size());
     }
 
     @Test
@@ -201,10 +202,10 @@ class CategoryServiceImplTest {
         when(categoryMapper.toCategoryGetResponse(entitiesPage1)).thenReturn(responsesPage1);
 
         // Test first page
-        ResponseEntity<Collection<CategoryGetResponse>> response = categoryServiceImpl.findByParentId(parentId, 0, 20);
+        ResponseEntity<PaginatedResponse<CategoryGetResponse>> response = categoryServiceImpl.findByParentId(parentId, 0, 20);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(20, response.getBody().size());
-        
+        assertEquals(20, response.getBody().items().size());
+
         // Mock second page
         Page<CategoryEntity> page2 = new PageImpl<>(entitiesPage2, PageRequest.of(1, 20), 25);
         when(categoryRepository.findByCategoryParentFk(any(CategoryEntity.class), ArgumentMatchers.eq(PageRequest.of(1, 20))))
@@ -214,13 +215,14 @@ class CategoryServiceImplTest {
         // Test second page
         response = categoryServiceImpl.findByParentId(parentId, 1, 20);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(5, response.getBody().size());
+        assertEquals(5, response.getBody().items().size());
     }
 
     @Test
     @DisplayName("Find categories by parent ID - Null ID")
     void findCategoriesByParentIdNullId() {
-        ResponseEntity<Collection<CategoryGetResponse>> response = categoryServiceImpl.findByParentId(null, 0, 20);
+        when(categoryRepository.existsById(any(UUID.class))).thenThrow(NullPointerException.class);
+        ResponseEntity<PaginatedResponse<CategoryGetResponse>> response = categoryServiceImpl.findByParentId(UUID.randomUUID(), 0, 20);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 

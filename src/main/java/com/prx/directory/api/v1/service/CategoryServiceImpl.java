@@ -3,6 +3,7 @@ package com.prx.directory.api.v1.service;
 import com.prx.directory.api.v1.to.CategoryCreateRequest;
 import com.prx.directory.api.v1.to.CategoryCreateResponse;
 import com.prx.directory.api.v1.to.CategoryGetResponse;
+import com.prx.directory.api.v1.to.PaginatedResponse;
 import com.prx.directory.jpa.entity.CategoryEntity;
 import com.prx.directory.jpa.repository.CategoryRepository;
 import com.prx.directory.mapper.CategoryMapper;
@@ -20,8 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.UUID;
-
-import static java.util.Collections.emptyList;
 
 // Service implementation for category-related operations.
 //
@@ -56,43 +55,51 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public ResponseEntity<Collection<CategoryGetResponse>> findByParentId(@NotNull UUID parentId, int page, int size) {
+    public ResponseEntity<PaginatedResponse<CategoryGetResponse>> findByParentId(@NotNull UUID parentId, int page, int size) {
         logger.info("Request to find categories by parent ID: {} with page: {}, size: {}", parentId, page, size);
-        
+
         try {
             // Validate pagination parameters
             if (page < 0) {
                 logger.warn("Invalid page number: {}. Page must be non-negative.", page);
                 return ResponseEntity.badRequest().build();
             }
-            
+
             if (size <= 0 || size > MAX_PAGE_SIZE) {
                 logger.warn("Invalid page size: {}. Size must be between 1 and {}.", size, MAX_PAGE_SIZE);
                 return ResponseEntity.badRequest().build();
             }
-            
+
             // Check if parent category exists
             if (!categoryRepository.existsById(parentId)) {
                 logger.warn("Parent category not found with ID: {}", parentId);
                 return ResponseEntity.notFound().build();
             }
-            
+
             // Create parent entity reference for query
             CategoryEntity categoryEntity = new CategoryEntity();
             categoryEntity.setId(parentId);
-            
+
             // Query categories by parent with pagination at database level
             Pageable pageable = PageRequest.of(page, size);
             Page<CategoryEntity> categoryPage = categoryRepository.findByCategoryParentFk(categoryEntity, pageable);
-            
+
             // Map entities to responses
-            Collection<CategoryGetResponse> response = categoryMapper.toCategoryGetResponse(categoryPage.getContent());
-            
-            logger.info("Successfully retrieved {} categories for parent ID: {} (page: {}, size: {}, total: {})", 
+            Collection<CategoryGetResponse> items = categoryMapper.toCategoryGetResponse(categoryPage.getContent());
+
+            logger.info("Successfully retrieved {} categories for parent ID: {} (page: {}, size: {}, total: {})",
                        categoryPage.getNumberOfElements(), parentId, page, size, categoryPage.getTotalElements());
-            
+
+            PaginatedResponse<CategoryGetResponse> response = new PaginatedResponse<>(
+                    categoryPage.getTotalElements(),
+                    categoryPage.getNumber(),
+                    categoryPage.getSize(),
+                    categoryPage.getTotalPages(),
+                    items
+            );
+
             return ResponseEntity.ok(response);
-            
+
         } catch (Exception e) {
             logger.error("Error finding categories by parent ID: {}", parentId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

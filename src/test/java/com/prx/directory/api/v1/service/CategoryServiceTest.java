@@ -1,6 +1,7 @@
 package com.prx.directory.api.v1.service;
 
 import com.prx.directory.api.v1.to.CategoryGetResponse;
+import com.prx.directory.api.v1.to.PaginatedResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -27,7 +28,7 @@ class CategoryServiceTest {
     @DisplayName("Find categories by parent ID - Success")
     void findCategoriesByParentIdSuccess() {
         UUID parentId = UUID.randomUUID();
-        ResponseEntity<Collection<CategoryGetResponse>> response = categoryService.findByParentId(parentId, 0, 20);
+        ResponseEntity<PaginatedResponse<CategoryGetResponse>> response = categoryService.findByParentId(parentId, 0, 20);
         assertEquals(HttpStatus.NOT_IMPLEMENTED, response.getStatusCode());
     }
 
