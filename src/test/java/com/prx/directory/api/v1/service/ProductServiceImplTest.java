@@ -8,13 +8,15 @@ import com.prx.directory.jpa.entity.BusinessProductEntity;
 import com.prx.directory.jpa.entity.BusinessProductEntityId;
 import com.prx.directory.jpa.entity.ProductEntity;
 import com.prx.directory.jpa.repository.BusinessProductRepository;
+import com.prx.directory.jpa.repository.BusinessRepository;
 import com.prx.directory.jpa.repository.ProductRepository;
 import com.prx.directory.mapper.BusinessProductMapper;
 import com.prx.directory.mapper.ProductMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mockito;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -28,11 +30,18 @@ import static org.mockito.Mockito.when;
 @ExtendWith(value = {SpringExtension.class})
 class ProductServiceImplTest {
 
-    private final ProductRepository productRepository = Mockito.mock(ProductRepository.class);
-    private final BusinessProductRepository businessProductRepository = Mockito.mock(BusinessProductRepository.class);
-    private final ProductMapper productMapper = Mockito.mock(ProductMapper.class);
-    private final BusinessProductMapper businessProductMapper = Mockito.mock(BusinessProductMapper.class);
-    private final ProductServiceImpl productService = new ProductServiceImpl(productRepository, businessProductRepository, productMapper, businessProductMapper);
+    @Mock
+    ProductRepository productRepository;
+    @Mock
+    BusinessProductRepository businessProductRepository;
+    @Mock
+    ProductMapper productMapper;
+    @Mock
+    BusinessProductMapper businessProductMapper;
+    @Mock
+    BusinessRepository businessRepository;
+    @InjectMocks
+    ProductServiceImpl productService;
 
     @Test
     @DisplayName("Create product successfully")

@@ -1,5 +1,6 @@
 package com.prx.directory.mapper;
 
+import com.prx.commons.services.config.mapper.MapperAppConfig;
 import com.prx.directory.api.v1.to.DigitalContactTO;
 import com.prx.directory.jpa.entity.DigitalContactEntity;
 import org.mapstruct.*;
@@ -9,14 +10,8 @@ import org.mapstruct.*;
  */
 @Mapper(
         // Specifies that the mapper should be a Spring bean.
-        componentModel = MappingConstants.ComponentModel.SPRING,
-        uses = {DigitalContactTO.class, DigitalContactEntity.class}
-)
-@MapperConfig(
-        // Specifies that the mapper should fail if there are any unmapped properties.
-        unmappedSourcePolicy = ReportingPolicy.IGNORE,
-        // Specifies that the mapper should fail if there are any unmapped properties.
-        unmappedTargetPolicy = ReportingPolicy.IGNORE
+        uses = {DigitalContactTO.class, DigitalContactEntity.class},
+        config = MapperAppConfig.class
 )
 public interface DigitalContactMapper {
     /**

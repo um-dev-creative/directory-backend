@@ -9,7 +9,7 @@ public final class DirectoryAppConstants {
 
     // Campaign pagination defaults
     public static final int DEFAULT_PAGE = 1;
-    public static final int DEFAULT_PER_PAGE = 20;
+    public static final int DEFAULT_PER_PAGE = 10;
     public static final int MAX_PER_PAGE = 100;
 
     // Campaign error messages

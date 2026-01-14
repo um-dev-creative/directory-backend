@@ -3,6 +3,7 @@ package com.prx.directory.mapper;
 import com.prx.commons.services.config.mapper.MapperAppConfig;
 import com.prx.directory.api.v1.to.ProductCreateRequest;
 import com.prx.directory.api.v1.to.ProductCreateResponse;
+import com.prx.directory.api.v1.to.ProductListItemTO;
 import com.prx.directory.jpa.entity.CategoryEntity;
 import com.prx.directory.jpa.entity.ProductEntity;
 import org.mapstruct.Mapper;
@@ -54,4 +55,8 @@ public interface ProductMapper {
         categoryEntity.setId(categoryId);
         return categoryEntity;
     }
+
+    @Mapping(target = "categoryParentId", source = "categoryFk.categoryParentFk.id")
+    ProductListItemTO toProductListItemTO(ProductEntity productEntity);
+
 }
