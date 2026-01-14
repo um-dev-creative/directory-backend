@@ -1,4 +1,4 @@
-FROM amazoncorretto:21-alpine3.20
+FROM amazoncorretto:25-alpine3.22
 LABEL version="0.0.1"
 LABEL description="Directory Backend API"
 LABEL mantainer="Luis Mata luis.antonio.mata@gmail.com"
