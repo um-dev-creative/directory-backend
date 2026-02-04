@@ -5,11 +5,11 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.8</version>
+        <version>4.0.2</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
-    <groupId>com.prx</groupId>
+    <groupId>com.umdev</groupId>
     <artifactId>directory-backend</artifactId>
     <version>0.0.2-SNAPSHOT</version>
     <name>directory-backend</name>
@@ -34,9 +34,9 @@
         <postgresql.version>42.7.7</postgresql.version>
         <google.gson.version>2.10.1</google.gson.version>
         <!--        PRX Commons-->
-        <com.prx.commons.version>0.0.4</com.prx.commons.version>
-        <com.prx.commons-services.version>0.0.1</com.prx.commons-services.version>
-        <com.prx.security-oauth.version>0.0.1</com.prx.security-oauth.version>
+        <com.umdev.commons.version>0.0.1</com.umdev.commons.version>
+        <com.umdev.commons-services.version>0.0.1</com.umdev.commons-services.version>
+        <com.umdev.security-oauth.version>0.0.1</com.umdev.security-oauth.version>
         <!--        MAVEN-->
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -49,11 +49,11 @@
         <repsy.account.user>${env.REPSY_ACCOUNT_USER}</repsy.account.user>
         <repsy.account.password>${env.REPSY_ACCOUNT_PASSWORD}</repsy.account.password>
         <!--        OPEN API -->
-        <springdoc.version>2.6.0</springdoc.version>
+        <springdoc.version>3.0.0</springdoc.version>
         <!--        SPRING -->
-        <spring-cloud.version>2024.0.3</spring-cloud.version>
-        <spring-boot.kafka.version>3.3.8</spring-boot.kafka.version>
-        <spring-boot.version>3.5.8</spring-boot.version>
+        <spring-cloud.version>2025.1.1</spring-cloud.version>
+        <spring-boot.kafka.version>4.0.2</spring-boot.kafka.version>
+        <spring-boot.version>4.0.2</spring-boot.version>
         <spring-security-aouth2-autoconfigure.version>3.3.2</spring-security-aouth2-autoconfigure.version>
         <spring-cloud-dependencies.version>4.3.0</spring-cloud-dependencies.version>
         <spring-bootstrap.version>4.1.4</spring-bootstrap.version>
@@ -121,6 +121,7 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
+            <version>5.0.1</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.kafka</groupId>
@@ -150,19 +151,19 @@
         </dependency>
         <!--        PRX Dependencies-->
         <dependency>
-            <groupId>com.prx</groupId>
-            <artifactId>prx-commons</artifactId>
-            <version>${com.prx.commons.version}</version>
+            <groupId>com.umdev</groupId>
+            <artifactId>commons</artifactId>
+            <version>${com.umdev.commons.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.prx</groupId>
+            <groupId>com.umdev</groupId>
             <artifactId>commons-services</artifactId>
-            <version>${com.prx.commons-services.version}</version>
+            <version>${com.umdev.commons-services.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.prx</groupId>
+            <groupId>com.umdev</groupId>
             <artifactId>security-oauth</artifactId>
-            <version>${com.prx.security-oauth.version}</version>
+            <version>${com.umdev.security-oauth.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
@@ -241,12 +242,6 @@
             <artifactId>spring-boot-test-autoconfigure</artifactId>
             <version>${spring-boot.version}</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.junit.vintage</groupId>-->
-<!--            <artifactId>junit-vintage-engine</artifactId>-->
-<!--            <version>${junit.jupiter.version}</version>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>org.junit</groupId>
             <artifactId>junit-bom</artifactId>
@@ -300,7 +295,7 @@
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
-                <version>3.18.0</version>
+                <version>3.19.0</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -510,6 +505,19 @@
             <id>maven_central</id>
             <name>Maven Central</name>
             <url>https://repo.maven.apache.org/maven2/</url>
+        </repository>
+        <repository>
+            <id>spring-snapshots</id>
+            <name>Spring Snapshots</name>
+            <url>https://repo.spring.io/snapshot</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>spring-milestones</id>
+            <name>Spring Milestones</name>
+            <url>https://repo.spring.io/milestone</url>
         </repository>
         <repository>
             <id>PRX-Repsy</id>

@@ -111,7 +111,7 @@ spring:
       application-name: ${app.name}
     bootstrap:
       # Enables the Spring Cloud Bootstrap application context
-      enabled: ${SPRING_BOOT_CLOUD_BOOTSTRAP_ENABLED}
+      enabled: ${SPRING_BOOT_CLOUD_BOOTSTRAP_ENABLED:false}
     # The active profile for the Spring Cloud Config
     profile: ${SPRING_BOOT_PROFILE_ACTIVE}
     config:
