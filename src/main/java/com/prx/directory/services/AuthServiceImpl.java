@@ -56,7 +56,7 @@ public class AuthServiceImpl implements AuthService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
         var authResponse = new AuthResponse(sessionJwtService.generateSessionToken(authRequest.alias(), new ConcurrentHashMap<>()));
-        if (Objects.isNull(authResponse) || authResponse.token().isBlank()) {
+        if (authResponse.token().isBlank()) {
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).build();
         }
         return ResponseEntity.ok(authResponse);

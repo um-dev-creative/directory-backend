@@ -2,14 +2,18 @@
 
 [![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=prx-dev_directory-backend&token=30babbee984be4a21f7e4627f90e80c5b47330fa)](https://sonarcloud.io/summary/new_code?id=prx-dev_directory-backend)
 
-
-<!-- Tech badges -->
-
+<!-- badges: start -->
 ![Java](https://img.shields.io/badge/Java-21-blue?logo=java&style=flat-square)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.8-brightgreen?logo=spring&style=flat-square)
 ![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2025.0.1-brightgreen?logo=spring&style=flat-square)
-![JPA / Hibernate](https://img.shields.io/badge/JPA-Hibernate-orange?logo=hibernate&style=flat-square)
-
+[![Maven](https://img.shields.io/badge/Maven-%3E%3D%203.8.0-orange?logo=apachemaven&style=flat-square)](https://maven.apache.org/)
+[![JUnit](https://img.shields.io/badge/JUnit%20Jupiter-5.11.3-red?logo=junit5&style=flat-square)](https://junit.org/junit5/)
+[![JaCoCo](https://img.shields.io/badge/JaCoCo-0.8.14-yellow?logo=jacoco&style=flat-square)](https://www.jacoco.org/jacoco/)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-42.7.7-blue?logo=postgresql&style=flat-square)
+![Docker (base image)](https://img.shields.io/badge/Docker-amazoncorretto%3A25-blue?logo=docker&style=flat-square)
+![Vault](https://img.shields.io/badge/Vault-1.18.4-black?logo=hashicorp&style=flat-square)
+![Kafka](https://img.shields.io/badge/Kafka-3.9.0-orange?logo=apachekafka&style=flat-square)
+<!-- badges: end -->
 
 Overview
 --------
@@ -29,7 +33,7 @@ Quick links
 Getting started (developer)
 ---------------------------
 Prerequisites
-- Java 21 (or the project's configured `java.version` in `pom.xml`)
+- Java 21 (configured as `java.version` in `pom.xml`)
 - Maven (3.8+ recommended)
 - Optional: Docker if you prefer containerized runs
 
@@ -60,19 +64,27 @@ Configuration
 - Environment defaults are available in `default.env` (copy/override as needed).
 - The service uses Spring Cloud / Spring Boot configuration conventions. For local development you can run with `--spring.profiles.active=local` and point to a local config server or an overridden `application.yml`.
 
+Tech stack and versions
+-----------------------
+| Technology |           Version | Source |
+|---|------------------:|---|
+| Docker (base image) | amazoncorretto:25 | `Dockerfile` (FROM)
+| Java |                21 | `pom.xml`: `<properties>` (`java.version`)
+| Kafka |             3.9.0 | `pom.xml`: `org.springframework.kafka:spring-kafka` dependency
+| Maven |             3.8.0 | `pom.xml` present
+| PostgreSQL |            42.7.7 | `pom.xml`: `<properties>` (`postgresql.version`) and `dependencyManagement`
+| Spring Boot |             3.5.8 | `pom.xml`: `<parent>`
+| Spring Cloud |          2025.0.1 | `pom.xml`: `<properties>` (`spring-cloud.version`)
+| Vault |            1.18.4 | `default.env` / `bootstrap.yml` (VAULT_ENABLED / spring.cloud.vault)
+
 Dependency & version management (short)
 ---------------------------------------
 - Many dependency and plugin versions are centralized inside the top-level `pom.xml` under the `<properties>` block and controlled via `<dependencyManagement>` where appropriate.
-- The project leaves the Spring Boot parent version as an explicit literal in the `<parent>` section (this avoids tool/linter issues when using a property there). However, most dependencies and plugin versions are centralized as properties (for example `${mapstruct.version}`, `${mockito.version}`, `${postgresql.version}`, etc.).
-
-If you want to change a dependency version:
-1. Prefer updating the property in `pom.xml` (if available) or the related `dependencyManagement` entry.
-2. Re-run `mvn -DskipTests dependency:tree` to review transitive versions.
+- If you want to change a dependency version, prefer updating the property in `pom.xml` (if available) or the related `dependencyManagement` entry.
 
 Build & validation notes
 ------------------------
 See `README-BUILD.md` for a quick build checklist and common troubleshooting commands.
-For the validation steps I ran while preparing these docs, see `BUILD_VALIDATION_REPORT.md`.
 
 Testing & coverage
 ------------------
@@ -82,26 +94,6 @@ Testing & coverage
 mvn clean test jacoco:report
 # open the report at target/site/jacoco/index.html
 ```
-
-API & Developer guidance
-------------------------
-- API contracts are typically defined in the `com.prx.directory.api.v1.*` packages and wired using Spring MVC / Jersey controllers.
-- DTOs/TOs (transfer objects) are immutable Java records where appropriate — exercise caution when adding JSON annotations.
-
-Contributing
-------------
-- Create a feature branch, run tests locally, and open a PR with a clear description of behavior and tests added.
-- Keep backward compatibility in mind for public APIs and DTOs.
-
-Security & dependencies
------------------------
-- The project contains some warnings from automated scans about transitive dependencies (hinting at older transitive libraries). If you see a security warning during your build, run:
-```powershell
-mvn -DskipTests dependency:tree > dependency-tree.txt
-```
-and inspect which direct dependency is bringing the vulnerable transitive. Then either:
-- upgrade the direct dependency's version in `pom.xml` or
-- add an `<exclusion>` and explicitly import a fixed version via `dependencyManagement`.
 
 Contact
 -------
@@ -115,3 +107,5 @@ Acknowledgements
 ----------------
 - Project tooling: Maven, JaCoCo, PMD
 - Integrations: backbone, mercury (internal clients visible under `com.prx.directory.client.*`)
+
+End of README.
