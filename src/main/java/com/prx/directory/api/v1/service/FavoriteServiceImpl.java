@@ -87,7 +87,6 @@ public class FavoriteServiceImpl implements FavoriteService {
                     UserFavoriteEntity::setCampaign,
                     () -> userFavoriteRepository.findByUserIdAndCampaignId(user.getId(), itemId));
             // Defensive: default case added in case new FavoriteType values are introduced in the future.
-            default -> ResponseEntity.badRequest().build();
         };
     }
 

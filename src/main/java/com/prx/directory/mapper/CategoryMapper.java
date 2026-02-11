@@ -11,6 +11,7 @@ import org.mapstruct.Mapping;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Objects;
 
 @Mapper(
         // Specifies that the mapper should be a Spring bean.
@@ -36,7 +37,7 @@ public interface CategoryMapper {
         CategoryEntity entity = new CategoryEntity();
         entity.setName(request.name());
         entity.setDescription(request.description() == null ? "" : request.description());
-        entity.setActive(request.active() == null ? true : request.active());
+        entity.setActive(Objects.isNull(request.active()) ? true : request.active());
         entity.setCreatedDate(LocalDateTime.now());
         entity.setLastUpdate(LocalDateTime.now());
         if (request.categoryParentId() != null) {
