@@ -63,7 +63,7 @@
         <mockito.junit.jupiter.version>4.8.0</mockito.junit.jupiter.version>
         <mockito.version>5.14.2</mockito.version>
         <!--        Coverage and Sonar-->
-        <sonar.organization>prx</sonar.organization>
+        <sonar.organization>prx-dev</sonar.organization>
         <sonar.exclusions>**/*.xml,**/*Application.*,**/exceptions/*, **/util/*, **/config/*,**/config/**/*,
             **/mapper/*, **/*Test.*, **/cache/*, **/cache/domain/*, **/security/*, **/producer/*,**/interceptor/*
         </sonar.exclusions>
