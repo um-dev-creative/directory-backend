@@ -83,7 +83,7 @@ public interface UserApi {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "202", description = "User lastUpdate successfully",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                schema = @Schema(implementation = Void.class))),
+                schema = @Schema())),
         @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content),
         @ApiResponse(responseCode = "404", description = "User not found", content = @Content)
     })

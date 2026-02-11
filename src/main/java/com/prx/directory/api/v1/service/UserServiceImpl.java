@@ -38,6 +38,7 @@ public class UserServiceImpl implements UserService {
     private static final String USERNAME_ALREADY_EXISTS = "Username {} already exists";
     private static final String EMAIL_ALREADY_EXISTS = "Email already exists";
     private static final String ERROR_CREATING_USER = "Error creating user";
+    private static final String ERROR_NOT_USER = "User not found";
     private static final int MAX_ALIAS_LENGTH = 12;
     private static final int MAX_ALIAS_TRY = 5;
 
@@ -145,14 +146,14 @@ public class UserServiceImpl implements UserService {
             try {
                 var existingUser = backboneClient.findUserById(userId);
                 if (existingUser == null) {
-                    logger.warn("User not found: {}", userId);
+                    logger.warn("{}: {}", ERROR_NOT_USER, userId);
                     return ResponseEntity.status(HttpStatus.NOT_FOUND)
                             .header(MESSAGE_HEADER, USER_NOT_FOUND_MESSAGE)
                             .build();
                 }
             } catch (FeignException e) {
                 if (e.status() == HttpStatus.NOT_FOUND.value()) {
-                    logger.warn("User not found: {}", userId);
+                    logger.warn("{}: {}", ERROR_NOT_USER, userId);
                     return ResponseEntity.status(HttpStatus.NOT_FOUND)
                             .header(MESSAGE_HEADER, USER_NOT_FOUND_MESSAGE)
                             .build();

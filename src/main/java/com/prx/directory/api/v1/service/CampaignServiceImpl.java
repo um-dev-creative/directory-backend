@@ -143,12 +143,11 @@ public class CampaignServiceImpl implements CampaignService {
             // Compute counts for root-level distribution fields
             LocalDateTime now = LocalDateTime.now();
             // Use the same specification with additional predicates so counts respect filters
-            Specification<CampaignEntity> activesSpec = Specification.where(spec)
-                    .and((root, query, cb) -> cb.equal(root.get("status"), "ACTIVE"));
-            Specification<CampaignEntity> inactivesSpec = Specification.where(spec)
-                    .and((root, query, cb) -> cb.equal(root.get("status"), "INACTIVE"));
-            Specification<CampaignEntity> expiredSpec = Specification.where(spec)
-                    .and((root, query, cb) -> cb.lessThan(root.get("endDate"), now));
+            // CampaignSpecifications.byFilters always returns a non-null Specification, so build
+            // derived specifications by directly calling spec.and(...).
+            Specification<CampaignEntity> activesSpec = spec.and((root, query, cb) -> cb.equal(root.get("status"), "ACTIVE"));
+            Specification<CampaignEntity> inactivesSpec = spec.and((root, query, cb) -> cb.equal(root.get("status"), "INACTIVE"));
+            Specification<CampaignEntity> expiredSpec = spec.and((root, query, cb) -> cb.lessThan(root.get("endDate"), now));
 
             long actives = campaignRepository.count(activesSpec);
             long inactives = campaignRepository.count(inactivesSpec);
