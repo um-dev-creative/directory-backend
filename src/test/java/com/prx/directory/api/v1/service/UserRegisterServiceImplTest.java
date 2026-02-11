@@ -11,6 +11,7 @@ import com.prx.security.to.AuthRequest;
 import feign.FeignException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -39,6 +40,7 @@ class UserRegisterServiceImplTest {
     }
 
     @Test
+    @DisplayName("confirmCode: success returns 200")
     void confirmCode_success() {
         UUID userId = UUID.randomUUID();
         var userResp = new BackboneUserGetResponse(userId, "alias","pass","email","disp", LocalDateTime.now(), LocalDateTime.now(),true,true,true,true,null, List.of(), List.of());
@@ -56,6 +58,7 @@ class UserRegisterServiceImplTest {
     }
 
     @Test
+    @DisplayName("confirmCode: Feign error propagates status and headers")
     void confirmCode_feignErrorPropagatesStatusAndHeader() {
         UUID userId = UUID.randomUUID();
         var userResp = new BackboneUserGetResponse(userId, "alias","pass","email","disp", LocalDateTime.now(), LocalDateTime.now(),true,true,true,true,null, List.of(), List.of());

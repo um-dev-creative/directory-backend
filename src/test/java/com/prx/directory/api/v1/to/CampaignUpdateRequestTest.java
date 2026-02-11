@@ -7,6 +7,7 @@ import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -31,6 +32,7 @@ class CampaignUpdateRequestTest {
     }
 
     @Test
+    @DisplayName("CampaignUpdateRequest: null fields produce no violations and start<=end true")
     void validRequest_noViolations() {
         CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, null, null, null, null, null, null, null, null);
         Set<ConstraintViolation<CampaignUpdateRequest>> violations = validator.validate(req);
@@ -39,6 +41,7 @@ class CampaignUpdateRequestTest {
     }
 
     @Test
+    @DisplayName("CampaignUpdateRequest: name too long causes violation")
     void nameTooLong_causesViolation() {
         String longName = "x".repeat(121);
         CampaignUpdateRequest req = new CampaignUpdateRequest(longName, null, null, null, null, null, null, null, null, null);
@@ -49,6 +52,7 @@ class CampaignUpdateRequestTest {
     }
 
     @Test
+    @DisplayName("CampaignUpdateRequest: description too long causes violation")
     void descriptionTooLong_causesViolation() {
         String longDesc = "x".repeat(1201);
         CampaignUpdateRequest req = new CampaignUpdateRequest(null, longDesc, null, null, null, null, null, null, null, null);
@@ -59,6 +63,7 @@ class CampaignUpdateRequestTest {
     }
 
     @Test
+    @DisplayName("CampaignUpdateRequest: start after end fails validation and method")
     void startAfterEnd_methodAndValidationFail() {
         LocalDateTime start = LocalDateTime.parse("2025-11-10T00:00:00");
         LocalDateTime end = LocalDateTime.parse("2025-11-02T00:00:00");
@@ -75,6 +80,7 @@ class CampaignUpdateRequestTest {
     }
 
     @Test
+    @DisplayName("CampaignUpdateRequest: start equals end passes validation and method")
     void startEqualsEnd_methodAndValidationPass() {
         LocalDateTime localDateTime = LocalDateTime.parse("2025-11-02T00:00:00");
         CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, localDateTime, localDateTime, null, null, null, null, null, null);
@@ -84,6 +90,7 @@ class CampaignUpdateRequestTest {
     }
 
     @Test
+    @DisplayName("CampaignUpdateRequest: start before end passes validation and method")
     void startBeforeEnd_methodAndValidationPass() {
         LocalDateTime start = LocalDateTime.parse("2025-11-01T00:00:00");
         LocalDateTime end = LocalDateTime.parse("2025-11-02T00:00:00");
@@ -94,6 +101,7 @@ class CampaignUpdateRequestTest {
     }
 
     @Test
+    @DisplayName("CampaignUpdateRequest: null name and description allowed")
     void nullNameAndDescription_areAllowed() {
         CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, null, null, null, null, null, null, null, null);
         Set<ConstraintViolation<CampaignUpdateRequest>> violations = validator.validate(req);

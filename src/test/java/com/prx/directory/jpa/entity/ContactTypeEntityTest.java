@@ -5,6 +5,7 @@ import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -28,12 +29,14 @@ class ContactTypeEntityTest {
     }
 
     @Test
+    @DisplayName("ContactTypeEntity: default constructor sets active false")
     void defaultConstructor_setsActiveToFalse() {
         ContactTypeEntity entity = new ContactTypeEntity();
         assertFalse(entity.getActive());
     }
 
     @Test
+    @DisplayName("ContactTypeEntity: setters and getters work correctly")
     void settersAndGetters_workCorrectly() {
         ContactTypeEntity entity = new ContactTypeEntity();
         UUID id = UUID.randomUUID();
@@ -49,6 +52,7 @@ class ContactTypeEntityTest {
     }
 
     @Test
+    @DisplayName("ContactTypeEntity: validation fails when name is null")
     void validation_nullName_causesViolation() {
         ContactTypeEntity entity = new ContactTypeEntity();
         entity.setId(UUID.randomUUID());
@@ -61,6 +65,7 @@ class ContactTypeEntityTest {
     }
 
     @Test
+    @DisplayName("ContactTypeEntity: validation fails when name is too long")
     void validation_nameTooLong_causesViolation() {
         ContactTypeEntity entity = new ContactTypeEntity();
         entity.setId(UUID.randomUUID());
@@ -73,6 +78,7 @@ class ContactTypeEntityTest {
     }
 
     @Test
+    @DisplayName("ContactTypeEntity: validation fails when description too long")
     void validation_descriptionTooLong_causesViolation() {
         ContactTypeEntity entity = new ContactTypeEntity();
         entity.setId(UUID.randomUUID());
@@ -86,6 +92,7 @@ class ContactTypeEntityTest {
     }
 
     @Test
+    @DisplayName("ContactTypeEntity: valid entity has no violations")
     void validation_validEntity_noViolations() {
         ContactTypeEntity entity = new ContactTypeEntity();
         entity.setId(UUID.randomUUID());
@@ -98,6 +105,7 @@ class ContactTypeEntityTest {
     }
 
     @Test
+    @DisplayName("ContactTypeEntity: null description is allowed")
     void validation_nullDescription_isAllowed() {
         ContactTypeEntity entity = new ContactTypeEntity();
         entity.setId(UUID.randomUUID());
@@ -109,4 +117,3 @@ class ContactTypeEntityTest {
         assertTrue(violations.isEmpty());
     }
 }
-

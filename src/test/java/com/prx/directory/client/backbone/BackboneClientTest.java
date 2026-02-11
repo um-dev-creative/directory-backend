@@ -2,6 +2,7 @@ package com.prx.directory.client.backbone;
 
 import com.prx.directory.client.backbone.to.BackboneProfileImageRefResponse;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.mockito.Mock;
 import org.springframework.http.ResponseEntity;
 
@@ -17,6 +18,7 @@ class BackboneClientTest {
     private BackboneClient backboneClient;
 
     @Test
+    @DisplayName("BackboneClient: getProfileImageRef returns expected response")
     void testGetProfileImageRef() {
         UUID applicationId = UUID.randomUUID();
         ResponseEntity<BackboneProfileImageRefResponse> expectedReference = ResponseEntity.ok(new BackboneProfileImageRefResponse("imageRef123"));
