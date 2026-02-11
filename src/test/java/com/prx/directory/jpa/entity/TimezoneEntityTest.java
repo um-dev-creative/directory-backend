@@ -6,6 +6,7 @@ import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -30,12 +31,14 @@ class TimezoneEntityTest {
     }
 
     @Test
+    @DisplayName("TimezoneEntity: default constructor creates entity")
     void defaultConstructor_createsEntity() {
         TimezoneEntity entity = new TimezoneEntity();
         assertNotNull(entity);
     }
 
     @Test
+    @DisplayName("TimezoneEntity: setters and getters work correctly")
     void settersAndGetters_workCorrectly() {
         TimezoneEntity entity = new TimezoneEntity();
         UUID id = UUID.randomUUID();
@@ -58,6 +61,7 @@ class TimezoneEntityTest {
     }
 
     @Test
+    @DisplayName("TimezoneEntity: validation fails when name is null")
     void validation_nullName_causesViolation() {
         TimezoneEntity entity = new TimezoneEntity();
         entity.setId(UUID.randomUUID());
@@ -73,6 +77,7 @@ class TimezoneEntityTest {
     }
 
     @Test
+    @DisplayName("TimezoneEntity: validation fails when name too long")
     void validation_nameTooLong_causesViolation() {
         TimezoneEntity entity = new TimezoneEntity();
         entity.setId(UUID.randomUUID());
@@ -88,6 +93,7 @@ class TimezoneEntityTest {
     }
 
     @Test
+    @DisplayName("TimezoneEntity: validation fails when abbreviation too long")
     void validation_abbreviationTooLong_causesViolation() {
         TimezoneEntity entity = new TimezoneEntity();
         entity.setId(UUID.randomUUID());
@@ -103,6 +109,7 @@ class TimezoneEntityTest {
     }
 
     @Test
+    @DisplayName("TimezoneEntity: valid entity has no validation violations")
     void validation_validEntity_noViolations() {
         TimezoneEntity entity = new TimezoneEntity();
         entity.setId(UUID.randomUUID());
@@ -117,6 +124,7 @@ class TimezoneEntityTest {
     }
 
     @Test
+    @DisplayName("TimezoneEntity: validation fails when utcOffset is null")
     void validation_nullUtcOffset_causesViolation() {
         TimezoneEntity entity = new TimezoneEntity();
         entity.setId(UUID.randomUUID());

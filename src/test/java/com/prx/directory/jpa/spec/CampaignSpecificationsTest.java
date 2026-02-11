@@ -7,6 +7,7 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.data.jpa.domain.Specification;
@@ -22,6 +23,7 @@ import static org.mockito.Mockito.*;
 class CampaignSpecificationsTest {
 
     @Test
+    @DisplayName("byFilters: no filters returns non-null predicate and no ops")
     void byFilters_noFilters_callsAndOnly() {
         Specification<CampaignEntity> spec = CampaignSpecifications.byFilters(null, null, null, null);
 
@@ -43,6 +45,7 @@ class CampaignSpecificationsTest {
     }
 
     @Test
+    @DisplayName("byFilters: name provided invokes like")
     void byFilters_nameProvided_invokesLike() {
         String name = "CampaignName";
         Specification<CampaignEntity> spec = CampaignSpecifications.byFilters(name, null, null, null);
@@ -65,6 +68,7 @@ class CampaignSpecificationsTest {
     }
 
     @Test
+    @DisplayName("byFilters: blank name does not invoke like")
     void byFilters_nameBlank_noLike() {
         Specification<CampaignEntity> spec = CampaignSpecifications.byFilters("  ", null, null, null);
 
@@ -81,6 +85,7 @@ class CampaignSpecificationsTest {
     }
 
     @Test
+    @DisplayName("byFilters: category provided invokes in")
     void byFilters_categoryProvided_invokesIn() {
         UUID categoryId = UUID.randomUUID();
         Specification<CampaignEntity> spec = CampaignSpecifications.byFilters(null, categoryId, null, null);
@@ -103,6 +108,7 @@ class CampaignSpecificationsTest {
     }
 
     @Test
+    @DisplayName("byFilters: business provided invokes in")
     void byFilters_businessProvided_invokesIn() {
         UUID businessId = UUID.randomUUID();
         Specification<CampaignEntity> spec = CampaignSpecifications.byFilters(null, null, businessId, null);
@@ -125,6 +131,7 @@ class CampaignSpecificationsTest {
     }
 
     @Test
+    @DisplayName("byFilters: criteria active true invokes equal true")
     void byFilters_withCriteriaActive_invokesEqualTrue() {
         CampaignCriteria criteria = CampaignCriteria.of(Boolean.TRUE, null, null, null, null);
         Specification<CampaignEntity> spec = CampaignSpecifications.byFilters(null, null, null, criteria);
@@ -145,6 +152,7 @@ class CampaignSpecificationsTest {
     }
 
     @Test
+    @DisplayName("byFilters: criteria active false invokes equal false")
     void byFilters_withCriteriaActive_invokesEqualFalse() {
         CampaignCriteria criteria = CampaignCriteria.of(Boolean.FALSE, null, null, null, null);
         Specification<CampaignEntity> spec = CampaignSpecifications.byFilters(null, null, null, criteria);
@@ -165,6 +173,7 @@ class CampaignSpecificationsTest {
     }
 
     @Test
+    @DisplayName("byFilters: date ranges invoke date predicates twice each")
     void byFilters_withDateRanges_invokesDatePredicates() {
         LocalDateTime startFrom = LocalDateTime.parse("2025-11-01T00:00:00");
         LocalDateTime startTo = LocalDateTime.parse("2025-11-05T00:00:00");
@@ -197,6 +206,7 @@ class CampaignSpecificationsTest {
     }
 
     @Test
+    @DisplayName("byFilters: startFrom only invokes single greaterThanOrEqualTo")
     void byFilters_startFromOnly_invokesSingleGreater() {
         LocalDateTime startFrom = LocalDateTime.parse("2025-11-01T00:00:00");
         CampaignCriteria criteria = CampaignCriteria.of(null, startFrom, null, null, null);
@@ -216,6 +226,7 @@ class CampaignSpecificationsTest {
     }
 
     @Test
+    @DisplayName("byFilters: startTo only invokes single lessThanOrEqualTo")
     void byFilters_startToOnly_invokesSingleLess() {
         LocalDateTime startTo = LocalDateTime.parse("2025-11-05T00:00:00");
         CampaignCriteria criteria = CampaignCriteria.of(null, null, startTo, null, null);
@@ -235,6 +246,7 @@ class CampaignSpecificationsTest {
     }
 
     @Test
+    @DisplayName("byFilters: endFrom only invokes single greaterThanOrEqualTo")
     void byFilters_endFromOnly_invokesSingleGreater() {
         LocalDateTime endFrom = LocalDateTime.parse("2025-11-10T00:00:00");
         CampaignCriteria criteria = CampaignCriteria.of(null, null, null, endFrom, null);
@@ -254,6 +266,7 @@ class CampaignSpecificationsTest {
     }
 
     @Test
+    @DisplayName("byFilters: endTo only invokes single lessThanOrEqualTo")
     void byFilters_endToOnly_invokesSingleLess() {
         LocalDateTime endTo = LocalDateTime.parse("2025-11-15T00:00:00");
         CampaignCriteria criteria = CampaignCriteria.of(null, null, null, null, endTo);

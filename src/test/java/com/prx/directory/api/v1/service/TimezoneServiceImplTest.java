@@ -6,6 +6,7 @@ import com.prx.directory.jpa.entity.TimezoneEntity;
 import com.prx.directory.jpa.repository.TimezoneRepository;
 import com.prx.directory.mapper.TimezoneMapper;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import org.springframework.data.domain.Page;
@@ -47,6 +48,7 @@ class TimezoneServiceImplTest {
     }
 
     @Test
+    @DisplayName("TimezoneServiceImpl: pageable mapping returns expected total elements")
     void getTimezonesPageable_mapsEntities() {
         Page<TimezoneEntity> page = new PageImpl<>(List.of(sampleEntity()));
         when(repository.findAll(any(Pageable.class))).thenReturn(page);
@@ -56,6 +58,7 @@ class TimezoneServiceImplTest {
     }
 
     @Test
+    @DisplayName("TimezoneServiceImpl: findAll returns collection response")
     void findAll_returnsCollectionResponse() {
         when(repository.findAll()).thenReturn(List.of(sampleEntity()));
 

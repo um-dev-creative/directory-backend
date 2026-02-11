@@ -101,10 +101,11 @@ spring:
           jwk-set-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}${AUTH_CERT_URI}
   cloud:
     # The Spring Cloud Config specific configurations
-    #<><><><><><><><><><><><><><> VAULT <><><><><><><><><><><><><><>
+    #<><><><><><><><><><><><><><><> VAULT <><><><><><><><><><><><><><>
     vault:
+      enabled: ${VAULT_ENABLED}
       token: ${VAULT_TOKEN}
-      uri: ${VAULT_SERVER_URL}
+      uri: ${VAULT_SERVER_URI}
       kv:
         backend: PRX
         default-context: ${app.name}
