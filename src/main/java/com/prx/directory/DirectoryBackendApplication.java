@@ -2,13 +2,18 @@ package com.prx.directory;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 
-@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
+@EnableFeignClients(basePackages = "com.prx.directory.client")
+@SpringBootApplication(
+        scanBasePackages = {
+                "com.prx.commons.services",
+                "com.prx.directory",
+                "com.prx.security"
+        }
+)
 public class DirectoryBackendApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(DirectoryBackendApplication.class, args);
     }
-
 }

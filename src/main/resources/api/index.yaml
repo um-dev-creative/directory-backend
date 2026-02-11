@@ -1,0 +1,1178 @@
+openapi: 3.0.0
+info:
+  title: Directory Site Backend
+  version: 1.0.0
+  description: ''
+servers:
+  - url: '{{directoryUrl}}'
+paths:
+  /api/v1/auth/session-token:
+    post:
+      summary: Generate Session-Token
+      parameters:
+        - name: session-token-bkd
+          in: header
+          schema:
+            type: string
+          example: '{{backboneSessionToken}}'
+      responses:
+        '403':
+          description: Generate Token
+          headers:
+            WWW-Authenticate:
+              schema:
+                type: string
+              example: >-
+                Bearer error="insufficient_scope", error_description="The
+                request requires higher privileges than provided by the access
+                token.",
+                error_uri="https://tools.ietf.org/html/rfc6750#section-3.1"
+            X-Content-Type-Options:
+              schema:
+                type: string
+              example: nosniff
+            X-XSS-Protection:
+              schema:
+                type: integer
+              example: '0'
+            Cache-Control:
+              schema:
+                type: string
+              example: no-cache, no-store, max-age=0, must-revalidate
+            Pragma:
+              schema:
+                type: string
+              example: no-cache
+            Expires:
+              schema:
+                type: integer
+              example: '0'
+            Strict-Transport-Security:
+              schema:
+                type: string
+              example: max-age=31536000 ; includeSubDomains
+            X-Frame-Options:
+              schema:
+                type: string
+              example: DENY
+            Content-Length:
+              schema:
+                type: integer
+              example: '0'
+            Date:
+              schema:
+                type: string
+              example: Fri, 21 Feb 2025 10:57:06 GMT
+            Keep-Alive:
+              schema:
+                type: string
+              example: timeout=60
+            Connection:
+              schema:
+                type: string
+              example: keep-alive
+      tags:
+        - v1
+        - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                alias:
+                  type: string
+                password:
+                  type: string
+            example:
+              alias: amata290839
+              password: zPagoHGkBI+L+URuIehVGQ==
+  /api/v1/auth/token:
+    post:
+      summary: Generate Token Manual
+      parameters:
+        - name: session-token-bkd
+          in: header
+          schema:
+            type: string
+          example: >-
+            eyJhbGciOiJIUzI1NiJ9.eyJ1aWQiOiIxMjZjNDNkYi1hYzBiLTQ2MTAtYjMzMy0wMzgwNWQ5MDhjNTIiLCJmaXJzdG5hbWUiOiJCbHVlIiwicm9sZXMiOiJbMjgxZTc3ZGEtOGMwNi00MGQ5LWIyZWUtNmYxY2UyMzgyN2Q1XSIsImFsaWFzIjoiYmpheXMtNzA3NzMiLCJ0eXBlIjoic2Vzc2lvbi10b2tlbiIsImlhdCI6MTc0ODI5NzU5MCwianRpIjoiZmM2NTMyNzgtMmI4OS00ODNkLTk3YTYtMTE0N2Y1MDhkZDBkIiwibGFzdG5hbWUiOiJKYXlzIiwic3ViIjoiZWY3ZGExYTEtMzQyZC00NTQ2LTgwNjUtNjYzOGE1OTIyZTZjIiwiZXhwIjoxNzQ4Mjk3NTk3fQ.kJMgAt7ZYzrJqE0RmDoS2nqJuQKxa-leGN9sXNByP3U
+      responses:
+        '403':
+          description: Generate Token
+          headers:
+            WWW-Authenticate:
+              schema:
+                type: string
+              example: >-
+                Bearer error="insufficient_scope", error_description="The
+                request requires higher privileges than provided by the access
+                token.",
+                error_uri="https://tools.ietf.org/html/rfc6750#section-3.1"
+            X-Content-Type-Options:
+              schema:
+                type: string
+              example: nosniff
+            X-XSS-Protection:
+              schema:
+                type: integer
+              example: '0'
+            Cache-Control:
+              schema:
+                type: string
+              example: no-cache, no-store, max-age=0, must-revalidate
+            Pragma:
+              schema:
+                type: string
+              example: no-cache
+            Expires:
+              schema:
+                type: integer
+              example: '0'
+            Strict-Transport-Security:
+              schema:
+                type: string
+              example: max-age=31536000 ; includeSubDomains
+            X-Frame-Options:
+              schema:
+                type: string
+              example: DENY
+            Content-Length:
+              schema:
+                type: integer
+              example: '0'
+            Date:
+              schema:
+                type: string
+              example: Fri, 21 Feb 2025 10:57:06 GMT
+            Keep-Alive:
+              schema:
+                type: string
+              example: timeout=60
+            Connection:
+              schema:
+                type: string
+              example: keep-alive
+      tags:
+        - v1
+        - auth
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                alias:
+                  type: string
+                password:
+                  type: string
+            example:
+              alias: bjays-70773
+              password: zPagoHGkBI+L+URuIehVGQ==
+  /api/v1/businesses:
+    post:
+      summary: Create Business
+      parameters:
+        - name: session-token
+          in: header
+          schema:
+            type: string
+          example: '{{directorySessionTokenName}}'
+        - name: session-token-bkd
+          in: header
+          schema:
+            type: string
+          example: '{{backboneSessionToken}}'
+      responses: {}
+      tags:
+        - v1
+        - businesses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                categoryId:
+                  type: string
+                userId:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                customerServiceEmail:
+                  type: string
+                  format: email
+                orderManagementEmail:
+                  type: string
+                  format: email
+                website:
+                  type: string
+                  format: uri
+            example:
+              name: AADgC23sAq Business
+              description: This is an example business description.
+              categoryId: 3536c5be-e56a-4a22-8f3c-d36da4a86f61
+              userId: 4d411d6a-31ee-4a6d-8660-2d563bfd0d76
+              email: contact@example.com
+              customerServiceEmail: support@example.com
+              orderManagementEmail: orders@example.com
+              website: https://www.example.com
+  /api/v1/businesses/{businessId}:
+    get:
+      summary: Get Business by Id
+      parameters:
+        - name: session-token
+          in: header
+          schema:
+            type: string
+          example: '{{directorySessionTokenName}}'
+      responses: {}
+      tags:
+        - v1
+        - businesses
+    parameters:
+      - name: businessId
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 3c50b50b-d117-44f8-b350-b441518e11c9
+    delete:
+      summary: Delete Business by business Id and User Id
+      parameters:
+        - name: session-token
+          in: header
+          schema:
+            type: string
+          example: '{{directorySessionTokenName}}'
+      responses: {}
+      tags:
+        - v1
+        - businesses
+  /api/v1/businesses/user/{userId}:
+    get:
+      summary: Get Business collection by User Id
+      parameters:
+        - name: session-token
+          in: header
+          required: false
+          deprecated: false
+          schema: {}
+          example: '{{directorySessionTokenName}}'
+      responses: {}
+      tags:
+        - v1
+        - businesses
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 3171803c-bb08-4eb0-8821-b6ebe5948f48
+  /api/v1/businesses/1a24da99-78d0-4221-96fa-64aa79a47bd1:
+    patch:
+      summary: Update Business
+      parameters:
+        - name: session-token
+          in: header
+          required: false
+          deprecated: false
+          schema: {}
+          example: '{{directorySessionTokenName}}'
+        - name: session-token-bkd
+          in: header
+          required: false
+          deprecated: false
+          schema: {}
+          example: '{{backboneSessionToken}}'
+      responses: {}
+      tags:
+        - v1
+        - businesses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                categoryId:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                customerServiceEmail:
+                  type: string
+                  format: email
+                orderManagementEmail:
+                  type: string
+                  format: email
+                website:
+                  type: string
+            example:
+              name: El negocio 1
+              description: descripcion del negocio
+              categoryId: 3536c5be-e56a-4a22-8f3c-d36da4a86f61
+              email: elcorreo@dmain.com
+              customerServiceEmail: attention@dmain.com
+              orderManagementEmail: manager@dmain.com
+              website: www.midominio.com
+  /api/v1/campaigns:
+    post:
+      summary: Create Campaign
+      parameters:
+        - name: session-token
+          in: header
+          required: false
+          deprecated: false
+          schema: {}
+          example: '{{directorySessionTokenName}}'
+        - name: session-token-bkd
+          in: header
+          required: false
+          deprecated: false
+          schema: {}
+          example: '{{backboneSessionToken}}'
+      responses: {}
+      tags:
+        - v1
+        - campaings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                startDate:
+                  type: string
+                  format: style
+                endDate:
+                  type: string
+                categoryId:
+                  type: string
+                businessId:
+                  type: string
+                discount:
+                  type: number
+                terms:
+                  type: string
+                status:
+                  type: string
+                active:
+                  type: boolean
+            example:
+              title: A Big Deal
+              description: Gran campana
+              startDate: '2025-11-25T00:00:00'
+              endDate: '2025-12-31T23:59:59'
+              categoryId: 0492cf87-dee0-4710-a450-341bd112dea2
+              businessId: c2fc43b7-dd6e-42e0-bd1b-9c9e95545190
+              discount: 0.26
+              terms: Sin definir
+              status: ACTIVE
+              active: true
+    get:
+      summary: List Campaign
+      parameters:
+        - name: active
+          in: query
+          required: false
+          deprecated: false
+          schema: {}
+          example: 'true'
+        - name: per_page
+          in: query
+          required: false
+          deprecated: false
+          schema: {}
+          example: '10'
+        - name: session-token
+          in: header
+          required: false
+          deprecated: false
+          schema: {}
+          example: '{{directorySessionTokenName}}'
+        - name: session-token-bkd
+          in: header
+          required: false
+          deprecated: false
+          schema: {}
+          example: '{{backboneSessionToken}}'
+      responses: {}
+      tags:
+        - v1
+        - campaings
+  /api/v1/campaigns/64d0648d-a3ff-4fa6-83e1-649cea48bc09:
+    patch:
+      summary: Update Campaign
+      parameters:
+        - name: session-token
+          in: header
+          required: false
+          deprecated: false
+          schema: {}
+          example: '{{directorySessionTokenName}}'
+        - name: session-token-bkd
+          in: header
+          required: false
+          deprecated: false
+          schema: {}
+          example: '{{backboneSessionToken}}'
+      responses: {}
+      tags:
+        - v1
+        - campaings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                businessId:
+                  type: string
+                categoryId:
+                  type: string
+                startDate:
+                  type: string
+                  format: style
+                endDate:
+                  type: string
+                discount:
+                  type: integer
+                active:
+                  type: boolean
+                terms:
+                  type: string
+            example:
+              title: Octava oferta
+              description: Descripcion
+              businessId: 1a24da99-78d0-4221-96fa-64aa79a47bd1
+              categoryId: b1468341-1f30-463f-b22d-7d4a882fa870
+              startDate: '2025-11-25T00:00:00'
+              endDate: '2025-12-31T23:59:34'
+              discount: 55
+              active: true
+              terms: nuevos terminos y condiciones
+  /api/v1/campaigns/75980cb0-3515-48e4-95a6-4862daebfb3c:
+    get:
+      summary: Find Campaign
+      parameters:
+        - name: session-token
+          in: header
+          schema:
+            type: string
+          example: '{{directorySessionTokenName}}'
+        - name: session-token-bkd
+          in: header
+          schema:
+            type: string
+          example: '{{backboneSessionToken}}'
+      responses: {}
+      tags:
+        - v1
+        - campaings
+  /api/v1/categories:
+    post:
+      summary: Create Category
+      parameters:
+        - name: session-token
+          in: header
+          required: false
+          deprecated: false
+          schema: {}
+          example: '{{directorySessionTokenName}}'
+        - name: session-token-bkd
+          in: header
+          required: false
+          deprecated: false
+          schema: {}
+          example: '{{backboneSessionToken}}'
+      responses: {}
+      tags:
+        - v1
+        - categories
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                categoryParentId:
+                  type: string
+                lastUpdate:
+                  type: string
+                  format: style
+                createdDate:
+                  type: string
+                active:
+                  type: boolean
+            example:
+              name: Living Room Furniture x
+              description: Furniture for living rooms
+              categoryParentId: 2c483f40-8e5f-4e0d-8323-2189f29d8626
+              lastUpdate: '2025-06-26T00:09:07'
+              createdDate: '2025-06-26T00:09:07'
+              active: true
+    get:
+      summary: Get Categories
+      parameters:
+        - name: session-token
+          in: header
+          schema:
+            type: string
+          example: '{{directorySessionTokenName}}'
+        - name: session-token-bkd
+          in: header
+          schema:
+            type: string
+          example: '{{backboneSessionToken}}'
+      responses: {}
+      tags:
+        - v1
+        - categories
+  /api/v1/categories/{categoryId}:
+    get:
+      summary: Find Category by ID
+      parameters:
+        - name: session-token
+          in: header
+          schema:
+            type: string
+          example: '{{directorySessionTokenName}}'
+      responses: {}
+      tags:
+        - v1
+        - categories
+    parameters:
+      - name: categoryId
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 1d175fee-bc94-42d8-9362-79aa0475fe28
+  /api/v1/categories/parent/{parentId}:
+    get:
+      summary: Find Category by parent ID
+      parameters:
+        - name: session-token
+          in: header
+          required: false
+          deprecated: false
+          schema: {}
+          example: '{{directorySessionTokenName}}'
+        - name: session-token-bkd
+          in: header
+          required: false
+          deprecated: false
+          schema: {}
+          example: '{{backboneSessionToken}}'
+      responses: {}
+      tags:
+        - v1
+        - categories
+    parameters:
+      - name: parentId
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 0492cf87-dee0-4710-a450-341bd112dea2
+  /api/v1/digital-contact:
+    get:
+      summary: Get Digital Contact
+      parameters:
+        - name: page
+          in: query
+          required: false
+          deprecated: false
+          schema: {}
+          example: '0'
+        - name: size
+          in: query
+          required: false
+          deprecated: false
+          schema: {}
+          example: '10'
+        - name: session-token
+          in: header
+          schema:
+            type: string
+          example: '{{directorySessionTokenName}}'
+      responses: {}
+      tags:
+        - v1
+        - digital-contact
+  /api/v1/digital-contact/business/{businessId}:
+    get:
+      summary: Get Digital Contact By Business ID
+      parameters:
+        - name: session-token
+          in: header
+          schema:
+            type: string
+          example: '{{directorySessionTokenName}}'
+      responses: {}
+      tags:
+        - v1
+        - digital-contact
+    parameters:
+      - name: businessId
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 1a24da99-78d0-4221-96fa-64aa79a47bd1
+  /api/v1/digital-contact/{digitalContactId}:
+    get:
+      summary: Get Digital Contact By ID
+      parameters:
+        - name: session-token
+          in: header
+          schema:
+            type: string
+          example: '{{directorySessionTokenName}}'
+      responses: {}
+      tags:
+        - v1
+        - digital-contact
+    parameters:
+      - name: digitalContactId
+        in: path
+        required: true
+        schema:
+          type: string
+        example: fe5e185c-5525-4155-b361-ce6960525b16
+  /api/v1/favorites:
+    post:
+      summary: Create Favorite
+      parameters:
+        - name: session-token
+          in: header
+          schema:
+            type: string
+          example: '{{directorySessionTokenName}}'
+        - name: session-token-bkd
+          in: header
+          schema:
+            type: string
+          example: '{{backboneSessionToken}}'
+      responses: {}
+      tags:
+        - v1
+        - favorites
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                itemId:
+                  type: string
+            example:
+              type: PRODUCT
+              itemId: d6919c8c-dc11-4280-a09a-6c3af3fdc443
+    get:
+      summary: Find Favorites by User ID, Type and itemId
+      parameters:
+        - name: session-token
+          in: header
+          schema:
+            type: string
+          example: '{{directorySessionTokenName}}'
+      responses: {}
+      tags:
+        - v1
+        - favorites
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+  /api/v1/favorites/016870b0-b5eb-42aa-ad6d-6ae2a0145cd9:
+    patch:
+      summary: Update Favorite
+      parameters:
+        - name: session-token
+          in: header
+          required: false
+          deprecated: false
+          schema: {}
+          example: '{{directorySessionTokenName}}'
+        - name: session-token-bkd
+          in: header
+          required: false
+          deprecated: false
+          schema: {}
+          example: '{{backboneSessionToken}}'
+      responses: {}
+      tags:
+        - v1
+        - favorites
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                active:
+                  type: boolean
+            example:
+              id: 016870b0-b5eb-42aa-ad6d-6ae2a0145cd9
+              active: false
+  /api/v1/products:
+    post:
+      summary: Create Product
+      parameters:
+        - name: session-token
+          in: header
+          required: false
+          deprecated: false
+          schema: {}
+          example: '{{directorySessionTokenName}}'
+        - name: session-token-bkd
+          in: header
+          required: false
+          deprecated: false
+          schema: {}
+          example: '{{backboneSessionToken}}'
+      responses: {}
+      tags:
+        - v1
+        - products
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                categoryId:
+                  nullable: true
+            example:
+              name: Example Product AAZ
+              description: This is an example product description.
+              categoryId: null
+  /api/v1/products/link:
+    post:
+      summary: Link Product and Business
+      parameters:
+        - name: session-token
+          in: header
+          schema:
+            type: string
+          example: '{{directorySessionTokenName}}'
+        - name: session-token-bkd
+          in: header
+          schema:
+            type: string
+          example: '{{backboneSessionToken}}'
+      responses: {}
+      tags:
+        - v1
+        - products
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                businessId:
+                  type: string
+                productId:
+                  type: string
+            example:
+              businessId: a596b01f-9229-4698-9335-5cc4d0e0dea1
+              productId: 6c60cb1f-66c1-48cf-b936-310e2abc4907
+  /api/v1/profile/image:
+    post:
+      summary: Save Profile Image
+      parameters:
+        - name: session-token
+          in: header
+          schema:
+            type: string
+          example: '{{directorySessionTokenName}}'
+      responses: {}
+      tags:
+        - v1
+        - profile-image
+  /api/v1/timezones:
+    get:
+      summary: get timezone
+      parameters:
+        - name: q
+          in: query
+          required: false
+          deprecated: false
+          schema: {}
+          example: CST
+        - name: page
+          in: query
+          required: false
+          deprecated: false
+          schema: {}
+          example: '0'
+        - name: size
+          in: query
+          required: false
+          deprecated: false
+          schema: {}
+          example: '5'
+        - name: session-token
+          in: header
+          schema:
+            type: string
+          example: '{{directorySessionTokenName}}'
+      responses: {}
+      tags:
+        - v1
+        - timezone
+  /api/v1/timezones/all:
+    get:
+      summary: get timezone all
+      parameters:
+        - name: session-token
+          in: header
+          schema:
+            type: string
+          example: '{{directorySessionTokenName}}'
+      responses: {}
+      tags:
+        - v1
+        - timezone
+  /api/v1/users:
+    post:
+      summary: Create User
+      parameters:
+        - name: session-token
+          in: header
+          schema:
+            type: string
+          example: '{{directorySessionTokenName}}'
+        - name: session-token-bkd
+          in: header
+          schema:
+            type: string
+          example: '{{backboneSessionToken}}'
+      responses: {}
+      tags:
+        - v1
+        - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                firstname:
+                  type: string
+                lastname:
+                  type: string
+                dateOfBirth:
+                  type: string
+                  format: date
+                phoneNumber:
+                  type: string
+                  format: utc-millisec
+                displayName:
+                  type: string
+                notificationSms:
+                  type: boolean
+                notificationEmail:
+                  type: boolean
+                privacyDataOutActive:
+                  type: boolean
+            example:
+              password: shireRingBearer123
+              email: luis.mata@icloud.com
+              firstname: Gandalf
+              lastname: Gray
+              dateOfBirth: '1989-02-23'
+              phoneNumber: '+1234567890'
+              displayName: The Gray
+              notificationSms: true
+              notificationEmail: true
+              privacyDataOutActive: false
+  /api/v1/users/{userId}:
+    get:
+      summary: Find User by ID
+      parameters:
+        - name: session-token
+          in: header
+          schema:
+            type: string
+          example: '{{directorySessionTokenName}}'
+      responses:
+        '200':
+          description: Find User by ID
+          headers:
+            X-Content-Type-Options:
+              schema:
+                type: string
+              example: nosniff
+            X-XSS-Protection:
+              schema:
+                type: integer
+              example: '0'
+            Cache-Control:
+              schema:
+                type: string
+              example: no-cache, no-store, max-age=0, must-revalidate
+            Pragma:
+              schema:
+                type: string
+              example: no-cache
+            Expires:
+              schema:
+                type: integer
+              example: '0'
+            Strict-Transport-Security:
+              schema:
+                type: string
+              example: max-age=31536000 ; includeSubDomains
+            X-Frame-Options:
+              schema:
+                type: string
+              example: DENY
+            Transfer-Encoding:
+              schema:
+                type: string
+              example: chunked
+            Date:
+              schema:
+                type: string
+              example: Fri, 25 Jul 2025 01:30:17 GMT
+            Keep-Alive:
+              schema:
+                type: string
+              example: timeout=60
+            Connection:
+              schema:
+                type: string
+              example: keep-alive
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  alias:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+                  firstName:
+                    type: string
+                  middleName:
+                    type: string
+                  lastName:
+                    type: string
+                  displayName:
+                    type: string
+                  profileImageRef:
+                    type: string
+                  phoneId:
+                    type: string
+                  phoneNumber:
+                    type: string
+                    format: phone
+                  dateOfBirth:
+                    type: string
+                    format: date
+                  createdAt:
+                    type: string
+                    format: style
+                  updatedAt:
+                    type: string
+                  notificationEmail:
+                    type: boolean
+                  notificationSms:
+                    type: boolean
+                  privacyDataOutActive:
+                    type: boolean
+                  status:
+                    type: boolean
+                  roleId:
+                    type: string
+                  applicationId:
+                    type: string
+              example:
+                id: 3171803c-bb08-4eb0-8821-b6ebe5948f48
+                alias: fbaggins-20
+                email: lantmata@gmail.com
+                firstName: Frodo
+                middleName: ''
+                lastName: Baggins
+                displayName: Frodo Baggins
+                profileImageRef: LTHB/3171803c-bb08-4eb0-8821-b6ebe5948f48-250723104035.jpg
+                phoneId: e24cb175-e595-4eeb-b7b0-95c94c40a195
+                phoneNumber: +1 416 858 0487
+                dateOfBirth: '1999-02-12'
+                createdAt: '2025-07-17 00:59:33'
+                updatedAt: '2025-07-23 06:20:14'
+                notificationEmail: true
+                notificationSms: true
+                privacyDataOutActive: true
+                status: true
+                roleId: 9a232260-a2e3-4990-b062-b6966efb25f8
+                applicationId: c9291036-fd71-4f2b-9986-2c5d4e5a0f8b
+      tags:
+        - v1
+        - users
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 50a856bd-8706-4de2-b4bb-e44b932191d7
+    put:
+      summary: DS-partial-update
+      parameters:
+        - name: userId
+          in: query
+          required: false
+          deprecated: false
+          schema: {}
+          example: 4d411d6a-31ee-4a6d-8660-2d563bfd0d76
+        - name: session-token
+          in: header
+          schema:
+            type: string
+          example: '{{directorySessionTokenName}}'
+      responses: {}
+      tags:
+        - v1
+        - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                displayName:
+                  type: string
+                notificationEmail:
+                  type: boolean
+                notificationSms:
+                  type: boolean
+                privacyDataOutActive:
+                  type: boolean
+                phoneId:
+                  type: string
+                phoneNumber:
+                  type: string
+                  format: utc-millisec
+                roleIds:
+                  type: array
+                  items:
+                    type: string
+                active:
+                  type: string
+            example:
+              firstName: Gandalf
+              lastName: Gray
+              displayName: The Grayman
+              notificationEmail: true
+              notificationSms: true
+              privacyDataOutActive: false
+              phoneId: 290f1f94-d739-4c6d-900a-9e255608325e
+              phoneNumber: '+1234567890'
+              roleIds:
+                - 281e77da-8c06-40d9-b2ee-6f1ce23827d5
+              active: 'true'
+    delete:
+      summary: Delete User by Application
+      parameters:
+        - name: session-token
+          in: header
+          schema:
+            type: string
+          example: '{{directorySessionTokenName}}'
+        - name: session-token-bkd
+          in: header
+          schema:
+            type: string
+          example: '{{backboneSessionToken}}'
+      responses: {}
+      tags:
+        - v1
+        - users
+  /api/v1/user-register:
+    post:
+      summary: user-register
+      parameters:
+        - name: session-token
+          in: header
+          schema:
+            type: string
+          example: '{{directorySessionTokenName}}'
+        - name: session-token-bkd
+          in: header
+          schema:
+            type: string
+          example: '{{backboneSessionToken}}'
+      responses: {}
+      tags:
+        - v1
+        - user-register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                verificationCode:
+                  type: string
+            example:
+              userId: 6da59e82-77b4-4e25-a711-d9072c29fa5e
+              verificationCode: 2078-8657
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+security:
+  - BearerAuth: []

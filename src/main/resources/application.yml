@@ -1,8 +1,0 @@
-prx:
-  logging:
-    trace:
-      enabled: true
-
-spring:
-  server:
-    port: 8080
