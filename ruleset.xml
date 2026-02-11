@@ -24,10 +24,8 @@
     <rule ref="category/java/bestpractices.xml/AvoidStringBufferField"/>
     <rule ref="category/java/bestpractices.xml/CheckResultSet"/>
     <rule ref="category/java/bestpractices.xml/ConstantsInInterface"/>
-    <rule ref="category/java/bestpractices.xml/DefaultLabelNotLastInSwitchStmt"/>
     <rule ref="category/java/bestpractices.xml/OneDeclarationPerLine"/>
     <rule ref="category/java/bestpractices.xml/PreserveStackTrace"/>
-    <rule ref="category/java/bestpractices.xml/SwitchStmtsShouldHaveDefault"/>
     <rule ref="category/java/bestpractices.xml/UseCollectionIsEmpty"/>
     <rule ref="category/java/bestpractices.xml/UnusedFormalParameter"/>
     <rule ref="category/java/bestpractices.xml/UnusedLocalVariable"/>
@@ -46,7 +44,6 @@
     <rule ref="category/java/codestyle.xml/ForLoopShouldBeWhileLoop"/>
     <rule ref="category/java/codestyle.xml/TooManyStaticImports"/>
     <rule ref="category/java/codestyle.xml/UnnecessaryFullyQualifiedName"/>
-    <rule ref="category/java/codestyle.xml/UnnecessaryLocalBeforeReturn"/>
     <rule ref="category/java/codestyle.xml/UnnecessaryModifier"/>
     <rule ref="category/java/codestyle.xml/UnnecessaryReturn"/>
     <rule ref="category/java/codestyle.xml/UselessParentheses"/>
@@ -96,7 +93,6 @@
     <rule ref="category/java/errorprone.xml/JumbledIncrementer"/>
     <rule ref="category/java/errorprone.xml/MisplacedNullCheck"/>
     <rule ref="category/java/errorprone.xml/MissingStaticMethodInNonInstantiatableClass"/>
-    <rule ref="category/java/errorprone.xml/NonCaseLabelInSwitchStatement"/>
     <rule ref="category/java/errorprone.xml/NonStaticInitializer"/>
     <rule ref="category/java/errorprone.xml/NullAssignment"/>
     <rule ref="category/java/errorprone.xml/OverrideBothEqualsAndHashcode"/>
@@ -112,7 +108,6 @@
     <rule ref="category/java/errorprone.xml/UnnecessaryConversionTemporary"/>
     <rule ref="category/java/errorprone.xml/UnusedNullCheckInEquals"/>
     <rule ref="category/java/errorprone.xml/UseEqualsToCompareStrings"/>
-    <rule ref="category/java/errorprone.xml/UselessOperationOnImmutable"/>
     <rule ref="category/java/multithreading.xml/AvoidSynchronizedAtMethodLevel"/>
     <rule ref="category/java/multithreading.xml/AvoidUsingVolatile"/>
     <rule ref="category/java/multithreading.xml/DontCallThreadRun"/>
@@ -130,7 +125,6 @@
     <rule ref="category/java/performance.xml/OptimizableToArrayCall"/>
     <rule ref="category/java/performance.xml/StringInstantiation"/>
     <rule ref="category/java/performance.xml/StringToString"/>
-    <rule ref="category/java/performance.xml/TooFewBranchesForASwitchStatement"/>
     <rule ref="category/java/performance.xml/UseIndexOfChar"/>
     <rule ref="category/java/performance.xml/UselessStringValueOf"/>
     <rule ref="category/java/performance.xml/UseStringBufferLength"/>

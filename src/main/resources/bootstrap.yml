@@ -1,0 +1,150 @@
+# This is the main configuration file for the application.
+# It uses the YAML format for easier readability and nested configuration.
+
+# Application specific configurations
+prx:
+  logging:
+    trace:
+      enabled: ${LOGGING_TRACE_ENABLED}
+  jwt:
+    secret: ${APP_TOKEN_SECRET}
+    expirationMs: ${APP_TOKEN_EXPIRATION}
+  auth:
+    clients:
+      - id: backbone
+        authorization-grant-type: ${BACKBONE_GRANT_TYPE}
+        scope: ${BACKBONE_SCOPE}
+        client-secret: ${BACKBONE_CLIENT_SECRET}
+        client-id: ${BACKBONE_CLIENT_ID}
+        redirect-uri: ${AUTH_SERVER_URI}${AUTH_TOKEN_URI}
+        username: ${BACKBONE_USERNAME}
+        password: ${BACKBONE_PASSWORD}
+      - id: mercury
+        authorization-grant-type: ${MERCURY_GRANT_TYPE}
+        scope: ${MERCURY_SCOPE}
+        client-secret: ${MERCURY_CLIENT_SECRET}
+        client-id: ${MERCURY_CLIENT_ID}
+        redirect-uri: ${AUTH_SERVER_URI}${AUTH_TOKEN_URI}
+        username: ${MERCURY_USERNAME}
+        password: ${MERCURY_PASSWORD}
+app:
+  clientRoles: ${AUTH_ROLE_ID}
+  # The name of the application
+  name: directory-backend
+  # The version of the application
+  version: 0.0.1
+# Spring Boot specific configurations
+# Server specific configurations
+server:
+  port: ${APP_PORT}
+  ssl:
+    # Enables SSL for the server
+    enabled: true
+    # The SSL bundle for the server
+    bundle: directory-security
+    enabled-protocols: TLSv1.3
+    compression:
+      enabled: true
+      mime-types: text/html,text/xml,text/plain,text/css,application/json
+      min-response-size: 1024
+
+spring:
+  ssl:
+    bundle:
+      jks:
+        directory-security:
+          keystore:
+            location: classpath:${SSL_KEYSTORE_LOCATION}
+            password: ${SSL_KEYSTORE_PASSWORD}
+            type: ${SSL_KEYSTORE_TYPE}
+          truststore:
+            location: classpath:${SSL_TRUSTSTORE_LOCATION}
+            password: ${SSL_TRUSTSTORE_PASSWORD}
+            type: ${SSL_TRUSTSTORE_TYPE}
+  mvc:
+    throw-exception-if-no-handler-found: true
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration
+  mustache:
+    check-template-location: false
+  test:
+    context:
+      failure:
+        threshold: 10000000
+  main:
+    # Allows overriding of bean definitions
+    allow-bean-definition-overriding: true
+  profiles:
+    active: ${SPRING_BOOT_PROFILE_ACTIVE}
+  application:
+    # The name of the Spring Boot application, taken from the app.name property
+    name: ${app.name}
+  security:
+    # Disables the security for the Spring Boot application
+    oauth2:
+      clientRegistrationId: directory-backend-client
+      client:
+        registration:
+          external:
+            provider: external
+            client-id: ${AUTH_CLIENT_ID}
+            client-secret: ${AUTH_CLIENT_SECRET}
+            scope: profile directory-backend-app-scope openid
+            authorization-grant-type: password
+        provider:
+          external:
+            issuer-uri: ${AUTH_SERVER_URI}
+            jwk-set-uri: ${spring.security.oauth2.client.provider.external.issuer-uri}/protocol/openid-connect/certs
+      resourceserver:
+        jwt:
+          issuer-uri: ${AUTH_SERVER_URI}
+          jwk-set-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}${AUTH_CERT_URI}
+  cloud:
+    # The Spring Cloud Config specific configurations
+    #<><><><><><><><><><><><><><><> VAULT <><><><><><><><><><><><><><>
+    vault:
+      enabled: ${VAULT_ENABLED}
+      token: ${VAULT_TOKEN}
+      uri: ${VAULT_SERVER_URI}
+      kv:
+        backend: PRX
+        default-context: ${app.name}
+      application-name: ${app.name}
+    bootstrap:
+      # Enables the Spring Cloud Bootstrap application context
+      enabled: ${SPRING_BOOT_CLOUD_BOOTSTRAP_ENABLED}
+    # The active profile for the Spring Cloud Config
+    profile: ${SPRING_BOOT_PROFILE_ACTIVE}
+    config:
+      # The active profile for the Spring Cloud Config
+      profile: ${SPRING_BOOT_PROFILE_ACTIVE}
+      # The label for the Spring Cloud Config
+      label: ${SPRING_CLOUD_CONFIG_LABEL}
+      # The URI for the Spring Cloud Config server
+      uri: ${CNFS_URI}
+      port: ${CNFS_PORT}
+      # Enables sending of state for the Spring Cloud Config
+      send-state: true
+  jpa:
+    properties:
+      hibernate:
+        boot:
+          allow_jdbc_metadata_access: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+    # Defers the initialization of the datasource
+    defer-datasource-initialization: true
+
+swagger:
+  base-package: 'com.prx.directory.api.v1.controller'
+  api-info:
+    title: ${app.name}
+    version: ${app.version}
+    description: ${app.description}
+    contact:
+      name: 'Luis Antonio Mata'
+      url: 'www.prx.test'
+      email: 'luis.antonio.mata@gmail.com'
+    cache:
+      disabled: true
