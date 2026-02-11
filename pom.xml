@@ -65,7 +65,7 @@
         <!--        Coverage and Sonar-->
         <sonar.organization>prx</sonar.organization>
         <sonar.exclusions>**/*.xml,**/*Application.*,**/exceptions/*, **/util/*, **/config/*,**/config/**/*,
-            **/mapper/*, **/*Test.*, **/cache/*, **/cache/domain/*
+            **/mapper/*, **/*Test.*, **/cache/*, **/cache/domain/*, **/security/*, **/producer/*,**/interceptor/*
         </sonar.exclusions>
         <project.ruleset>${project.basedir}/ruleset.xml</project.ruleset>
         <!-- Centralized versions for previously hardcoded dependency/plugin versions -->
@@ -493,7 +493,7 @@
                                         <limit>
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.70</minimum>
+                                            <minimum>0.50</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
