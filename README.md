@@ -70,17 +70,17 @@ Configuration
 
 Tech stack and versions
 -----------------------
-| Technology |           Version | Source |
-|---|------------------:|---|
-| Docker (base image) | amazoncorretto:25-alpine3.22 | `Dockerfile` (FROM) |
-| Java |                21 | `pom.xml`: `<properties>` (`java.version`) |
-| JaCoCo |           0.8.14 | `pom.xml`: `<properties>` (`maven.plugin.jacoco.version`) |
-| Kafka |         detected | `pom.xml`: `org.springframework.kafka:spring-kafka` dependency |
-| Maven |             detected | `pom.xml` present |
-| PostgreSQL |            42.7.7 | `pom.xml`: `<properties>` (`postgresql.version`) and `dependencyManagement` |
-| Spring Boot |             3.5.8 | `pom.xml`: `<parent>` |
-| Spring Cloud |          2025.0.1 | `pom.xml`: `<properties>` (`spring-cloud.version`) |
-| Vault |            detected | `default.env` (VAULT_ENABLED) |
+| Technology |                      Version | Source |
+|---|-----------------------------:|---|
+| Docker (base image) | amazoncorretto:21-alpine3.23 | `Dockerfile` (FROM) |
+| Java |                           21 | `pom.xml`: `<properties>` (`java.version`) |
+| JaCoCo |                       0.8.14 | `pom.xml`: `<properties>` (`maven.plugin.jacoco.version`) |
+| Kafka |                     detected | `pom.xml`: `org.springframework.kafka:spring-kafka` dependency |
+| Maven |                     detected | `pom.xml` present |
+| PostgreSQL |                       42.7.7 | `pom.xml`: `<properties>` (`postgresql.version`) and `dependencyManagement` |
+| Spring Boot |                        3.5.8 | `pom.xml`: `<parent>` |
+| Spring Cloud |                     2025.0.1 | `pom.xml`: `<properties>` (`spring-cloud.version`) |
+| Vault |                     detected | `default.env` (VAULT_ENABLED) |
 
 Dependency & version management (short)
 ---------------------------------------
