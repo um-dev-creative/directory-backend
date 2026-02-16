@@ -4,7 +4,6 @@
 [![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=umdc-directory-backend&token=30babbee984be4a21f7e4627f90e80c5b47330fa)](https://sonarcloud.io/summary/new_code?id=umdc-directory-backend)
 
 [![Qodana](https://github.com/um-dev-creative/directory-backend/actions/workflows/qodana_code_quality.yml/badge.svg)](https://github.com/um-dev-creative/directory-backend/actions/workflows/qodana_code_quality.yml)
-
 ## Tech stack badges
 <!-- badges: start -->
 ![Java](https://img.shields.io/badge/Java-21-blue?logo=java&style=flat-square)
@@ -76,7 +75,7 @@ Tech stack and versions
 | Java |                           21 | `pom.xml`: `<properties>` (`java.version`) |
 | JaCoCo |                       0.8.14 | `pom.xml`: `<properties>` (`maven.plugin.jacoco.version`) |
 | Kafka |                     detected | `pom.xml`: `org.springframework.kafka:spring-kafka` dependency |
-| Maven |                     detected | `pom.xml` present |
+| Maven |                        3.8.0 | `pom.xml` present |
 | PostgreSQL |                       42.7.7 | `pom.xml`: `<properties>` (`postgresql.version`) and `dependencyManagement` |
 | Spring Boot |                        3.5.8 | `pom.xml`: `<parent>` |
 | Spring Cloud |                     2025.0.1 | `pom.xml`: `<properties>` (`spring-cloud.version`) |
@@ -113,4 +112,4 @@ Acknowledgements
 - Project tooling: Maven, JaCoCo, PMD
 - Integrations: backbone, mercury (internal clients visible under `com.prx.directory.client.*`)
 
-End of README.
+[![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-light.svg)](https://sonarcloud.io/summary/new_code?id=umdc-directory-backend)

@@ -1,6 +1,7 @@
 # This is the main configuration file for the application.
 # It uses the YAML format for easier readability and nested configuration.
-
+log:
+  debug: ${LOGGING_TRACE_ENABLED}
 # Application specific configurations
 prx:
   logging:
