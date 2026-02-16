@@ -1,18 +1,22 @@
 # Directory Backend
+## Qodana and SonarCloud badges
 
-[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=prx-dev_directory-backend&token=30babbee984be4a21f7e4627f90e80c5b47330fa)](https://sonarcloud.io/summary/new_code?id=prx-dev_directory-backend)
+[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=umdc-directory-backend&token=30babbee984be4a21f7e4627f90e80c5b47330fa)](https://sonarcloud.io/summary/new_code?id=umdc-directory-backend)
 
+[![Qodana](https://github.com/um-dev-creative/directory-backend/actions/workflows/qodana_code_quality.yml/badge.svg)](https://github.com/um-dev-creative/directory-backend/actions/workflows/qodana_code_quality.yml)
+
+## Tech stack badges
 <!-- badges: start -->
 ![Java](https://img.shields.io/badge/Java-21-blue?logo=java&style=flat-square)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.8-brightgreen?logo=spring&style=flat-square)
 ![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2025.0.1-brightgreen?logo=spring&style=flat-square)
 [![Maven](https://img.shields.io/badge/Maven-%3E%3D%203.8.0-orange?logo=apachemaven&style=flat-square)](https://maven.apache.org/)
-[![JUnit](https://img.shields.io/badge/JUnit%20Jupiter-5.11.3-red?logo=junit5&style=flat-square)](https://junit.org/junit5/)
+[![JUnit](https://img.shields.io/badge/JUnit%20Jupiter-5.14.1-red?logo=junit5&style=flat-square)](https://junit.org/junit5/)
 [![JaCoCo](https://img.shields.io/badge/JaCoCo-0.8.14-yellow?logo=jacoco&style=flat-square)](https://www.jacoco.org/jacoco/)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-42.7.7-blue?logo=postgresql&style=flat-square)
-![Docker (base image)](https://img.shields.io/badge/Docker-amazoncorretto%3A25-blue?logo=docker&style=flat-square)
-![Vault](https://img.shields.io/badge/Vault-1.18.4-black?logo=hashicorp&style=flat-square)
-![Kafka](https://img.shields.io/badge/Kafka-3.9.0-orange?logo=apachekafka&style=flat-square)
+![Docker (base image)](https://img.shields.io/badge/Docker-amazoncorretto%3A21--alpine3.23-blue?logo=docker&style=flat-square)
+![Vault](https://img.shields.io/badge/Vault-detected-black?logo=hashicorp&style=flat-square)
+![Kafka](https://img.shields.io/badge/Kafka-detected-orange?logo=apachekafka&style=flat-square)
 <!-- badges: end -->
 
 Overview
@@ -66,16 +70,17 @@ Configuration
 
 Tech stack and versions
 -----------------------
-| Technology |           Version | Source |
-|---|------------------:|---|
-| Docker (base image) | amazoncorretto:25 | `Dockerfile` (FROM)
-| Java |                21 | `pom.xml`: `<properties>` (`java.version`)
-| Kafka |             3.9.0 | `pom.xml`: `org.springframework.kafka:spring-kafka` dependency
-| Maven |             3.8.0 | `pom.xml` present
-| PostgreSQL |            42.7.7 | `pom.xml`: `<properties>` (`postgresql.version`) and `dependencyManagement`
-| Spring Boot |             3.5.8 | `pom.xml`: `<parent>`
-| Spring Cloud |          2025.0.1 | `pom.xml`: `<properties>` (`spring-cloud.version`)
-| Vault |            1.18.4 | `default.env` / `bootstrap.yml` (VAULT_ENABLED / spring.cloud.vault)
+| Technology |                      Version | Source |
+|---|-----------------------------:|---|
+| Docker (base image) | amazoncorretto:21-alpine3.23 | `Dockerfile` (FROM) |
+| Java |                           21 | `pom.xml`: `<properties>` (`java.version`) |
+| JaCoCo |                       0.8.14 | `pom.xml`: `<properties>` (`maven.plugin.jacoco.version`) |
+| Kafka |                     detected | `pom.xml`: `org.springframework.kafka:spring-kafka` dependency |
+| Maven |                     detected | `pom.xml` present |
+| PostgreSQL |                       42.7.7 | `pom.xml`: `<properties>` (`postgresql.version`) and `dependencyManagement` |
+| Spring Boot |                        3.5.8 | `pom.xml`: `<parent>` |
+| Spring Cloud |                     2025.0.1 | `pom.xml`: `<properties>` (`spring-cloud.version`) |
+| Vault |                     detected | `default.env` (VAULT_ENABLED) |
 
 Dependency & version management (short)
 ---------------------------------------
