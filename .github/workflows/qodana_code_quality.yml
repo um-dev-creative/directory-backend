@@ -1,3 +1,8 @@
+#-------------------------------------------------------------------------------#
+#        Discover additional configuration options in our documentation         #
+#               https://www.jetbrains.com/help/qodana/github.html               #
+#-------------------------------------------------------------------------------#
+
 name: Qodana
 on:
   workflow_dispatch:
@@ -5,6 +10,7 @@ on:
   push:
     branches: # Specify your branches here
       - main # The 'main' branch
+      - development
       - 'releases/*' # The release branches
 
 jobs:
@@ -14,15 +20,36 @@ jobs:
       contents: write
       pull-requests: write
       checks: write
+      security-events: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4.3.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}  # to check out the actual pull request commit, not the merge commit
           fetch-depth: 0  # a full history is required for pull request analysis
-      - name: 'Qodana Scan'
-        uses: JetBrains/qodana-action@v2025.3
+      # Add Java setup
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
         with:
-          pr-mode: false
+          java-version: '21'
+          distribution: 'temurin'
+      - name: 'Qodana Scan'
+        uses: JetBrains/qodana-action@ffcb814413b72d889076d8ec78294c2d91e8ad27
         env:
           QODANA_TOKEN: ${{ secrets.QODANA_TOKEN_1669277291 }}
           QODANA_ENDPOINT: 'https://qodana.cloud'
+        with:
+          linter: qodana-jvm-community:2025.3
+          # When pr-mode is set to true, Qodana analyzes only the files that have been changed
+          pr-mode: false
+          use-caches: true
+          post-pr-comment: true
+          use-annotations: true
+          # Upload Qodana results (SARIF, other artifacts, logs) as an artifact to the job
+          upload-result: true
+          # quick-fixes available in Ultimate and Ultimate Plus plans
+          push-fixes: 'none'
+      - name: Ensure results directory exists
+        run: mkdir -p ../results
+      - uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: ${{ runner.temp }}/qodana/results/qodana.sarif.json

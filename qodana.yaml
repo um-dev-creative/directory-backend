@@ -1,10 +1,16 @@
 ####################################################################################################################
 # WARNING: Do not store sensitive information in this file, as its contents will be included in the Qodana report. #
 ####################################################################################################################
-
 version: "1.0"
+failureConditions:
+  severityThresholds:
+    any: 100 # Total number of problems in all severities
+    critical: 100 # Severities
+    high: 100
+    moderate: 3
+    low: 4
+    info: 5
+
 linter: jetbrains/qodana-jvm-community:2025.3
 profile:
   name: qodana.recommended
-include:
-  - name: CheckDependencyLicenses

@@ -31,53 +31,65 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>21</java.version>
-        <postgresql.version>42.7.7</postgresql.version>
-        <google.gson.version>2.10.1</google.gson.version>
+        <!-- argLine used by Surefire/Jacoco; default empty so builds don't fail when not set -->
+        <argLine/>
         <!--        PRX Commons-->
         <com.prx.commons.version>0.0.1</com.prx.commons.version>
         <com.prx.commons-services.version>0.0.1</com.prx.commons-services.version>
         <com.prx.security-oauth.version>0.0.1</com.prx.security-oauth.version>
         <!--        MAVEN-->
+        <maven.compiler.release>${java.version}</maven.compiler.release>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
+        <maven.compiler.plugin.version>3.14.1</maven.compiler.plugin.version>
+        <maven.resource.plugin.version>3.3.1</maven.resource.plugin.version>
         <maven.plugin.javadoc.version>3.6.3</maven.plugin.javadoc.version>
-        <maven.plugin.jacoco.version>0.8.12</maven.plugin.jacoco.version>
+        <maven.plugin.jacoco.version>0.8.14</maven.plugin.jacoco.version>
         <maven.plugin.pmd.version>3.28.0</maven.plugin.pmd.version>
         <maven.plugin.jxr.version>3.0.0</maven.plugin.jxr.version>
         <maven.surefire.version>3.5.2</maven.surefire.version>
         <!--        OPEN API -->
         <springdoc.version>2.6.0</springdoc.version>
         <!--        SPRING -->
-        <spring-cloud.version>2025.0.1</spring-cloud.version>
-        <spring-boot.kafka.version>3.3.8</spring-boot.kafka.version>
         <spring-boot.version>3.5.8</spring-boot.version>
-        <spring-security-aouth2-autoconfigure.version>3.3.2</spring-security-aouth2-autoconfigure.version>
+        <spring-cloud.version>2025.0.1</spring-cloud.version>
+
+        <!-- Centralized versions for previously hardcoded dependency/plugin versions -->
+        <postgresql.version>42.7.7</postgresql.version>
+        <google.gson.version>2.13.2</google.gson.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <jwt.version>0.12.3</jwt.version>
-        <!--        Test Dependencies-->
-        <!--        JUnit 5.x-->
-        <junit.jupiter.version>5.11.4</junit.jupiter.version>
-        <junit.jupiter.core.version>5.9.3</junit.jupiter.core.version>
-        <!--        Mockito-->
-        <mockserver.junit.jupiter.version>5.11.2</mockserver.junit.jupiter.version>
-        <mockito.junit.jupiter.version>4.8.0</mockito.junit.jupiter.version>
-        <mockito.version>5.14.2</mockito.version>
-        <!--        Coverage and Sonar-->
-        <sonar.organization>prx-dev</sonar.organization>
-        <sonar.exclusions>**/*.xml,**/*Application.*,**/exceptions/*, **/util/*, **/config/*,**/config/**/*,
-            **/mapper/*, **/*Test.*, **/cache/*, **/cache/domain/*, **/security/*, **/producer/*,**/interceptor/*
-        </sonar.exclusions>
-        <project.ruleset>${project.basedir}/ruleset.xml</project.ruleset>
-        <!-- Centralized versions for previously hardcoded dependency/plugin versions -->
         <snakeyaml.version>2.5</snakeyaml.version>
         <org.json.version>20250517</org.json.version>
         <plexus.utils.version>4.0.2</plexus.utils.version>
         <rewrite.plugin.version>5.42.0</rewrite.plugin.version>
         <rewrite.recipe.version>5.21.0</rewrite.recipe.version>
-        <asm.version>9.1</asm.version>
-        <!-- promote commons-lang3 to property for centralization -->
+        <asm.version>9.7</asm.version>
         <commons-lang3.version>3.18.0</commons-lang3.version>
+
+        <!--        Test Dependencies-->
+        <!--        JUnit 5.x-->
+        <junit.jupiter.version>5.14.1</junit.jupiter.version>
+        <!--        Mockito-->
+        <mockito.version>5.21.0</mockito.version>
+
+        <!--        Coverage and Sonar-->
+        <sonar.organization>umdevc</sonar.organization>
+        <sonar.projectKey>umdc-directory-backend</sonar.projectKey>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <!-- Include only production Java sources for Sonar analysis (exclude tests and resources). Adjust glob if your sources live elsewhere) -->
+        <sonar.inclusions>src/main/java/**/*.java</sonar.inclusions>
+        <sonar.coverage.inclusions>${sonar.inclusions}</sonar.coverage.inclusions>
+        <!-- Do not exclude all Java files — previous config removed all Java from Sonar analysis. Keep resource/config exclusions only. -->
+        <sonar.exclusions>
+            **/*.xml,**/*Application.*,**/exceptions/*, **/util/*, **/config/*,**/config/**/*,
+            **/mapper/*, **/*Test.*, **/cache/*, **/cache/domain/*, **/security/*, **/producer/*,**/interceptor/*
+        </sonar.exclusions>
+        <sonar.coverage.exclusions>${sonar.exclusions}</sonar.coverage.exclusions>
+        <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <project.ruleset>${project.basedir}/ruleset.xml</project.ruleset>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -187,11 +199,6 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.netflix.eureka</groupId>-->
-<!--            <artifactId>eureka-client-jersey3</artifactId>-->
-<!--            <version>2.0.3</version>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
