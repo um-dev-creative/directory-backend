@@ -14,7 +14,7 @@
 [![JUnit](https://img.shields.io/badge/JUnit%20Jupiter-5.14.1-red?logo=junit5&style=flat-square)](https://junit.org/junit5/)
 [![JaCoCo](https://img.shields.io/badge/JaCoCo-0.8.14-yellow?logo=jacoco&style=flat-square)](https://www.jacoco.org/jacoco/)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-42.7.7-blue?logo=postgresql&style=flat-square)
-![Docker (base image)](https://img.shields.io/badge/Docker-amazoncorretto%3A25--alpine3.22-blue?logo=docker&style=flat-square)
+![Docker (base image)](https://img.shields.io/badge/Docker-amazoncorretto%3A21--alpine3.23-blue?logo=docker&style=flat-square)
 ![Vault](https://img.shields.io/badge/Vault-detected-black?logo=hashicorp&style=flat-square)
 ![Kafka](https://img.shields.io/badge/Kafka-detected-orange?logo=apachekafka&style=flat-square)
 <!-- badges: end -->
