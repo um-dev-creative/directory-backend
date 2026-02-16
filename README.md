@@ -1,6 +1,9 @@
 # Directory Backend
 ## Qodana and SonarCloud badges
+
 [![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=umdc-directory-backend&token=30babbee984be4a21f7e4627f90e80c5b47330fa)](https://sonarcloud.io/summary/new_code?id=umdc-directory-backend)
+
+[![Qodana](https://github.com/um-dev-creative/directory-backend/actions/workflows/qodana_code_quality.yml/badge.svg)](https://github.com/um-dev-creative/directory-backend/actions/workflows/qodana_code_quality.yml)
 
 ## Tech stack badges
 <!-- badges: start -->
