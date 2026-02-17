@@ -1,11 +1,10 @@
 package com.prx.directory.api.v1.service;
 
-import com.prx.directory.api.v1.to.CampaignListResponse;
-import com.prx.directory.api.v1.to.CampaignTO;
-import com.prx.directory.api.v1.to.CampaignUpdateRequest;
-import com.prx.directory.api.v1.to.CampaignUpdateResponse;
+import com.prx.directory.api.v1.to.*;
 import com.prx.directory.constant.DirectoryAppConstants;
+import com.prx.directory.jpa.entity.BusinessEntity;
 import com.prx.directory.jpa.entity.CampaignEntity;
+import com.prx.directory.jpa.entity.CategoryEntity;
 import com.prx.directory.jpa.repository.BusinessRepository;
 import com.prx.directory.jpa.repository.CampaignRepository;
 import com.prx.directory.jpa.repository.CategoryRepository;
@@ -98,6 +97,7 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<CampaignListResponse> list(Integer page, Integer perPage, String sort, Map<String, String> filters) {
         int p = (Objects.isNull(page) || page < 1) ? DirectoryAppConstants.DEFAULT_PAGE : page;
         int pp = (Objects.isNull(perPage) || perPage < 1) ? DirectoryAppConstants.DEFAULT_PER_PAGE : perPage;
@@ -137,7 +137,7 @@ public class CampaignServiceImpl implements CampaignService {
                     .byFilters(name, categoryId, businessId, criteria);
             Page<CampaignEntity> result = campaignRepository.findAll(spec, pageable);
 
-            List<com.prx.directory.api.v1.to.CampaignResumeTO> items = result.getContent().stream().map(campaignMapper::toResumeTO)
+            List<CampaignResumeTO> items = result.getContent().stream().map(campaignMapper::toResumeTO)
                     .toList();
 
             // Compute counts for root-level distribution fields
@@ -281,7 +281,7 @@ public class CampaignServiceImpl implements CampaignService {
             if (!categoryRepository.existsById(request.categoryId())) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, DirectoryAppConstants.CATEGORY_NOT_FOUND);
             }
-            var categoryEntity = new com.prx.directory.jpa.entity.CategoryEntity();
+            var categoryEntity = new CategoryEntity();
             categoryEntity.setId(request.categoryId());
             existingCampaign.setCategoryFk(categoryEntity);
             updated = true;
@@ -292,7 +292,7 @@ public class CampaignServiceImpl implements CampaignService {
             if (!businessRepository.existsById(request.businessId())) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, DirectoryAppConstants.BUSINESS_NOT_FOUND);
             }
-            var businessEntity = new com.prx.directory.jpa.entity.BusinessEntity();
+            var businessEntity = new BusinessEntity();
             businessEntity.setId(request.businessId());
             existingCampaign.setBusinessFk(businessEntity);
             updated = true;

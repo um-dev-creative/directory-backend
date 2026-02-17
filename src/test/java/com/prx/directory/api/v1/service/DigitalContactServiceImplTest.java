@@ -5,6 +5,7 @@ import com.prx.directory.jpa.entity.DigitalContactEntity;
 import com.prx.directory.jpa.repository.DigitalContactRepository;
 import com.prx.directory.mapper.DigitalContactMapper;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import org.springframework.data.domain.Page;
@@ -21,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@DisplayName("DigitalContactServiceImpl - unit tests for digital contact mapping and retrieval")
 class DigitalContactServiceImplTest {
 
     DigitalContactRepository repository;
@@ -35,6 +37,7 @@ class DigitalContactServiceImplTest {
     }
 
     @Test
+    @DisplayName("getAllDigitalContacts maps entities to TOs and returns page")
     void getAllDigitalContacts_mapsEntities() {
         var ent = new DigitalContactEntity();
         ent.setId(UUID.randomUUID());
@@ -50,6 +53,7 @@ class DigitalContactServiceImplTest {
     }
 
     @Test
+    @DisplayName("getDigitalContactById returns present and empty optional correctly")
     void getDigitalContactById_presentOrEmpty() {
         var ent = new DigitalContactEntity();
         ent.setId(UUID.randomUUID());
@@ -66,4 +70,3 @@ class DigitalContactServiceImplTest {
         assertTrue(service.getDigitalContactById(id).isEmpty());
     }
 }
-
