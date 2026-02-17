@@ -6,15 +6,18 @@ import com.prx.commons.general.pojo.Role;
 import com.prx.directory.api.v1.to.GetUserResponse;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
+import com.prx.directory.api.v1.to.PutUserRequest;
 import com.prx.directory.client.backbone.BackboneClient;
 import com.prx.directory.client.backbone.to.BackboneProfileImageRefResponse;
 import com.prx.directory.client.backbone.to.BackboneUserCreateRequest;
 import com.prx.directory.client.backbone.to.BackboneUserCreateResponse;
 import com.prx.directory.client.backbone.to.BackboneUserGetResponse;
+import com.prx.directory.client.backbone.to.BackboneUserUpdateRequest;
 import com.prx.directory.jpa.repository.BusinessRepository;
 import com.prx.directory.kafka.producer.EmailMessageProducerService;
 import com.prx.directory.mapper.GetUserMapper;
 import com.prx.directory.mapper.UserCreateMapper;
+import com.prx.directory.mapper.PutUserMapper;
 import feign.FeignException;
 import feign.Request;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,8 +39,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static com.prx.directory.constant.DirectoryAppConstants.MESSAGE_ERROR_HEADER;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -54,6 +56,8 @@ class UserServiceImplTest {
     BusinessRepository businessRepository;
     @Mock
     EmailMessageProducerService emailMessageProducerService;
+    @Mock
+    PutUserMapper putUserMapper;
     @InjectMocks
     UserServiceImpl userService;
 
@@ -605,5 +609,108 @@ class UserServiceImplTest {
             // Expected behavior when UUID.fromString fails
             assertEquals("Invalid UUID string: invalid-uuid", e.getMessage());
         }
+    }
+
+    @Test
+    @DisplayName("update should return BAD_REQUEST when request is null")
+    void update_nullRequest_returnsBadRequest() {
+        ResponseEntity<Void> resp = userService.update(userId, null);
+        assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
+        assertEquals("Request body is missing.", resp.getHeaders().getFirst("message"));
+    }
+
+    @Test
+    @DisplayName("update should return BAD_REQUEST when userId is null")
+    void update_nullUserId_returnsBadRequest() {
+        PutUserRequest req = new PutUserRequest("A","B","D", true, true, false, null, "123", List.of(UUID.randomUUID()), true);
+        ResponseEntity<Void> resp = userService.update(null, req);
+        assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
+        assertEquals("User ID is required.", resp.getHeaders().getFirst("message"));
+    }
+
+    @Test
+    @DisplayName("update should validate empty roleIds and return BAD_REQUEST")
+    void update_emptyRoleIds_returnsBadRequest() {
+        PutUserRequest req = new PutUserRequest("A","B","D", true, true, false, null, "123", Collections.emptyList(), true);
+        ResponseEntity<Void> resp = userService.update(userId, req);
+        assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
+        assertEquals("Cannot remove all roles from user. At least one role is required.", resp.getHeaders().getFirst("message"));
+    }
+
+    @Test
+    @DisplayName("update should detect duplicate roleIds and return BAD_REQUEST")
+    void update_duplicateRoleIds_returnsBadRequest() {
+        UUID r = UUID.randomUUID();
+        List<UUID> roleIds = List.of(r, r);
+        PutUserRequest req = new PutUserRequest("A","B","D", true, true, false, null, "123", roleIds, true);
+        ResponseEntity<Void> resp = userService.update(userId, req);
+        assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
+        assertEquals("Role collection contains duplicate values.", resp.getHeaders().getFirst("message"));
+    }
+
+    @Test
+    @DisplayName("update should detect invalid zero UUID and return BAD_REQUEST")
+    void update_invalidZeroRoleId_returnsBadRequest() {
+        UUID zero = UUID.fromString("00000000-0000-0000-0000-000000000000");
+        List<UUID> roleIds = List.of(zero);
+        PutUserRequest req = new PutUserRequest("A","B","D", true, true, false, null, "123", roleIds, true);
+        ResponseEntity<Void> resp = userService.update(userId, req);
+        assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
+        assertEquals("Role collection contains invalid role ID.", resp.getHeaders().getFirst("message"));
+    }
+
+    @Test
+    @DisplayName("update should return NOT_FOUND when backbone findUserById returns null")
+    void update_userNotFound_whenFindReturnsNull() {
+        PutUserRequest req = new PutUserRequest("A","B","D", true, true, false, null, "123", List.of(UUID.randomUUID()), true);
+        when(backboneClient.findUserById(any())).thenReturn(null);
+
+        ResponseEntity<Void> resp = userService.update(userId, req);
+        assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
+        assertEquals("User not found.", resp.getHeaders().getFirst("message"));
+    }
+
+    @Test
+    @DisplayName("update should call putUserMapper and backbone userPartialUpdate on success")
+    void update_success_callsUserPartialUpdate() {
+        PutUserRequest req = new PutUserRequest("A","B","D", true, true, false, null, "123", List.of(UUID.randomUUID()), true);
+        // mock existing user returned
+        BackboneUserGetResponse existing = mock(BackboneUserGetResponse.class);
+        when(backboneClient.findUserById(any())).thenReturn(existing);
+        // prepare backbone update request
+        BackboneUserUpdateRequest bReq = new BackboneUserUpdateRequest(UUID.randomUUID(), true, true, true, List.of(UUID.randomUUID()));
+        when(putUserMapper.toBackbone(any(), any())).thenReturn(bReq);
+        ResponseEntity<Void> bResp = ResponseEntity.noContent().build();
+        when(backboneClient.userPartialUpdate(any(), any())).thenReturn(bResp);
+
+        ResponseEntity<Void> resp = userService.update(userId, req);
+        assertEquals(HttpStatus.NO_CONTENT, resp.getStatusCode());
+        verify(putUserMapper).toBackbone(any(), eq(req));
+        verify(backboneClient).userPartialUpdate(eq(userId), eq(bReq));
+    }
+
+    @Test
+    @DisplayName("update should return BAD_REQUEST when userPartialUpdate throws FeignException.BadRequest")
+    void update_userPartialUpdate_badRequest() {
+        PutUserRequest req = new PutUserRequest("A","B","D", true, true, false, null, "123", List.of(UUID.randomUUID()), true);
+        BackboneUserGetResponse existing = mock(BackboneUserGetResponse.class);
+        when(backboneClient.findUserById(any())).thenReturn(existing);
+        BackboneUserUpdateRequest bReq = new BackboneUserUpdateRequest(UUID.randomUUID(), true, true, true, List.of(UUID.randomUUID()));
+        when(putUserMapper.toBackbone(any(), any())).thenReturn(bReq);
+        Request r = Request.create(Request.HttpMethod.PUT, "url", Map.of(), null, null, null);
+        when(backboneClient.userPartialUpdate(any(), any())).thenThrow(new FeignException.BadRequest("bad", r, null, null));
+
+        ResponseEntity<Void> resp = userService.update(userId, req);
+        assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
+        assertEquals("Invalid request data.", resp.getHeaders().getFirst("message"));
+    }
+
+    @Test
+    @DisplayName("generateVerificationCode returns pattern ####-####")
+    void generateVerificationCode_pattern() throws Exception {
+        // invoke private method via reflection
+        String code = (String) org.springframework.test.util.ReflectionTestUtils.invokeMethod(userService, "generateVerificationCode");
+        assertNotNull(code);
+        assertTrue(code.matches("\\d{4}-\\d{4}"));
     }
 }
