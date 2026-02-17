@@ -94,7 +94,7 @@
             **/mapper/*, **/*Test.*, **/cache/*, **/cache/domain/*, **/security/*, **/producer/*,**/interceptor/*
         </sonar.exclusions>
         <sonar.coverage.exclusions>${sonar.exclusions}</sonar.coverage.exclusions>
-        <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.coverage.jacoco.xmlReportPaths>/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
         <project.ruleset>${project.basedir}/ruleset.xml</project.ruleset>
     </properties>
 
@@ -400,11 +400,8 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven.surefire.version}</version>
                 <configuration>
-                    <!-- Ensure jacoco's agent argLine (set by jacoco:prepare-agent) is preserved and combined
-                         with Mockito's javaagent. Jacoco sets a property named 'argLine'; we reference it here
-                         so both agents are passed to the test JVM. If ${argLine} is empty, only Mockito's
-                         agent will be appended. -->
-                    <argLine>${argLine} -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
+                    <!-- Use the argLine set by JaCoCo's prepare-agent; do not append manual mockito javaagent. -->
+                    <argLine>${argLine}</argLine>
                 </configuration>
                 <dependencies>
                     <dependency>
@@ -482,6 +479,8 @@
                                 <format>XML</format>
                                 <format>HTML</format>
                             </formats>
+                            <!-- ensure xml report is written to target/site/jacoco/jacoco.xml -->
+                            <outputDirectory>${project.build.directory}/site/jacoco</outputDirectory>
                         </configuration>
                     </execution>
                     <execution>
