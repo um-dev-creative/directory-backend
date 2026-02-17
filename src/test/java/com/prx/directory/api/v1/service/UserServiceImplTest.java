@@ -15,6 +15,7 @@ import com.prx.directory.jpa.repository.BusinessRepository;
 import com.prx.directory.kafka.producer.EmailMessageProducerService;
 import com.prx.directory.mapper.GetUserMapper;
 import com.prx.directory.mapper.UserCreateMapper;
+import com.prx.directory.security.PasswordService;
 import feign.FeignException;
 import feign.Request;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,6 +55,8 @@ class UserServiceImplTest {
     BusinessRepository businessRepository;
     @Mock
     EmailMessageProducerService emailMessageProducerService;
+    @Mock
+    PasswordService passwordService;
     @InjectMocks
     UserServiceImpl userService;
 
@@ -145,7 +148,8 @@ class UserServiceImplTest {
         );
         when(backboneClient.checkEmail(anyString(), any())).thenReturn(ResponseEntity.ok().build());
         when(backboneClient.checkAlias(anyString(), any())).thenReturn(ResponseEntity.ok().build());
-        when(userCreateMapper.toBackbone(any(), any(), any(), any())).thenReturn(backboneRequest);
+        when(passwordService.hashPassword(anyString())).thenReturn("$2a$10$hashedPassword");
+        when(userCreateMapper.toBackbone(any(), any(), any(), any(), anyString())).thenReturn(backboneRequest);
         when(backboneClient.post(any())).thenReturn(backboneResponse);
         when(userCreateMapper.fromBackbone(any())).thenReturn(response);
         ResponseEntity<UserCreateResponse> result = userService.create(request);

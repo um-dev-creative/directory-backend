@@ -15,6 +15,7 @@ import com.prx.directory.kafka.producer.EmailMessageProducerService;
 import com.prx.directory.mapper.GetUserMapper;
 import com.prx.directory.mapper.PutUserMapper;
 import com.prx.directory.mapper.UserCreateMapper;
+import com.prx.directory.security.PasswordService;
 import feign.FeignException;
 import feign.Request;
 import feign.Response;
@@ -53,13 +54,15 @@ class UserServiceImplExtendedTest {
     private GetUserMapper getUserMapper;
     @Mock
     private BusinessRepository businessRepository;
+    @Mock
+    private PasswordService passwordService;
 
     private UserServiceImpl service;
 
     @BeforeEach
     void setUp() {
         service = new UserServiceImpl(backboneClient, emailMessageProducerService,
-                userCreateMapper, putUserMapper, getUserMapper, businessRepository);
+                userCreateMapper, putUserMapper, getUserMapper, businessRepository, passwordService);
         ReflectionTestUtils.setField(service, "verificationCodeTemplateId", UUID.randomUUID());
         ReflectionTestUtils.setField(service, "applicationIdString", UUID.randomUUID().toString());
         ReflectionTestUtils.setField(service, "initialRoleId", UUID.randomUUID().toString());
@@ -82,7 +85,8 @@ class UserServiceImplExtendedTest {
                 backboneResp.notificationSms(), backboneResp.notificationEmail(), backboneResp.privacyDataOutActive());
 
         when(backboneClient.checkEmail(anyString(), any(UUID.class))).thenReturn(ResponseEntity.ok().build());
-        when(userCreateMapper.toBackbone(any(), any(), any(), anyString())).thenReturn(mock(BackboneUserCreateRequest.class));
+        when(passwordService.hashPassword(anyString())).thenReturn("$2a$10$hashedPassword");
+        when(userCreateMapper.toBackbone(any(), any(), any(), anyString(), anyString())).thenReturn(mock(BackboneUserCreateRequest.class));
         when(backboneClient.post(any())).thenReturn(backboneResp);
         when(userCreateMapper.fromBackbone(any())).thenReturn(expected);
         doNothing().when(emailMessageProducerService).sendMessage(any());
@@ -93,6 +97,7 @@ class UserServiceImplExtendedTest {
         assertNotNull(result.getBody());
         assertEquals(expected.id(), result.getBody().id());
         verify(emailMessageProducerService, times(1)).sendMessage(any());
+        verify(passwordService, times(1)).hashPassword("password123");
     }
 
     @Test
@@ -129,7 +134,8 @@ class UserServiceImplExtendedTest {
                 "JDoe", true, true, true);
 
         when(backboneClient.checkEmail(anyString(), any(UUID.class))).thenReturn(ResponseEntity.ok().build());
-        when(userCreateMapper.toBackbone(any(), any(), any(), anyString()))
+        when(passwordService.hashPassword(anyString())).thenReturn("$2a$10$hashedPassword");
+        when(userCreateMapper.toBackbone(any(), any(), any(), anyString(), anyString()))
                 .thenThrow(new StandardException("Error", null));
 
         ResponseEntity<UserCreateResponse> result = service.create(request);

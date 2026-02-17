@@ -15,6 +15,7 @@ import com.prx.directory.kafka.to.Recipient;
 import com.prx.directory.mapper.GetUserMapper;
 import com.prx.directory.mapper.PutUserMapper;
 import com.prx.directory.mapper.UserCreateMapper;
+import com.prx.directory.security.PasswordService;
 import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,20 +56,24 @@ public class UserServiceImpl implements UserService {
     private final BackboneClient backboneClient;
     private final GetUserMapper getUserMapper;
     private final BusinessRepository businessRepository;
+    private final PasswordService passwordService;
 
     /// Constructs a new UserServiceImpl with the specified BackboneClient and UserCreateMapper.
     ///
     /// @param backboneClient   the client used to communicate with the backend
     /// @param userCreateMapper the mapper used to convert between request/response objects and backend objects
+    /// @param passwordService  the service used for password hashing with BCrypt
     public UserServiceImpl(BackboneClient backboneClient, EmailMessageProducerService emailMessageProducerService,
                            UserCreateMapper userCreateMapper, PutUserMapper putUserMapper,
-                           GetUserMapper getUserMapper, BusinessRepository businessRepository) {
+                           GetUserMapper getUserMapper, BusinessRepository businessRepository,
+                           PasswordService passwordService) {
         this.emailMessageProducerService = emailMessageProducerService;
         this.userCreateMapper = userCreateMapper;
         this.backboneClient = backboneClient;
         this.putUserMapper = putUserMapper;
         this.getUserMapper = getUserMapper;
         this.businessRepository = businessRepository;
+        this.passwordService = passwordService;
     }
 
     @Override
@@ -81,8 +86,10 @@ public class UserServiceImpl implements UserService {
                 return ResponseEntity.status(BAD_REQUEST).header(MESSAGE_ERROR_HEADER, "Content null invalid").build();
             }
             backboneClient.checkEmail(userCreateRequest.email(), applicationID);
+            // Hash password using BCrypt with automatic salt generation
+            String hashedPassword = passwordService.hashPassword(userCreateRequest.password());
             var backboneUserCreateRequest = userCreateMapper.toBackbone(userCreateRequest,
-                    applicationID, UUID.fromString(initialRoleId), generateAlias(userCreateRequest, true, 1));
+                    applicationID, UUID.fromString(initialRoleId), generateAlias(userCreateRequest, true, 1), hashedPassword);
             logger.debug("Creating user: {}", backboneUserCreateRequest);
             var userCreateResponse = userCreateMapper.fromBackbone(backboneClient.post(backboneUserCreateRequest));
             emailMessageProducerService.sendMessage(toEmailMessageTO(userCreateRequest, userCreateResponse));
