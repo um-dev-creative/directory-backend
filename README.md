@@ -4,6 +4,16 @@
 [![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=umdc-directory-backend&token=30babbee984be4a21f7e4627f90e80c5b47330fa)](https://sonarcloud.io/summary/new_code?id=umdc-directory-backend)
 
 [![Qodana](https://github.com/um-dev-creative/directory-backend/actions/workflows/qodana_code_quality.yml/badge.svg)](https://github.com/um-dev-creative/directory-backend/actions/workflows/qodana_code_quality.yml)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=umdc-directory-backend&metric=reliability_rating&token=30babbee984be4a21f7e4627f90e80c5b47330fa)](https://sonarcloud.io/summary/new_code?id=umdc-directory-backend)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=umdc-directory-backend&metric=security_rating&token=30babbee984be4a21f7e4627f90e80c5b47330fa)](https://sonarcloud.io/summary/new_code?id=umdc-directory-backend)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=umdc-directory-backend&metric=sqale_rating&token=30babbee984be4a21f7e4627f90e80c5b47330fa)](https://sonarcloud.io/summary/new_code?id=umdc-directory-backend)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=umdc-directory-backend&metric=code_smells&token=30babbee984be4a21f7e4627f90e80c5b47330fa)](https://sonarcloud.io/summary/new_code?id=umdc-directory-backend)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=umdc-directory-backend&metric=coverage&token=30babbee984be4a21f7e4627f90e80c5b47330fa)](https://sonarcloud.io/summary/new_code?id=umdc-directory-backend)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=umdc-directory-backend&metric=duplicated_lines_density&token=30babbee984be4a21f7e4627f90e80c5b47330fa)](https://sonarcloud.io/summary/new_code?id=umdc-directory-backend)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=umdc-directory-backend&metric=ncloc&token=30babbee984be4a21f7e4627f90e80c5b47330fa)](https://sonarcloud.io/summary/new_code?id=umdc-directory-backend)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=umdc-directory-backend&metric=vulnerabilities&token=30babbee984be4a21f7e4627f90e80c5b47330fa)](https://sonarcloud.io/summary/new_code?id=umdc-directory-backend)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=umdc-directory-backend&metric=bugs&token=30babbee984be4a21f7e4627f90e80c5b47330fa)](https://sonarcloud.io/summary/new_code?id=umdc-directory-backend)
+
 ## Tech stack badges
 <!-- badges: start -->
 ![Java](https://img.shields.io/badge/Java-21-blue?logo=java&style=flat-square)
@@ -32,6 +42,18 @@ Quick links
 - Knowledge Base / Docs: https://prx.myjetbrains.com/youtrack/articles/DS-A-8/Directory-Backend
 - Build instructions: `README-BUILD.md`
 - Latest build validation notes: `BUILD_VALIDATION_REPORT.md`
+
+## Requirements
+
+Before following the developer getting-started steps, ensure your environment meets the minimum requirements and that any optional integrations you need are available.
+
+- Java 21 (JDK 21) installed and JAVA_HOME configured.
+- Maven 3.8+ installed and `mvn` available on your PATH.
+- Optional but recommended: Docker (for running Postgres/Kafka/Vault locally).
+- A PostgreSQL instance accessible to the application when running integration flows (use Docker for local development if you don't have a database).
+- If you plan to exercise messaging or external integrations, have Kafka and Vault available or running locally/mocked.
+- Copy and customize `default.env` for local environment variables (e.g., `cp default.env .env`).
+- Recommended development machine: 8+ GB RAM, multi-core CPU, and several GB of free disk space for local DB/containers.
 
 Getting started (developer)
 ---------------------------

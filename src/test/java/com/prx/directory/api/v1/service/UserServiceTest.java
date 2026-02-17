@@ -11,6 +11,7 @@ import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@DisplayName("UserService - default interface behavior tests")
 class UserServiceTest {
 
     private final UserService userService = new UserService() {};
