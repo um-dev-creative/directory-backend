@@ -94,7 +94,7 @@
             **/mapper/*, **/*Test.*, **/cache/*, **/cache/domain/*, **/security/*, **/producer/*,**/interceptor/*
         </sonar.exclusions>
         <sonar.coverage.exclusions>${sonar.exclusions}</sonar.coverage.exclusions>
-        <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.coverage.jacoco.xmlReportPaths>/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
         <project.ruleset>${project.basedir}/ruleset.xml</project.ruleset>
     </properties>
 
