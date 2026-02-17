@@ -168,6 +168,21 @@
         <dependency>
             <groupId>com.prx</groupId>
             <artifactId>commons-services</artifactId>
+            <exclusions>
+                <!-- Exclude older springdoc artifacts that pull in javax.servlet (1.8.x) -->
+                <exclusion>
+                    <groupId>org.springdoc</groupId>
+                    <artifactId>springdoc-openapi-ui</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springdoc</groupId>
+                    <artifactId>springdoc-openapi-webmvc-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springdoc</groupId>
+                    <artifactId>springdoc-openapi-common</artifactId>
+                </exclusion>
+            </exclusions>
             <version>${com.prx.commons-services.version}</version>
         </dependency>
         <dependency>
