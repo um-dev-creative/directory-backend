@@ -83,6 +83,7 @@
         <!--        Coverage and Sonar-->
         <sonar.organization>umdevc</sonar.organization>
         <sonar.projectKey>umdc-directory-backend</sonar.projectKey>
+        <sonar.projectName>umdc-directory-backend</sonar.projectName>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <!-- Include only production Java sources for Sonar analysis (exclude tests and resources). Adjust glob if your sources live elsewhere) -->
         <sonar.inclusions>src/main/java/**/*.java</sonar.inclusions>
