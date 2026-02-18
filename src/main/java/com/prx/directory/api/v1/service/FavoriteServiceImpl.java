@@ -91,6 +91,7 @@ public class FavoriteServiceImpl implements FavoriteService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<FavoritesResponse> getFavorites(String sessionToken, String type, int page, int size, String sort) {
         // Return 501 Not Implemented if sort parameter is provided
         if (sort != null && !sort.isBlank()) {

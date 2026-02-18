@@ -89,6 +89,7 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<CampaignTO> find(UUID id) {
         return campaignRepository.findById(id)
                 .map(campaignMapper::toTO)
