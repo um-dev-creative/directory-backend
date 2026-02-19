@@ -155,11 +155,7 @@
             <artifactId>mapstruct</artifactId>
             <!-- version controlled in dependencyManagement -->
         </dependency>
-        <dependency>
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct-processor</artifactId>
-            <!-- version controlled in dependencyManagement -->
-        </dependency>
+        <!-- Note: mapstruct-processor should not be a regular dependency; it's provided to the compiler via maven-compiler-plugin's annotationProcessorPaths -->
         <!--        PRX Dependencies-->
         <dependency>
             <groupId>com.prx</groupId>
@@ -521,13 +517,45 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin.version}</version>
                 <configuration>
                     <showWarnings>true</showWarnings>
                     <compilerArgs>
                         <arg>-Xlint:deprecation</arg>
                     </compilerArgs>
+                    <!-- Use release to match the project's java.version -->
                     <release>${java.version}</release>
+                    <!-- Ensure MapStruct annotation processor runs during compile and test-compile -->
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>${mapstruct.version}</version>
+                        </path>
+                        <!-- If you use Lombok, uncomment and set the version -->
+                        <!--
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                        -->
+                    </annotationProcessorPaths>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>default-compile</id>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>default-testCompile</id>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
