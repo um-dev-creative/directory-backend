@@ -21,11 +21,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
 import java.util.UUID;
@@ -36,7 +36,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @DisplayName("ProductServiceImpl - unit tests for product business logic")
-@ExtendWith(value = {SpringExtension.class})
+@ExtendWith(MockitoExtension.class)
 class ProductServiceImplTest {
 
     @Mock
@@ -196,4 +196,27 @@ class ProductServiceImplTest {
         assertEquals(1, resp.getBody().data().size());
     }
 
+    @Test
+    @DisplayName("findByBusinessId - when BusinessRepository throws IllegalArgumentException then return 400 Bad Request")
+    void findByBusinessId_whenBusinessRepositoryThrowsIllegalArgument_shouldReturnBadRequest() {
+        UUID businessId = UUID.randomUUID();
+
+        when(businessRepository.existsById(any(UUID.class))).thenThrow(new IllegalArgumentException("invalid id"));
+
+        ResponseEntity<ProductListResponse> response = productService.findByBusinessId(businessId, 1, 10, null);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("findByBusinessId - when BusinessRepository throws generic Exception then return 500 Internal Server Error")
+    void findByBusinessId_whenBusinessRepositoryThrowsException_shouldReturnInternalServerError() {
+        UUID businessId = UUID.randomUUID();
+
+        when(businessRepository.existsById(any(UUID.class))).thenThrow(new RuntimeException("boom"));
+
+        ResponseEntity<ProductListResponse> response = productService.findByBusinessId(businessId, 1, 10, null);
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
 }
