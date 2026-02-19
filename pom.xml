@@ -38,8 +38,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>21</java.version>
-        <!-- argLine used by Surefire/Jacoco; default empty so builds don't fail when not set -->
-        <argLine/>
+        <!-- Use a dedicated jacoco argLine property to avoid conflicts with CI/global agent injection -->
+        <jacoco.argLine/>
         <!--        PRX Commons-->
         <com.prx.commons.version>0.0.1</com.prx.commons.version>
         <com.prx.commons-services.version>0.0.1</com.prx.commons-services.version>
@@ -401,7 +401,7 @@
                 <version>${maven.surefire.version}</version>
                 <configuration>
                     <!-- Use the argLine set by JaCoCo's prepare-agent; do not append manual mockito javaagent. -->
-                    <argLine>${argLine}</argLine>
+                    <argLine>${jacoco.argLine}</argLine>
                 </configuration>
                 <dependencies>
                     <dependency>
@@ -444,29 +444,6 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${maven.plugin.jacoco.version}</version>
                 <executions>
-                    <execution>
-                        <id>prepare-agent</id>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                        <phase>initialize</phase>
-                        <configuration>
-                            <!-- write the exec file to a predictable location -->
-                            <destFile>${project.build.directory}/jacoco.exec</destFile>
-                            <append>true</append>
-                            <!-- set propertyName so Surefire picks up the agent JVM arg -->
-                            <propertyName>argLine</propertyName>
-                            <!-- exclude JDK, tooling and mocking libs from instrumentation to avoid Unsupported major version issues -->
-                            <excludes>
-                                <exclude>sun/**</exclude>
-                                <exclude>jdk/**</exclude>
-                                <exclude>com/sun/**</exclude>
-                                <exclude>net/bytebuddy/**</exclude>
-                                <exclude>org/mockito/**</exclude>
-                                <exclude>org/junit/**</exclude>
-                            </excludes>
-                        </configuration>
-                    </execution>
                     <execution>
                         <id>report</id>
                         <goals>
@@ -599,6 +576,10 @@
                                 <goals>
                                     <goal>prepare-agent</goal>
                                 </goals>
+                                <configuration>
+                                    <!-- ensure the agent JVM arg is written to the same property used by Surefire -->
+                                    <propertyName>jacoco.argLine</propertyName>
+                                </configuration>
                             </execution>
                             <execution>
                                 <id>report</id>
