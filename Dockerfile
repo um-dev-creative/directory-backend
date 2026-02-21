@@ -3,7 +3,7 @@ LABEL version="0.0.1"
 LABEL description="Directory Backend API"
 LABEL mantainer="Luis Mata luis.antonio.mata@gmail.com"
 
-ARG RESOURCE_PATH=/
+ARG RESOURCE_PATH
 ARG TARGET_FILE=target/
 ARG KEYSTORE_FILE=keystore
 ARG BACKBONE_ALIAS=backbone
