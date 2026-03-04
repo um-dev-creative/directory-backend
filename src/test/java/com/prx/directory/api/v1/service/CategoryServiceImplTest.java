@@ -299,4 +299,49 @@ class CategoryServiceImplTest {
             assertEquals("Database error", e.getMessage());
         }
     }
+
+    @Test
+    @DisplayName("Find all categories - Success")
+    void findAllSuccess() {
+        UUID id1 = UUID.randomUUID();
+        UUID id2 = UUID.randomUUID();
+        CategoryEntity entity1 = new CategoryEntity();
+        entity1.setId(id1);
+        entity1.setName("Category 1");
+        entity1.setDescription("Desc 1");
+        entity1.setCreatedDate(LocalDateTime.now());
+        entity1.setLastUpdate(LocalDateTime.now());
+        entity1.setActive(true);
+
+        CategoryEntity entity2 = new CategoryEntity();
+        entity2.setId(id2);
+        entity2.setName("Category 2");
+        entity2.setDescription("Desc 2");
+        entity2.setCreatedDate(LocalDateTime.now());
+        entity2.setLastUpdate(LocalDateTime.now());
+        entity2.setActive(true);
+
+        List<CategoryGetResponse> responses = List.of(
+                new CategoryGetResponse(id1, "Category 1", "Desc 1", null, LocalDateTime.now(), LocalDateTime.now(), true),
+                new CategoryGetResponse(id2, "Category 2", "Desc 2", null, LocalDateTime.now(), LocalDateTime.now(), true)
+        );
+
+        when(categoryRepository.findAll()).thenReturn(List.of(entity1, entity2));
+        when(categoryMapper.toCategoryGetResponse(ArgumentMatchers.anyCollection())).thenReturn(responses);
+
+        var response = categoryServiceImpl.findAll();
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(2, response.getBody().size());
+    }
+
+    @Test
+    @DisplayName("Find all categories - Empty result")
+    void findAllEmpty() {
+        when(categoryRepository.findAll()).thenReturn(List.of());
+        when(categoryMapper.toCategoryGetResponse(ArgumentMatchers.anyCollection())).thenReturn(List.of());
+
+        var response = categoryServiceImpl.findAll();
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(0, response.getBody().size());
+    }
 }
