@@ -1,5 +1,7 @@
 package com.prx.directory.api.v1.service;
 
+import com.prx.directory.api.v1.to.CategoryCreateRequest;
+import com.prx.directory.api.v1.to.CategoryCreateResponse;
 import com.prx.directory.api.v1.to.CategoryGetResponse;
 import com.prx.directory.api.v1.to.PaginatedResponse;
 import org.junit.jupiter.api.DisplayName;
@@ -29,6 +31,21 @@ class CategoryServiceTest {
     void findCategoriesByParentIdSuccess() {
         UUID parentId = UUID.randomUUID();
         ResponseEntity<PaginatedResponse<CategoryGetResponse>> response = categoryService.findByParentId(parentId, 0, 20);
+        assertEquals(HttpStatus.NOT_IMPLEMENTED, response.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Find all categories - default returns NOT_IMPLEMENTED")
+    void findAllDefault() {
+        ResponseEntity<java.util.Collection<CategoryGetResponse>> response = categoryService.findAll();
+        assertEquals(HttpStatus.NOT_IMPLEMENTED, response.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Create category - default returns NOT_IMPLEMENTED")
+    void createDefault() {
+        CategoryCreateRequest request = new CategoryCreateRequest("Name", "Desc", null, true);
+        ResponseEntity<CategoryCreateResponse> response = categoryService.create(request);
         assertEquals(HttpStatus.NOT_IMPLEMENTED, response.getStatusCode());
     }
 
