@@ -63,4 +63,12 @@ public interface FavoriteService {
     default ResponseEntity<FavoriteResponse> updateFavorite(String sessionToken, UUID oldFavoriteId, FavoriteUpdateRequest request) {
         return ResponseEntity.status(501).build();
     }
+
+    /**
+     * Delete (soft-delete) a favorite identified by id. Implementations must enforce authorization
+     * (owner or admin) and return appropriate HTTP status codes.
+     */
+    default ResponseEntity<Void> deleteFavorite(String sessionToken, UUID favoriteId) {
+        return ResponseEntity.status(501).build();
+    }
 }

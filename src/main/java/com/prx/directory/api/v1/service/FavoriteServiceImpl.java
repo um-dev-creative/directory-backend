@@ -19,6 +19,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -27,6 +29,8 @@ import java.util.function.Supplier;
 
 @Service
 public class FavoriteServiceImpl implements FavoriteService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(FavoriteServiceImpl.class);
 
     private final UserFavoriteRepository userFavoriteRepository;
     private final BusinessRepository businessRepository;
@@ -215,6 +219,39 @@ public class FavoriteServiceImpl implements FavoriteService {
         entity.setUpdatedAt(LocalDateTime.now());
         UserFavoriteEntity saved = userFavoriteRepository.save(entity);
         return ResponseEntity.ok(favoriteMapper.toResponse(saved));
+    }
+
+    @Override
+    @Transactional
+    public ResponseEntity<Void> deleteFavorite(String sessionToken, UUID favoriteId) {
+        UUID userId = JwtUtil.getUidFromToken(sessionToken);
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        Optional<UserFavoriteEntity> opt = userFavoriteRepository.findById(favoriteId);
+        if (opt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        UserFavoriteEntity entity = opt.get();
+        // Authorization: allow owner only for now. Admin role not modeled in JWT parsing.
+        // When admin support is available extend this check accordingly.
+        if (Objects.isNull(entity.getUser()) || !userId.equals(entity.getUser().getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        // Soft-delete: mark inactive and set audit fields
+        entity.setActive(false);
+        entity.setDeletedAt(LocalDateTime.now());
+        entity.setDeletedBy(userId);
+        entity.setUpdatedAt(LocalDateTime.now());
+        userFavoriteRepository.save(entity);
+
+        // Audit log
+        LOGGER.info("Favorite {} soft-deleted by user {}", favoriteId, userId);
+
+        return ResponseEntity.noContent().build();
     }
 
     private <T> List<T> paginateList(List<T> list, int page, int size) {

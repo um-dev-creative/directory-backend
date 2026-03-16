@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import com.prx.commons.util.HttpStatusUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -50,6 +51,9 @@ import static com.prx.security.constant.ConstantApp.SESSION_TOKEN_KEY;
  */
 @Tag(name = "favorites", description = "Manage user favorites")
 public interface FavoriteApi {
+
+    // Reuse a single literal to satisfy PMD avoid-duplicate-literals checks
+    String UNAUTHORIZED_DESC = "Unauthorized";
 
     /**
      * Obtain the {@link FavoriteService} that performs business logic for favorites.
@@ -105,7 +109,7 @@ public interface FavoriteApi {
                             schema = @Schema(implementation = FavoriteResponse.class))),
             @ApiResponse(responseCode = "409", description = "Favorite already exists (duplicate)", content = @Content),
             @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+            @ApiResponse(responseCode = "401", description = UNAUTHORIZED_DESC, content = @Content),
             @ApiResponse(responseCode = "404", description = "Referenced item not found", content = @Content)
     })
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -131,7 +135,7 @@ public interface FavoriteApi {
             @ApiResponse(responseCode = "200", description = "Favorites retrieved",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = FavoritesResponse.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content)
+            @ApiResponse(responseCode = "401", description = UNAUTHORIZED_DESC, content = @Content)
     })
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     default ResponseEntity<FavoritesResponse> getFavorites(
@@ -183,7 +187,7 @@ public interface FavoriteApi {
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = FavoriteResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid request or path/body ID mismatch", content = @Content),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+            @ApiResponse(responseCode = "401", description = UNAUTHORIZED_DESC, content = @Content),
             @ApiResponse(responseCode = "403", description = "Forbidden - not the owner", content = @Content),
             @ApiResponse(responseCode = "404", description = "Favorite not found", content = @Content)
     })
@@ -197,5 +201,27 @@ public interface FavoriteApi {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
         return this.getService().updateFavorite(sessionToken, id, request);
+    }
+
+    /**
+     * Delete a favorite by id. Deletes (soft-delete) the favorite owned by the user or by an admin.
+     *
+     * Responses:
+     * - 204 No Content when successfully deleted
+     * - 403 Forbidden when not owner (or not authorized)
+     * - 404 Not Found when favorite does not exist
+     * - 401 Unauthorized when session token invalid
+     */
+    @Operation(summary = "Delete favorite", description = "Delete a favorite by id (soft-delete). Requires owner or admin authorization.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = HttpStatusUtil.OK_STR, description = "Favorite deleted", content = @Content),
+            @ApiResponse(responseCode = HttpStatusUtil.FORBIDDEN_STR, description = "Forbidden - not the owner or admin", content = @Content),
+            @ApiResponse(responseCode = HttpStatusUtil.NOT_FOUND_STR, description = "Favorite not found", content = @Content),
+            @ApiResponse(responseCode = HttpStatusUtil.UNAUTHORIZED_STR, description = UNAUTHORIZED_DESC, content = @Content)
+    })
+    @DeleteMapping(value = "/{id}")
+    default ResponseEntity<Void> deleteFavorite(@RequestHeader(SESSION_TOKEN_KEY) String sessionToken,
+                                                @PathVariable UUID id) {
+        return this.getService().deleteFavorite(sessionToken, id);
     }
 }

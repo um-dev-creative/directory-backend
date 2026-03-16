@@ -28,7 +28,7 @@ public interface UserFavoriteRepository extends JpaRepository<UserFavoriteEntity
             + "LEFT JOIN FETCH uf.business "
             + "LEFT JOIN FETCH uf.product "
             + "LEFT JOIN FETCH uf.campaign "
-            + "WHERE uf.user.id = :" + USER_ID;
+            + "WHERE uf.user.id = :" + USER_ID + " AND uf.active = true";
     String Q_FIND_BY_BUSINESS = "SELECT uf FROM UserFavoriteEntity uf WHERE uf.business.id = :" + BUSINESS_ID;
     String Q_FIND_BY_USER_AND_BUSINESS = Q_USER_PREFIX + USER_ID + " AND uf.business.id = :" + BUSINESS_ID;
     String Q_COUNT_ACTIVE_BY_USER = "SELECT COUNT(uf) FROM UserFavoriteEntity uf WHERE uf.user.id = :" + USER_ID + " AND uf.active = true";

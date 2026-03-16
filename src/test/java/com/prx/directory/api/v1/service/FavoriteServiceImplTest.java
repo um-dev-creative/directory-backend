@@ -201,4 +201,59 @@ class FavoriteServiceImplTest {
             assertEquals(favId, resp.getBody().id());
         }
     }
+
+    @Test
+    @DisplayName("deleteFavorite should return NOT_FOUND when favorite missing")
+    void deleteFavoriteShouldReturnNotFoundWhenMissing() {
+        UUID favId = UUID.randomUUID();
+        try (MockedStatic<JwtUtil> mockedStatic = Mockito.mockStatic(JwtUtil.class)) {
+            mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
+            when(userFavoriteRepository.findById(favId)).thenReturn(Optional.empty());
+
+            ResponseEntity<Void> resp = favoriteService.deleteFavorite("token", favId);
+            assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
+        }
+    }
+
+    @Test
+    @DisplayName("deleteFavorite should return FORBIDDEN when user is not owner")
+    void deleteFavoriteShouldReturnForbiddenWhenNotOwner() {
+        UUID favId = UUID.randomUUID();
+        UserFavoriteEntity existing = new UserFavoriteEntity();
+        var owner = new UserEntity();
+        owner.setId(UUID.randomUUID());
+        existing.setUser(owner);
+
+        try (MockedStatic<JwtUtil> mockedStatic = Mockito.mockStatic(JwtUtil.class)) {
+            mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
+            when(userFavoriteRepository.findById(favId)).thenReturn(Optional.of(existing));
+
+            ResponseEntity<Void> resp = favoriteService.deleteFavorite("token", favId);
+            assertEquals(HttpStatus.FORBIDDEN, resp.getStatusCode());
+        }
+    }
+
+    @Test
+    @DisplayName("deleteFavorite should soft-delete and return NO_CONTENT when owner")
+    void deleteFavoriteShouldSoftDeleteWhenOwner() {
+        UUID favId = UUID.randomUUID();
+        UserFavoriteEntity existing = new UserFavoriteEntity();
+        var owner = new UserEntity();
+        owner.setId(userId);
+        existing.setUser(owner);
+        existing.setId(favId);
+
+        try (MockedStatic<JwtUtil> mockedStatic = Mockito.mockStatic(JwtUtil.class)) {
+            mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
+            when(userFavoriteRepository.findById(favId)).thenReturn(Optional.of(existing));
+            when(userFavoriteRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+            ResponseEntity<Void> resp = favoriteService.deleteFavorite("token", favId);
+            assertEquals(HttpStatus.NO_CONTENT, resp.getStatusCode());
+            // ensure entity is marked inactive
+            assertEquals(false, existing.getActive());
+            Assertions.assertNotNull(existing.getDeletedAt());
+            assertEquals(userId, existing.getDeletedBy());
+        }
+    }
 }

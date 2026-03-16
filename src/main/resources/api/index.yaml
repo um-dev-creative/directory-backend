@@ -713,6 +713,18 @@ paths:
           application/json:
             schema:
               type: object
+    delete:
+      summary: Delete Favorite
+      parameters:
+        - name: session-token
+          in: header
+          schema:
+            type: string
+          example: '{{directorySessionTokenName}}'
+      responses: {}
+      tags:
+        - v1
+        - favorites
   /api/v1/favorites/016870b0-b5eb-42aa-ad6d-6ae2a0145cd9:
     patch:
       summary: Update Favorite
