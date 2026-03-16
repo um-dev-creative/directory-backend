@@ -1,6 +1,8 @@
 package com.prx.directory.api.v1.controller;
 
 import com.prx.directory.api.v1.service.CategoryService;
+import com.prx.directory.api.v1.to.CategoryCreateRequest;
+import com.prx.directory.api.v1.to.CategoryCreateResponse;
 import com.prx.directory.api.v1.to.CategoryGetResponse;
 import com.prx.directory.api.v1.to.PaginatedResponse;
 import org.junit.jupiter.api.DisplayName;
@@ -59,5 +61,26 @@ class CategoryControllerTest {
         var out = controller.findAll();
         assertEquals(HttpStatus.OK, out.getStatusCode());
         assertEquals(1, out.getBody().size());
+    }
+
+    @Test
+    @DisplayName("createCategory returns CREATED with body")
+    void createCategory_created() {
+        UUID categoryId = UUID.randomUUID();
+        var createdResponse = new CategoryCreateResponse(categoryId, java.time.LocalDateTime.now());
+        when(categoryService.create(any(CategoryCreateRequest.class)))
+                .thenReturn(ResponseEntity.status(HttpStatus.CREATED).body(createdResponse));
+        var out = controller.createCategory(new CategoryCreateRequest("Name", "Desc", null, true));
+        assertEquals(HttpStatus.CREATED, out.getStatusCode());
+        assertEquals(categoryId, out.getBody().id());
+    }
+
+    @Test
+    @DisplayName("createCategory returns NOT_FOUND when parent missing")
+    void createCategory_parentNotFound() {
+        when(categoryService.create(any(CategoryCreateRequest.class)))
+                .thenReturn(ResponseEntity.notFound().build());
+        var out = controller.createCategory(new CategoryCreateRequest("Name", "Desc", UUID.randomUUID(), true));
+        assertEquals(HttpStatus.NOT_FOUND, out.getStatusCode());
     }
 }

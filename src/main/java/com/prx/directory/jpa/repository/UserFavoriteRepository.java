@@ -24,7 +24,11 @@ public interface UserFavoriteRepository extends JpaRepository<UserFavoriteEntity
     String Q_USER_PREFIX = "SELECT uf FROM UserFavoriteEntity uf WHERE uf.user.id = :";
 
     // Full JPQL query constants (reuse the common prefix where applicable)
-    String Q_FIND_BY_USER = Q_USER_PREFIX + USER_ID;
+    String Q_FIND_BY_USER = "SELECT uf FROM UserFavoriteEntity uf "
+            + "LEFT JOIN FETCH uf.business "
+            + "LEFT JOIN FETCH uf.product "
+            + "LEFT JOIN FETCH uf.campaign "
+            + "WHERE uf.user.id = :" + USER_ID;
     String Q_FIND_BY_BUSINESS = "SELECT uf FROM UserFavoriteEntity uf WHERE uf.business.id = :" + BUSINESS_ID;
     String Q_FIND_BY_USER_AND_BUSINESS = Q_USER_PREFIX + USER_ID + " AND uf.business.id = :" + BUSINESS_ID;
     String Q_COUNT_ACTIVE_BY_USER = "SELECT COUNT(uf) FROM UserFavoriteEntity uf WHERE uf.user.id = :" + USER_ID + " AND uf.active = true";

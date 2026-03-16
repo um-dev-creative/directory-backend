@@ -10,16 +10,19 @@ import com.prx.directory.mapper.CampaignMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -29,6 +32,7 @@ class CampaignServiceImplTest {
     private CategoryRepository categoryRepository;
     private BusinessRepository businessRepository;
     private CampaignMapper campaignMapper;
+    private CampaignStatusCounter statusCounter;
     private CampaignServiceImpl service;
 
     @BeforeEach
@@ -37,7 +41,8 @@ class CampaignServiceImplTest {
         categoryRepository = Mockito.mock(CategoryRepository.class);
         businessRepository = Mockito.mock(BusinessRepository.class);
         campaignMapper = Mockito.mock(CampaignMapper.class);
-        service = new CampaignServiceImpl(campaignRepository, categoryRepository, businessRepository, campaignMapper);
+        statusCounter = Mockito.mock(CampaignStatusCounter.class);
+        service = new CampaignServiceImpl(campaignRepository, categoryRepository, businessRepository, campaignMapper, statusCounter);
     }
 
     @Test
@@ -89,22 +94,14 @@ class CampaignServiceImplTest {
         e1.setId(UUID.randomUUID());
         CampaignEntity e2 = new CampaignEntity();
         e2.setId(UUID.randomUUID());
-        var page = new org.springframework.data.domain.PageImpl<>(java.util.List.of(e1, e2));
+        var page = new PageImpl<>(List.of(e1, e2));
 
         // Mock repository findAll to return the page
-        when(campaignRepository.findAll(org.mockito.ArgumentMatchers.any(org.springframework.data.jpa.domain.Specification.class), org.mockito.ArgumentMatchers.any(org.springframework.data.domain.Pageable.class)))
+        when(campaignRepository.findAll(any(Specification.class), any(org.springframework.data.domain.Pageable.class)))
                 .thenReturn(page);
 
-        // Mock counts via generic count(Specification)
-        when(campaignRepository.count(org.mockito.ArgumentMatchers.any(Specification.class))).thenAnswer(inv -> {
-            Specification spec = inv.getArgument(0);
-            // crude heuristic: called three times; return 6,5,5 in order
-            // use an internal counter stored in a lambda captured array
-            return (long) TestCounter.next();
-        });
-
-        // Reset TestCounter so first three calls map to 6,5,5
-        TestCounter.reset(new long[]{6L,5L,5L});
+        // Stub the aggregate status counter (replaces 3 separate count() calls)
+        when(statusCounter.countByStatus(any(), any())).thenReturn(new long[]{6L, 5L, 5L});
 
         // Mock mapper mapping
         when(campaignMapper.toTO(e1)).thenReturn(new com.prx.directory.api.v1.to.CampaignTO(e1.getId(), "t1", null, null, null, null, null, null, null, null, true));
@@ -118,12 +115,4 @@ class CampaignServiceImplTest {
         assertEquals(5L, body.expired());
         assertEquals(2, body.items().size());
     }
-}
-
-// Simple test helper to simulate ordered returns from repository.count when invoked multiple times
-class TestCounter {
-    private static long[] values = new long[]{6L,5L,5L};
-    private static int idx = 0;
-    static void reset(long[] v) { values = v; idx = 0; }
-    static long next() { if (idx >= values.length) return values[values.length-1]; return values[idx++]; }
 }

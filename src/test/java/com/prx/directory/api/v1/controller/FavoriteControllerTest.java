@@ -54,26 +54,23 @@ class FavoriteControllerTest {
     }
 
     @Test
-    @DisplayName("updateFavorite should return BAD_REQUEST when path ID does not match body ID")
-    void updateFavoriteShouldReturnBadRequestWhenIdMismatch() {
-        UUID pathId = UUID.randomUUID();
-        UUID bodyId = UUID.randomUUID();
-        FavoriteUpdateRequest request = new FavoriteUpdateRequest(bodyId, null);
-
-        ResponseEntity<FavoriteResponse> result = favoriteController.updateFavorite("token", pathId, request);
+    @DisplayName("updateFavorite should return BAD_REQUEST when request is null")
+    void updateFavoriteShouldReturnBadRequestWhenRequestIsNull() {
+        ResponseEntity<FavoriteResponse> result = favoriteController.updateFavorite("token", UUID.randomUUID(), null);
 
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
     }
 
     @Test
-    @DisplayName("updateFavorite should call service when path ID matches body ID")
-    void updateFavoriteShouldCallServiceWhenIdMatches() {
-        UUID id = UUID.randomUUID();
-        FavoriteUpdateRequest request = new FavoriteUpdateRequest(id, false);
-        FavoriteResponse response = new FavoriteResponse(id, "STORE", UUID.randomUUID(), UUID.randomUUID(), LocalDateTime.now(), LocalDateTime.now(), false);
-        when(favoriteService.updateFavorite(any(), any(FavoriteUpdateRequest.class))).thenReturn(ResponseEntity.ok(response));
+    @DisplayName("updateFavorite should call service when request is valid")
+    void updateFavoriteShouldCallServiceWhenRequestIsValid() {
+        UUID favoriteId = UUID.randomUUID();
+        UUID productId = UUID.randomUUID();
+        FavoriteUpdateRequest request = new FavoriteUpdateRequest(productId, false);
+        FavoriteResponse response = new FavoriteResponse(favoriteId, "PRODUCT", productId, UUID.randomUUID(), LocalDateTime.now(), LocalDateTime.now(), false);
+        when(favoriteService.updateFavorite(any(), any(UUID.class), any(FavoriteUpdateRequest.class))).thenReturn(ResponseEntity.ok(response));
 
-        ResponseEntity<FavoriteResponse> result = favoriteController.updateFavorite("token", id, request);
+        ResponseEntity<FavoriteResponse> result = favoriteController.updateFavorite("token", favoriteId, request);
 
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals(response, result.getBody());

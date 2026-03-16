@@ -79,6 +79,8 @@
         <junit.jupiter.version>5.14.1</junit.jupiter.version>
         <!--        Mockito-->
         <mockito.version>5.21.0</mockito.version>
+        <!--        JMH (Java Microbenchmark Harness) -->
+        <jmh.version>1.37</jmh.version>
 
         <!--        Coverage and Sonar-->
         <sonar.organization>umdevc</sonar.organization>
@@ -287,6 +289,20 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- JMH - Java Microbenchmark Harness -->
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-core</artifactId>
+            <version>${jmh.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-generator-annprocess</artifactId>
+            <version>${jmh.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -618,6 +634,37 @@
                                     <formats>
                                         <format>XML</format>
                                     </formats>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!--
+            benchmark profile: compiles and runs JMH microbenchmarks.
+            Activate with: mvn test-compile exec:java -P benchmark
+            Or to skip normal tests:  mvn test-compile exec:java -P benchmark -DskipTests
+        -->
+        <profile>
+            <id>benchmark</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.3.0</version>
+                        <executions>
+                            <execution>
+                                <id>run-benchmarks</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>java</goal>
+                                </goals>
+                                <configuration>
+                                    <mainClass>com.prx.directory.benchmark.BenchmarkRunner</mainClass>
+                                    <classpathScope>test</classpathScope>
                                 </configuration>
                             </execution>
                         </executions>

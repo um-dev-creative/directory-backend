@@ -9,7 +9,7 @@ import java.util.UUID;
  * Only the 'active' field can be updated (for soft-delete support).
  */
 public record FavoriteUpdateRequest(
-        @NotNull
+        @NotNull(message = "Favorite ID must be provided")
         UUID id,
         Boolean active
 ) {

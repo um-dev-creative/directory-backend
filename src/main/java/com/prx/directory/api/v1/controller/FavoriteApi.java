@@ -17,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import static com.prx.security.constant.ConstantApp.SESSION_TOKEN_KEY;
@@ -189,12 +190,12 @@ public interface FavoriteApi {
     @PatchMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     default ResponseEntity<FavoriteResponse> updateFavorite(
             @RequestHeader(SESSION_TOKEN_KEY) String sessionToken,
-            @PathVariable("id") UUID id,
+            @PathVariable UUID id,
             @Valid @RequestBody FavoriteUpdateRequest request) {
-        // Validate path ID matches request body ID
-        if (request == null || request.id() == null || !id.equals(request.id())) {
+        // Path ID is favorite ID; request ID is target item ID.
+        if (Objects.isNull(request)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
-        return this.getService().updateFavorite(sessionToken, request);
+        return this.getService().updateFavorite(sessionToken, id, request);
     }
 }

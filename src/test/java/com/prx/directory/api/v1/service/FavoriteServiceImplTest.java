@@ -5,6 +5,7 @@ import com.prx.directory.api.v1.to.FavoriteResponse;
 import com.prx.directory.api.v1.to.FavoriteUpdateRequest;
 import com.prx.directory.constant.FavoriteType;
 import com.prx.directory.jpa.entity.BusinessEntity;
+import com.prx.directory.jpa.entity.ProductEntity;
 import com.prx.directory.jpa.entity.UserEntity;
 import com.prx.directory.jpa.entity.UserFavoriteEntity;
 import com.prx.directory.jpa.repository.BusinessRepository;
@@ -147,7 +148,7 @@ class FavoriteServiceImplTest {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
             when(userFavoriteRepository.findById(favId)).thenReturn(Optional.empty());
 
-            ResponseEntity<FavoriteResponse> resp = favoriteService.updateFavorite("token", req);
+            ResponseEntity<FavoriteResponse> resp = favoriteService.updateFavorite("token", favId, req);
             assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
         }
     }
@@ -156,7 +157,8 @@ class FavoriteServiceImplTest {
     @DisplayName("updateFavorite should return FORBIDDEN when user is not owner")
     void updateFavoriteShouldReturnForbiddenWhenNotOwner() {
         UUID favId = UUID.randomUUID();
-        FavoriteUpdateRequest req = new FavoriteUpdateRequest(favId, null);
+        UUID productId = UUID.randomUUID();
+        FavoriteUpdateRequest req = new FavoriteUpdateRequest(productId, null);
         UserFavoriteEntity existing = new UserFavoriteEntity();
         var owner = new UserEntity();
         owner.setId(UUID.randomUUID());
@@ -165,8 +167,9 @@ class FavoriteServiceImplTest {
         try (MockedStatic<JwtUtil> mockedStatic = Mockito.mockStatic(JwtUtil.class)) {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
             when(userFavoriteRepository.findById(favId)).thenReturn(Optional.of(existing));
+            when(productRepository.findById(productId)).thenReturn(Optional.of(new ProductEntity()));
 
-            ResponseEntity<FavoriteResponse> resp = favoriteService.updateFavorite("token", req);
+            ResponseEntity<FavoriteResponse> resp = favoriteService.updateFavorite("token", favId, req);
             assertEquals(HttpStatus.FORBIDDEN, resp.getStatusCode());
         }
     }
@@ -175,22 +178,24 @@ class FavoriteServiceImplTest {
     @DisplayName("updateFavorite should update and return OK when owner")
     void updateFavoriteShouldUpdateWhenOwner() {
         UUID favId = UUID.randomUUID();
-        FavoriteUpdateRequest req = new FavoriteUpdateRequest(favId, false);
+        UUID productId = UUID.randomUUID();
+        FavoriteUpdateRequest req = new FavoriteUpdateRequest(productId, false);
         UserFavoriteEntity existing = new UserFavoriteEntity();
         var owner = new UserEntity();
         owner.setId(userId);
         existing.setUser(owner);
         existing.setId(favId);
 
-        FavoriteResponse favoriteResponse = new FavoriteResponse(favId, "STORE", UUID.randomUUID(), userId, LocalDateTime.now(), LocalDateTime.now(), false);
+        FavoriteResponse favoriteResponse = new FavoriteResponse(favId, "PRODUCT", productId, userId, LocalDateTime.now(), LocalDateTime.now(), false);
 
         try (MockedStatic<JwtUtil> mockedStatic = Mockito.mockStatic(JwtUtil.class)) {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
             when(userFavoriteRepository.findById(favId)).thenReturn(Optional.of(existing));
+            when(productRepository.findById(productId)).thenReturn(Optional.of(new ProductEntity()));
             when(userFavoriteRepository.save(any())).thenAnswer(i -> i.getArgument(0));
             when(favoriteMapper.toResponse(any(UserFavoriteEntity.class))).thenReturn(favoriteResponse);
 
-            ResponseEntity<FavoriteResponse> resp = favoriteService.updateFavorite("token", req);
+            ResponseEntity<FavoriteResponse> resp = favoriteService.updateFavorite("token", favId, req);
             assertEquals(HttpStatus.OK, resp.getStatusCode());
             Assertions.assertNotNull(resp.getBody());
             assertEquals(favId, resp.getBody().id());
