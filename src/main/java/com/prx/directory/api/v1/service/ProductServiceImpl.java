@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
@@ -84,6 +85,7 @@ public class ProductServiceImpl implements ProductService {
                 HttpStatus.CREATED);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public ResponseEntity<ProductListResponse> findByBusinessId(UUID businessId, Integer page, Integer perPage, Boolean active) {
         logger.info("Listing products for business {} page={} perPage={} active={}", businessId, page, perPage, active);

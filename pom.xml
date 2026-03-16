@@ -38,8 +38,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>21</java.version>
-        <!-- argLine used by Surefire/Jacoco; default empty so builds don't fail when not set -->
-        <argLine/>
+        <!-- Use a dedicated jacoco argLine property to avoid conflicts with CI/global agent injection -->
+        <jacoco.argLine/>
         <!--        PRX Commons-->
         <com.prx.commons.version>0.0.1</com.prx.commons.version>
         <com.prx.commons-services.version>0.0.1</com.prx.commons-services.version>
@@ -157,11 +157,7 @@
             <artifactId>mapstruct</artifactId>
             <!-- version controlled in dependencyManagement -->
         </dependency>
-        <dependency>
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct-processor</artifactId>
-            <!-- version controlled in dependencyManagement -->
-        </dependency>
+        <!-- Note: mapstruct-processor should not be a regular dependency; it's provided to the compiler via maven-compiler-plugin's annotationProcessorPaths -->
         <!--        PRX Dependencies-->
         <dependency>
             <groupId>com.prx</groupId>
@@ -417,7 +413,7 @@
                 <version>${maven.surefire.version}</version>
                 <configuration>
                     <!-- Use the argLine set by JaCoCo's prepare-agent; do not append manual mockito javaagent. -->
-                    <argLine>${argLine}</argLine>
+                    <argLine>${jacoco.argLine}</argLine>
                 </configuration>
                 <dependencies>
                     <dependency>
@@ -460,29 +456,6 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${maven.plugin.jacoco.version}</version>
                 <executions>
-                    <execution>
-                        <id>prepare-agent</id>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                        <phase>initialize</phase>
-                        <configuration>
-                            <!-- write the exec file to a predictable location -->
-                            <destFile>${project.build.directory}/jacoco.exec</destFile>
-                            <append>true</append>
-                            <!-- set propertyName so Surefire picks up the agent JVM arg -->
-                            <propertyName>argLine</propertyName>
-                            <!-- exclude JDK, tooling and mocking libs from instrumentation to avoid Unsupported major version issues -->
-                            <excludes>
-                                <exclude>sun/**</exclude>
-                                <exclude>jdk/**</exclude>
-                                <exclude>com/sun/**</exclude>
-                                <exclude>net/bytebuddy/**</exclude>
-                                <exclude>org/mockito/**</exclude>
-                                <exclude>org/junit/**</exclude>
-                            </excludes>
-                        </configuration>
-                    </execution>
                     <execution>
                         <id>report</id>
                         <goals>
@@ -560,39 +533,45 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin.version}</version>
                 <configuration>
                     <showWarnings>true</showWarnings>
                     <compilerArgs>
                         <arg>-Xlint:deprecation</arg>
                     </compilerArgs>
+                    <!-- Use release to match the project's java.version -->
                     <release>${java.version}</release>
-                    <!--
-                        Explicit annotationProcessorPaths tells both Maven and IntelliJ exactly
-                        which annotation processors to use.  Without this section IntelliJ's own
-                        javac invocation cannot locate processors that are only present as regular
-                        (or test-scoped) classpath entries, producing:
-                            "java: package org.openjdk.jmh.annotations does not exist"
-                        Rules:
-                          - Once annotationProcessorPaths is set Maven uses ONLY these paths, so
-                            every active annotation processor must be listed here.
-                          - mapstruct-processor: MapStruct code-gen (main + test).
-                          - jmh-generator-annprocess: JMH benchmark scaffolding (test only, but
-                            listing it here is safe because the processor is a no-op if no
-                            @Benchmark classes are present during main compilation).
-                    -->
+                    <!-- Ensure MapStruct annotation processor runs during compile and test-compile -->
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.mapstruct</groupId>
                             <artifactId>mapstruct-processor</artifactId>
                             <version>${mapstruct.version}</version>
                         </path>
+                        <!-- If you use Lombok, uncomment and set the version -->
+                        <!--
                         <path>
-                            <groupId>org.openjdk.jmh</groupId>
-                            <artifactId>jmh-generator-annprocess</artifactId>
-                            <version>${jmh.version}</version>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
                         </path>
+                        -->
                     </annotationProcessorPaths>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>default-compile</id>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>default-testCompile</id>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -641,6 +620,10 @@
                                 <goals>
                                     <goal>prepare-agent</goal>
                                 </goals>
+                                <configuration>
+                                    <!-- ensure the agent JVM arg is written to the same property used by Surefire -->
+                                    <propertyName>jacoco.argLine</propertyName>
+                                </configuration>
                             </execution>
                             <execution>
                                 <id>report</id>
