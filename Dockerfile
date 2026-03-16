@@ -3,6 +3,7 @@ LABEL version="0.0.1"
 LABEL description="Directory Backend API"
 LABEL mantainer="Luis Mata luis.antonio.mata@gmail.com"
 
+WORKDIR /usr/local/runme
 ARG TARGET_FILE=target/
 ARG KEYSTORE_FILE=keystore
 ARG BACKBONE_ALIAS=backbone
@@ -16,7 +17,6 @@ ARG CNFS_CRT_NAME=prx-qa.config-server
 ARG APP_CRT_FILE_NAME=directory-rest
 ARG SUPABASE_CRT_FILE_NAME=prod-ca-2021
 ARG RESOURCE_PATH=src/main/resources/
-WORKDIR /usr/local/runme
 COPY ${TARGET_FILE}${JAR_FILE} ${JAR_FILE}
 COPY ${RESOURCE_PATH}${SUPABASE_CRT_FILE_NAME}.crt ${SUPABASE_CRT_FILE_NAME}.crt
 COPY ${RESOURCE_PATH}${APP_CRT_FILE_NAME}.crt ${APP_CRT_FILE_NAME}.crt
