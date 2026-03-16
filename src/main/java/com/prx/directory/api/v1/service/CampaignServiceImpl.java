@@ -41,15 +41,18 @@ public class CampaignServiceImpl implements CampaignService {
     private final BusinessRepository businessRepository;
     private final CampaignMapper campaignMapper;
     private final CampaignFilterParser filterParser;
+    private final CampaignStatusCounter statusCounter;
 
     public CampaignServiceImpl(CampaignRepository campaignRepository,
                                CategoryRepository categoryRepository,
                                BusinessRepository businessRepository,
-                               CampaignMapper campaignMapper) {
+                               CampaignMapper campaignMapper,
+                               CampaignStatusCounter statusCounter) {
         this.campaignRepository = campaignRepository;
         this.categoryRepository = categoryRepository;
         this.businessRepository = businessRepository;
         this.campaignMapper = campaignMapper;
+        this.statusCounter = statusCounter;
         this.filterParser = new CampaignFilterParser();
     }
 
@@ -140,18 +143,11 @@ public class CampaignServiceImpl implements CampaignService {
             List<CampaignResumeTO> items = result.getContent().stream().map(campaignMapper::toResumeTO)
                     .toList();
 
-            // Compute counts for root-level distribution fields
             LocalDateTime now = LocalDateTime.now();
-            // Use the same specification with additional predicates so counts respect filters
-            // CampaignSpecifications.byFilters always returns a non-null Specification, so build
-            // derived specifications by directly calling spec.and(...).
-            Specification<CampaignEntity> activesSpec = spec.and((root, query, cb) -> cb.equal(root.get("status"), "ACTIVE"));
-            Specification<CampaignEntity> inactivesSpec = spec.and((root, query, cb) -> cb.equal(root.get("status"), "INACTIVE"));
-            Specification<CampaignEntity> expiredSpec = spec.and((root, query, cb) -> cb.lessThan(root.get("endDate"), now));
-
-            long actives = campaignRepository.count(activesSpec);
-            long inactives = campaignRepository.count(inactivesSpec);
-            long expired = campaignRepository.count(expiredSpec);
+            long[] counts = statusCounter.countByStatus(spec, now);
+            long actives   = counts[0];
+            long inactives = counts[1];
+            long expired   = counts[2];
 
             CampaignListResponse response = new CampaignListResponse(
                     result.getTotalElements(),

@@ -31,6 +31,7 @@ class CampaignServiceImplAllTest {
     private CategoryRepository categoryRepository;
     private BusinessRepository businessRepository;
     private CampaignMapper campaignMapper;
+    private CampaignStatusCounter statusCounter;
     private CampaignServiceImpl service;
 
     @BeforeEach
@@ -39,7 +40,10 @@ class CampaignServiceImplAllTest {
         categoryRepository = Mockito.mock(CategoryRepository.class);
         businessRepository = Mockito.mock(BusinessRepository.class);
         campaignMapper = Mockito.mock(CampaignMapper.class);
-        service = new CampaignServiceImpl(campaignRepository, categoryRepository, businessRepository, campaignMapper);
+        statusCounter = Mockito.mock(CampaignStatusCounter.class);
+        // Default: aggregate counter returns zeros; individual tests may override.
+        when(statusCounter.countByStatus(any(), any())).thenReturn(new long[]{0L, 0L, 0L});
+        service = new CampaignServiceImpl(campaignRepository, categoryRepository, businessRepository, campaignMapper, statusCounter);
     }
 
     // -------- create(...) tests --------
@@ -416,8 +420,9 @@ class CampaignServiceImplAllTest {
     void list_repositoryThrowsException_returnsInternalServerError() {
         when(campaignRepository.findAll((Specification<CampaignEntity>) any(), (Pageable) any()))
                 .thenThrow(new RuntimeException("Database connection failed"));
+        var emptyMap = new HashMap<String, String>();
 
-        assertThrows(RuntimeException.class, () -> service.list(1, 10, "title", Map.of()));
+        assertThrows(RuntimeException.class, () -> service.list(1, 10, "title", emptyMap));
     }
 
     @Test

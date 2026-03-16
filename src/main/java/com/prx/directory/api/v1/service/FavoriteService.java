@@ -6,6 +6,8 @@ import com.prx.directory.api.v1.to.FavoriteUpdateRequest;
 import com.prx.directory.api.v1.to.FavoritesResponse;
 import org.springframework.http.ResponseEntity;
 
+import java.util.UUID;
+
 /**
  * Service contract for creating and managing user favorites.
  *
@@ -58,7 +60,7 @@ public interface FavoriteService {
      * Update an existing favorite's mutable fields. Implementations should ensure authorization
      * (owner or admin) and validation; return 404 when favorite not found.
      */
-    default ResponseEntity<FavoriteResponse> updateFavorite(String sessionToken, FavoriteUpdateRequest request) {
+    default ResponseEntity<FavoriteResponse> updateFavorite(String sessionToken, UUID oldFavoriteId, FavoriteUpdateRequest request) {
         return ResponseEntity.status(501).build();
     }
 }
