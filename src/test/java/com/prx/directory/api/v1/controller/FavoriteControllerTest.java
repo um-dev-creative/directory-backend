@@ -75,4 +75,26 @@ class FavoriteControllerTest {
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals(response, result.getBody());
     }
+
+    @Test
+    @DisplayName("deleteFavorite should return NO_CONTENT when service deletes")
+    void deleteFavoriteShouldReturnNoContentWhenServiceDeletes() {
+        UUID favoriteId = UUID.randomUUID();
+        when(favoriteService.deleteFavorite(any(), any(UUID.class))).thenReturn(ResponseEntity.noContent().build());
+
+        ResponseEntity<Void> result = favoriteController.deleteFavorite("token", favoriteId);
+
+        assertEquals(HttpStatus.NO_CONTENT, result.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("deleteFavorite should return FORBIDDEN when service returns forbidden")
+    void deleteFavoriteShouldReturnForbiddenWhenServiceForbidden() {
+        UUID favoriteId = UUID.randomUUID();
+        when(favoriteService.deleteFavorite(any(), any(UUID.class))).thenReturn(ResponseEntity.status(HttpStatus.FORBIDDEN).build());
+
+        ResponseEntity<Void> result = favoriteController.deleteFavorite("token", favoriteId);
+
+        assertEquals(HttpStatus.FORBIDDEN, result.getStatusCode());
+    }
 }
