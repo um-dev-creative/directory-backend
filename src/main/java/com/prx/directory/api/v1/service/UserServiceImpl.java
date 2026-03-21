@@ -7,6 +7,7 @@ import com.prx.directory.api.v1.to.PutUserRequest;
 import com.prx.directory.api.v1.to.UserCreateRequest;
 import com.prx.directory.api.v1.to.UserCreateResponse;
 import com.prx.directory.client.backbone.BackboneClient;
+import com.prx.directory.client.backbone.to.BackboneUserGetResponse;
 import com.prx.directory.client.backbone.to.BackboneUserUpdateRequest;
 import com.prx.directory.jpa.repository.BusinessRepository;
 import com.prx.directory.kafka.producer.EmailMessageProducerService;
@@ -30,7 +31,22 @@ import java.util.*;
 import static com.prx.directory.constant.DirectoryAppConstants.*;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
-/// Service implementation for user-related operations.
+/**
+ * Concrete implementation of the {@code UserService} interface providing
+ * the business logic for user-related operations such as user creation,
+ * retrieval, update, and deletion.
+ * <p>
+ * This service class overrides the default methods in the interface
+ * to include the custom implementation specific to this application.
+ * <p>
+ * Responsibilities:
+ * - Handling user management operations.
+ * - Integrating with the persistence layer to perform CRUD operations.
+ * - Returning appropriate HTTP responses for service methods.
+ * <p>
+ * Dependency: This class depends on the {@code UserService} interface
+ * and related Transfer Object (TO) classes for request and response handling.
+ */
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -55,11 +71,18 @@ public class UserServiceImpl implements UserService {
     private final BackboneClient backboneClient;
     private final GetUserMapper getUserMapper;
     private final BusinessRepository businessRepository;
+    private final SecureRandom random = new SecureRandom();
 
-    /// Constructs a new UserServiceImpl with the specified BackboneClient and UserCreateMapper.
-    ///
-    /// @param backboneClient   the client used to communicate with the backend
-    /// @param userCreateMapper the mapper used to convert between request/response objects and backend objects
+    /**
+     * Constructs an instance of UserServiceImpl with the specified dependencies.
+     *
+     * @param backboneClient               the BackboneClient used for communication with external systems
+     * @param emailMessageProducerService  the service responsible for producing and handling email messages
+     * @param userCreateMapper             the mapper used for transforming user creation data
+     * @param putUserMapper                the mapper used for updating user data
+     * @param getUserMapper                the mapper used for retrieving user data
+     * @param businessRepository           the repository for accessing business-related data
+     */
     public UserServiceImpl(BackboneClient backboneClient, EmailMessageProducerService emailMessageProducerService,
                            UserCreateMapper userCreateMapper, PutUserMapper putUserMapper,
                            GetUserMapper getUserMapper, BusinessRepository businessRepository) {
@@ -98,21 +121,40 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseEntity<GetUserResponse> findUser(String token, UUID id) {
+        UUID applicationID = UUID.fromString(applicationIdString);
+        BackboneUserGetResponse result;
         try {
-            UUID applicationID = UUID.fromString(applicationIdString);
-            var result = backboneClient.findUserById(id);
-            var profileImageRef = backboneClient.getProfileImageRef(token, applicationID);
-            var profileRef = Objects.nonNull(profileImageRef.getBody()) && Objects.nonNull(profileImageRef.getBody().ref()) ?
-                    profileImageRef.getBody().ref() : "";
-            var businessIds = businessRepository.findIdCollectionByUserId(id);
-            return ResponseEntity.ok(getUserMapper.fromBackbone(result, profileRef, businessIds));
+            result = backboneClient.findUserById(id);
         } catch (FeignException e) {
-            logger.warn("Error finding user: {}", e.getMessage());
+            logger.warn("Error fetching user {} from backbone: {}", id, e.getMessage());
             if (e.status() == HttpStatus.NOT_FOUND.value()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).header("message-error", USER_NOT_FOUND_MESSAGE).build();
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .header(MESSAGE_ERROR_HEADER, USER_NOT_FOUND_MESSAGE)
+                        .build();
             }
-            return ResponseEntity.status(e.status()).build();
+            // For other errors propagate status to caller as appropriate
+            if (e.status() > 0) {
+                return ResponseEntity.status(e.status()).build();
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+
+        String profileRef = "";
+        try {
+            var profileImageRef = backboneClient.getProfileImageRef(token, applicationID);
+            profileRef = Objects.nonNull(profileImageRef.getBody()) && Objects.nonNull(profileImageRef.getBody().ref()) ?
+                    profileImageRef.getBody().ref() : "";
+        } catch (FeignException e) {
+            // Image fetching is best-effort: log and continue returning the user without profileRef
+            if (e.status() == HttpStatus.NOT_FOUND.value()) {
+                logger.warn("Profile image not found for user {}: {}", id, e.getMessage());
+            } else {
+                logger.warn("Failed to fetch profile image for user {} (will return user without image): {}", id, e.getMessage());
+            }
+        }
+
+        var businessIds = businessRepository.findIdCollectionByUserId(id);
+        return ResponseEntity.ok(getUserMapper.fromBackbone(result, profileRef, businessIds));
     }
 
     @Override
@@ -293,18 +335,7 @@ public class UserServiceImpl implements UserService {
         return null; // Validation passed
     }
 
-    /// Generates a random four-digit number.
-    ///
-    /// This method uses [SecureRandom] to generate a random integer between 1000 and 9999 (inclusive), ensuring
-    /// that the result is always a four-digit number. This can be used for purposes such as verification codes or temporary PINs.
-    /// @return a random four-digit integer between 1000 and 9999
-    public int generateFourDigitNumber() {
-        SecureRandom random = new SecureRandom();
-        return 1000 + random.nextInt(9000); // Generates a number from 1000 to 9999
-    }
-
     private String generateAlias(UserCreateRequest userCreateRequest, boolean afterFirstTime, int time) {
-        SecureRandom random = new SecureRandom();
         String alias;
         StringBuilder aliasTemp = new StringBuilder(userCreateRequest.firstname().substring(0, 1)
                 .concat(userCreateRequest.lastname()));
@@ -335,6 +366,16 @@ public class UserServiceImpl implements UserService {
             return alias.substring(0, MAX_ALIAS_LENGTH - 1);
         }
         return alias.toString();
+    }
+
+    /**
+     * Generates a random four-digit number.
+     * This method uses [SecureRandom] to generate a random integer between 1000 and 9999 (inclusive), ensuring
+     * that the result is always a four-digit number. This can be used for purposes such as verification codes or temporary PINs.
+     * @return a random four-digit integer between 1000 and 9999
+     */
+    public int generateFourDigitNumber() {
+        return 1000 + random.nextInt(9000); // Generates a number from 1000 to 9999
     }
 
     private EmailMessageTO toEmailMessageTO(UserCreateRequest userCreateRequest, UserCreateResponse userCreateResponse) {

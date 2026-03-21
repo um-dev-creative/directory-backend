@@ -424,7 +424,6 @@ class UserServiceImplTest {
                 .InternalServerError(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), requestFeign, null, null));
 
         ResponseEntity<GetUserResponse> response = userService.findUser("token", userId);
-
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
