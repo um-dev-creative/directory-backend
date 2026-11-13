@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres (loosely) to "Keep a Changelog" and follows semantic versioning where practical.
 
+## [Unreleased] - 2026-11-13
+
+### Changed
+- **Breaking for operators.** Directory no longer logs in to mercury with an alias and a password. It asks backbone-rest for the Backbone M2M token of its own managed client (`POST /api/v1/managed-clients/token`, scopes `mercury:message:read` and `mercury:message:write`), sends it as `Authorization: Bearer` to mercury's `POST /api/v1/auth/token` and sends the M2M token mercury answers (tied to the Directory application) in `session-token`. New `MercuryTokens` caches both tokens until a minute before they expire and retries once with fresh tokens on a 401; `MercuryAuthClient` and `BackboneManagedClient` are Feign clients without the OAuth interceptor. `MercuryClient.token` and the `session-token-bkd` header towards mercury are gone, and `UserRegisterServiceImpl.confirmCode` no longer reads the user from backbone (it sent that user's alias and password to mercury). **Action needed, in this order:** (1) deploy backbone-rest, `security-oauth` and mercury with the Backbone-token exchange; (2) create Directory's managed client in Backbone, tied to the Directory application, with both scopes; (3) put `MERCURY_M2M_CLIENT_ID` and `MERCURY_M2M_CLIENT_SECRET` in Vault (optional `MERCURY_M2M_SCOPES`); (4) deploy this. See `docs/technical/mercury-m2m-auth.md` and `docs/user-guide/mercury-m2m-auth.md`.
+
 ## [Unreleased] - 2026-04-12
 
 ### Added

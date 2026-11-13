@@ -2,6 +2,7 @@ package com.prx.directory.services;
 
 import com.prx.directory.client.backbone.BackboneClient;
 import com.prx.directory.client.mercury.MercuryClient;
+import com.prx.directory.client.mercury.MercuryTokens;
 import com.prx.security.service.SessionJwtService;
 import com.prx.security.to.AuthRequest;
 import com.prx.security.to.AuthResponse;
@@ -18,7 +19,8 @@ class AuthServiceImplTest {
     private final SessionJwtService sessionJwtService = mock(SessionJwtService.class);
     private final BackboneClient backboneClient = mock(BackboneClient.class);
     private final MercuryClient mercuryClient = mock(MercuryClient.class);
-    private final AuthServiceImpl authService = new AuthServiceImpl(sessionJwtService, backboneClient, mercuryClient);
+    private final MercuryTokens mercuryTokens = mock(MercuryTokens.class);
+    private final AuthServiceImpl authService = new AuthServiceImpl(sessionJwtService, backboneClient, mercuryClient, mercuryTokens);
 
     @Test
     @DisplayName("token should return OK status with valid alias")
@@ -84,5 +86,51 @@ class AuthServiceImplTest {
         boolean isValid = authService.validate(sessionTokenBkd);
 
         assertFalse(isValid);
+    }
+
+    private static String backboneTokenOf(java.util.UUID uid) {
+        var payload = java.util.Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(("{\"uid\":\"" + uid + "\"}").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        return "h." + payload + ".s";
+    }
+
+    @SuppressWarnings("unchecked")
+    private void runsCallsWithTheMercuryToken() {
+        when(mercuryTokens.withToken(any())).thenAnswer(inv -> ((java.util.function.Function<String, Object>) inv.getArgument(0)).apply("mercury"));
+    }
+
+    @Test
+    @DisplayName("token with the backbone session reads the verification status with Mercury's M2M token")
+    void tokenWithBackboneSessionAddsTheVerificationStatus() {
+        var user = java.util.UUID.randomUUID();
+        runsCallsWithTheMercuryToken();
+        when(mercuryClient.isVerificationCodeDone("mercury", user)).thenReturn(true);
+        when(sessionJwtService.generateSessionToken(anyString(), anyMap())).thenReturn("jwt");
+
+        var response = authService.token(new AuthRequest("alias", ""), backboneTokenOf(user));
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(sessionJwtService).generateSessionToken(eq("alias"), argThat(p -> "true".equals(p.get("vcCompleted")) && user.toString().equals(p.get("uid"))));
+    }
+
+    @Test
+    @DisplayName("token with the backbone session marks the verification incomplete when Mercury has no code")
+    void tokenWithBackboneSessionMarksIncompleteOnNotFound() {
+        var user = java.util.UUID.randomUUID();
+        when(mercuryTokens.withToken(any())).thenThrow(new feign.FeignException.NotFound("nf",
+                feign.Request.create(feign.Request.HttpMethod.GET, "http://x", java.util.Map.of(), null, java.nio.charset.StandardCharsets.UTF_8, null), new byte[0], java.util.Map.of()));
+        when(sessionJwtService.generateSessionToken(anyString(), anyMap())).thenReturn("jwt");
+
+        var response = authService.token(new AuthRequest("alias", ""), backboneTokenOf(user));
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(sessionJwtService).generateSessionToken(eq("alias"), argThat(p -> "false".equals(p.get("vcCompleted"))));
+    }
+
+    @Test
+    @DisplayName("token with the backbone session rejects a blank alias without touching Mercury")
+    void tokenWithBackboneSessionRejectsBlankAlias() {
+        assertEquals(HttpStatus.BAD_REQUEST, authService.token(new AuthRequest("", ""), "x").getStatusCode());
+        verifyNoInteractions(mercuryClient, mercuryTokens);
     }
 }
