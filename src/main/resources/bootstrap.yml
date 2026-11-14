@@ -29,6 +29,15 @@ prx:
         redirect-uri: ${AUTH_SERVER_URI}${AUTH_TOKEN_URI}
         username: ${MERCURY_USERNAME}
         password: ${MERCURY_PASSWORD}
+  clients:
+    mercury:
+      # Directory's Backbone managed client. Its Backbone M2M token is what proves to Mercury which application is calling: Mercury
+      # trades it (POST /api/v1/auth/token) for its own token, tied to the application Backbone links the client to. Replaces the
+      # alias and password Directory used to send to Mercury. The client needs the scopes below in Backbone. Both from Vault.
+      m2m:
+        client-id: ${MERCURY_M2M_CLIENT_ID:}
+        client-secret: ${MERCURY_M2M_CLIENT_SECRET:}
+        scopes: ${MERCURY_M2M_SCOPES:mercury:message:read,mercury:message:write}
 app:
   clientRoles: ${AUTH_ROLE_ID}
   # The name of the application

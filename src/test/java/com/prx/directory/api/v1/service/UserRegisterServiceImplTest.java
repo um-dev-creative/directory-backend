@@ -1,13 +1,10 @@
 package com.prx.directory.api.v1.service;
 
 import com.prx.directory.api.v1.to.ConfirmCodeRequest;
-import com.prx.directory.client.backbone.BackboneClient;
-import com.prx.directory.client.backbone.to.BackboneUserGetResponse;
 import com.prx.directory.client.mercury.MercuryClient;
+import com.prx.directory.client.mercury.MercuryTokens;
 import com.prx.directory.client.mercury.to.VerificationCodeRequest;
 import com.prx.directory.mapper.ConfirmCodeMapper;
-import com.prx.directory.api.v1.to.PrxTokenString;
-import com.prx.security.to.AuthRequest;
 import feign.FeignException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,8 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -27,25 +24,28 @@ class UserRegisterServiceImplTest {
 
     MercuryClient mercuryClient;
     ConfirmCodeMapper confirmCodeMapper;
-    BackboneClient backboneClient;
+    MercuryTokens mercuryTokens;
     UserRegisterServiceImpl service;
 
     @BeforeEach
     void setup() {
         mercuryClient = mock(MercuryClient.class);
         confirmCodeMapper = mock(ConfirmCodeMapper.class);
-        backboneClient = mock(BackboneClient.class);
-        service = new UserRegisterServiceImpl(mercuryClient, confirmCodeMapper, backboneClient);
+        mercuryTokens = mock(MercuryTokens.class);
+        service = new UserRegisterServiceImpl(mercuryClient, mercuryTokens, confirmCodeMapper);
         ReflectionTestUtils.setField(service, "applicationId", UUID.randomUUID());
+    }
+
+    @SuppressWarnings("unchecked")
+    private void runsCallsWithTheMercuryToken() {
+        when(mercuryTokens.withToken(any())).thenAnswer(inv -> ((Function<String, Object>) inv.getArgument(0)).apply("mercury-token"));
     }
 
     @Test
     @DisplayName("confirmCode: success returns 200")
     void confirmCode_success() {
         UUID userId = UUID.randomUUID();
-        var userResp = new BackboneUserGetResponse(userId, "alias","pass","email","disp", LocalDateTime.now(), LocalDateTime.now(),true,true,true,true,null, List.of(), List.of());
-        when(backboneClient.findUserById(userId)).thenReturn(userResp);
-        when(mercuryClient.token(anyString(), any(AuthRequest.class))).thenReturn(new PrxTokenString("mercury-token"));
+        runsCallsWithTheMercuryToken();
         when(confirmCodeMapper.toVerificationCodeRequest(any(ConfirmCodeRequest.class), any(UUID.class))).then(inv -> {
             ConfirmCodeRequest c = inv.getArgument(0);
             UUID appId = inv.getArgument(1);
@@ -55,15 +55,14 @@ class UserRegisterServiceImplTest {
 
         var resp = service.confirmCode("bkd", new ConfirmCodeRequest(userId, "123456789"));
         assertEquals(200, resp.getStatusCode().value());
+        verify(mercuryClient).confirmCode(eq("mercury-token"), any(VerificationCodeRequest.class));
     }
 
     @Test
     @DisplayName("confirmCode: Feign error propagates status and headers")
     void confirmCode_feignErrorPropagatesStatusAndHeader() {
         UUID userId = UUID.randomUUID();
-        var userResp = new BackboneUserGetResponse(userId, "alias","pass","email","disp", LocalDateTime.now(), LocalDateTime.now(),true,true,true,true,null, List.of(), List.of());
-        when(backboneClient.findUserById(userId)).thenReturn(userResp);
-        when(mercuryClient.token(anyString(), any(AuthRequest.class))).thenReturn(new PrxTokenString("t"));
+        runsCallsWithTheMercuryToken();
         when(confirmCodeMapper.toVerificationCodeRequest(any(), any())).thenAnswer(inv -> new VerificationCodeRequest(inv.getArgument(1), userId, "123456789"));
 
         Map<String, Collection<String>> headers = new HashMap<>();
@@ -80,9 +79,7 @@ class UserRegisterServiceImplTest {
     @DisplayName("confirmCode: Feign error without message header returns status and empty header")
     void confirmCode_feignErrorWithoutMessageHeader() {
         UUID userId = UUID.randomUUID();
-        var userResp = new BackboneUserGetResponse(userId, "alias","pass","email","disp", LocalDateTime.now(), LocalDateTime.now(),true,true,true,true,null, List.of(), List.of());
-        when(backboneClient.findUserById(userId)).thenReturn(userResp);
-        when(mercuryClient.token(anyString(), any(AuthRequest.class))).thenReturn(new PrxTokenString("t"));
+        runsCallsWithTheMercuryToken();
         when(confirmCodeMapper.toVerificationCodeRequest(any(), any())).thenAnswer(inv -> new VerificationCodeRequest(inv.getArgument(1), userId, "123456789"));
 
         FeignException ex = new FeignException.BadRequest("bad", mockRequest(), new byte[0], new HashMap<>());
