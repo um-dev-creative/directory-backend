@@ -5,6 +5,10 @@ user-invocable: true
 subagent-only: false
 tools: ['run_in_terminal', 'read_file', 'grep_search', 'file_search', 'create_file']
 skills: ['release-management', 'risk-assessment', 'ci-cd-orchestration', 'quality-gates', 'sprint-planning', 'backlog-management', 'jacoco-coverage']
+skill-definition: '.github/skills/project-manager/SKILL.md'
+tool-docs:
+  - '.github/tools/maven-build.tool.md'
+  - '.github/tools/github-cli.tool.md'
 ---
 
 # Project Manager Agent

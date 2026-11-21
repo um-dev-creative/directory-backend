@@ -1,7 +1,20 @@
 # AI Agent Coworkers — directory-backend
 
-This document indexes all AI agents, skills, tools, and workflows configured
+This document indexes all AI agents, skills, tools, prompts, and hooks configured
 for the **directory-backend** Spring Boot microservice.
+
+## Project Snapshot
+
+| Field | Value |
+|-------|-------|
+| Language | Java 21 |
+| Framework | Spring Boot 3.5.8 · Spring Cloud 2025.0.1 |
+| Build tool | Maven 3.x (`mvnw`) |
+| Test framework | JUnit 5.14.1 · Mockito 5.21.0 · H2 (test profile) · JMH 1.37 |
+| Static analysis | PMD 3.28.0 (`ruleset.xml`) · JaCoCo 0.8.14 (80% gate) · SonarCloud · Qodana |
+| Config system | Spring Cloud Config + HashiCorp Vault |
+| Entry point | `com.umdc.directory.DirectoryBackendApplication` |
+| Domain modules | User, Business, Campaign, Category, Product, DigitalContact, Favorite, Timezone, Auth |
 
 ## Agents
 
@@ -9,6 +22,7 @@ for the **directory-backend** Spring Boot microservice.
 
 | Agent | File | Description |
 |-------|------|-------------|
+| Orchestrator | `agents/orchestrator.agent.md` | Decomposes requests, delegates to subagents, produces delivery summaries |
 | Developer | `agents/developer.agent.md` | Senior full-stack developer (Java/Spring) |
 | QA / Test Writer | `agents/test-writer.agent.md` | Automated test authoring |
 | Product Owner | `agents/product-owner.agent.md` | Business stakeholder / requirements |
@@ -25,75 +39,80 @@ for the **directory-backend** Spring Boot microservice.
 | Database Architect | `agents/database-architect.agent.md` | JPA entity design / query optimization |
 | DevOps Engineer | `agents/devops-engineer.agent.md` | CI/CD pipeline / Docker management |
 
+See [`agents/agents.md`](agents/agents.md) for the full table with skill definitions.
+
 ## Skills
 
-| Skill | File | Used By |
-|-------|------|---------|
-| Acceptance Criteria | `skills/acceptance-criteria.skill.md` | Product Owner, Repo Requirements Analyst |
-| API Contract Review | `skills/api-contract-review.skill.md` | API Reviewer, Product Owner, Developer |
-| Backlog Management | `skills/backlog-management.skill.md` | Product Owner, Project Manager, Repo Requirements Analyst |
-| CI/CD Orchestration | `skills/ci-cd-orchestration.skill.md` | Project Manager, DevOps Engineer |
-| Clean Code | `skills/clean-code.skill.md` | Code Reviewer |
-| CVE Detection | `skills/cve-detection.skill.md` | Security Reviewer |
-| Dependency Audit | `skills/dependency-audit.skill.md` | Security Reviewer |
-| Docker Containerization | `skills/docker-containerization.skill.md` | DevOps Engineer |
-| Feign Integration | `skills/feign-integration.skill.md` | Developer |
-| GitHub Actions | `skills/github-actions.skill.md` | DevOps Engineer |
-| JaCoCo Coverage | `skills/jacoco-coverage.skill.md` | QA / Test Writer, Project Manager |
-| Java Code Quality | `skills/java-code-quality.skill.md` | Code Reviewer |
-| Java Spring Development | `skills/java-spring-development.skill.md` | Developer, Code Reviewer |
-| JPA Persistence | `skills/jpa-persistence.skill.md` | Developer, Database Architect |
-| JUnit 5 Testing | `skills/junit5-testing.skill.md` | QA / Test Writer, Developer |
-| JWT Security | `skills/jwt-security.skill.md` | Security Reviewer |
-| Kafka Messaging | `skills/kafka-messaging.skill.md` | Developer |
-| MapStruct Mapping | `skills/mapstruct-mapping.skill.md` | Developer |
-| Maven Build | `skills/maven-build.skill.md` | DevOps Engineer |
-| Mockito Mocking | `skills/mockito-mocking.skill.md` | QA / Test Writer |
-| OpenAPI Specification | `skills/openapi-specification.skill.md` | Product Owner, API Reviewer |
-| OWASP Top 10 | `skills/owasp-top10.skill.md` | Security Reviewer |
-| PMD Analysis | `skills/pmd-analysis.skill.md` | Code Reviewer |
-| Quality Gates | `skills/quality-gates.skill.md` | Project Manager |
-| Release Management | `skills/release-management.skill.md` | Project Manager, DevOps Engineer |
-| REST API Design | `skills/rest-api-design.skill.md` | Developer, API Reviewer, Product Owner |
-| Risk Assessment | `skills/risk-assessment.skill.md` | Project Manager, Repo Requirements Analyst |
-| Schema Design | `skills/schema-design.skill.md` | Database Architect |
-| Spring Boot Best Practices | `skills/spring-boot-best-practices.skill.md` | Code Reviewer |
-| Spring Boot Testing | `skills/spring-boot-testing.skill.md` | QA / Test Writer |
-| Spring Data JPA | `skills/spring-data-jpa.skill.md` | Database Architect |
-| Spring Security | `skills/spring-security.skill.md` | Security Reviewer |
-| Sprint Planning | `skills/sprint-planning.skill.md` | Project Manager |
-| SQL Optimization | `skills/sql-optimization.skill.md` | Database Architect |
-| Test Design Patterns | `skills/test-design-patterns.skill.md` | QA / Test Writer |
+### Per-Agent Skill Definitions
+
+| Agent | File |
+|-------|------|
+| Orchestrator | `skills/orchestrator/SKILL.md` |
+| Developer | `skills/developer/SKILL.md` |
+| QA / Test Writer | `skills/test-writer/SKILL.md` |
+| Code Reviewer | `skills/code-reviewer/SKILL.md` |
+| Security Reviewer | `skills/security-reviewer/SKILL.md` |
+| DevOps Engineer | `skills/devops-engineer/SKILL.md` |
+| API Reviewer | `skills/api-reviewer/SKILL.md` |
+| Database Architect | `skills/database-architect/SKILL.md` |
+| Product Owner | `skills/product-owner/SKILL.md` |
+| Project Manager | `skills/project-manager/SKILL.md` |
+| Repo Requirements Analyst | `skills/repo-requirements-analyst/SKILL.md` |
+
+See [`skills/skills.md`](skills/skills.md) for the full shared skill library (35 shared skills).
 
 ## Tools
 
-| Tool | File | Type |
-|------|------|------|
-| Maven Build | `tools/maven-build.tool.md` | Terminal |
-| Docker Build | `tools/docker-build.tool.md` | Terminal |
-| GitHub CLI | `tools/github-cli.tool.md` | Terminal |
-| Dependency Check | `tools/dependency-check.tool.md` | Terminal |
-| OpenAPI Validator | `tools/openapi-validator.tool.md` | Terminal |
-| Sonar Analysis | `tools/sonar-analysis.tool.md` | Terminal |
+| Tool | File | Used By |
+|------|------|---------|
+| Maven Build | `tools/maven-build.tool.md` | Developer, DevOps Engineer, QA / Test Writer |
+| Docker Build | `tools/docker-build.tool.md` | DevOps Engineer |
+| GitHub CLI | `tools/github-cli.tool.md` | DevOps Engineer, Project Manager, Orchestrator |
+| Dependency Check | `tools/dependency-check.tool.md` | Security Reviewer |
+| OpenAPI Validator | `tools/openapi-validator.tool.md` | API Reviewer, Developer |
+| Sonar Analysis | `tools/sonar-analysis.tool.md` | Code Reviewer, DevOps Engineer |
+| Git | `tools/git.tool.md` | Developer, Orchestrator, DevOps Engineer |
+| PMD and Qodana | `tools/pmd-qodana.tool.md` | Code Reviewer, Developer |
 
-## Workflows
+See [`tools/tools.md`](tools/tools.md) for full catalog and output locations.
 
-| Workflow | File | Trigger | Agents Involved |
-|----------|------|---------|-----------------|
-| Feature Development | `workflows/feature-development.workflow.md` | Manual | PO, Dev, QA, API Rev, Code Rev |
-| Bug Fix | `workflows/bug-fix.workflow.md` | Manual | Dev, QA, Code Rev |
-| Security Audit | `workflows/security-audit.workflow.md` | Manual | Sec Rev, Dev, PM |
-| Code Review | `workflows/code-review.workflow.md` | Pull Request | Code Rev, API Rev, Sec Rev |
-| Release | `workflows/release.workflow.md` | Manual | PM, Sec Rev, API Rev, Dev, DevOps |
-| Coverage Improvement | `workflows/coverage-improvement.workflow.md` | Manual | QA, Dev, PM |
+## Prompts
+
+| Prompt | Agent | Mode |
+|--------|-------|------|
+| Full Feature Delivery | Orchestrator | agent |
+| Implement Feature | Developer | agent |
+| Fix Bug | Developer | agent |
+| Fix Lint Violations | Code Reviewer | agent |
+| Write Unit Tests | QA / Test Writer | agent |
+| Improve Coverage | QA / Test Writer | agent |
+| Review Code | Code Reviewer | agent |
+| Security Audit | Security Reviewer | agent |
+| Prepare Release | DevOps Engineer | agent |
+| Define Story | Product Owner | ask |
+| Review API Contract | API Reviewer | agent |
+| Bootstrap Agent Infrastructure | Orchestrator | agent |
+
+See [`prompts/prompts.md`](prompts/prompts.md) for the full catalog with trigger conditions.
+
+## Hooks
+
+| Hook | Trigger | Blocking | Agents |
+|------|---------|---------|--------|
+| Pre Pull Request Gate | PR to `main`/`develop` | **Yes** | code-reviewer, api-reviewer, security-reviewer |
+| Post Implementation Review | Push to `feature/*`/`fix/*` | No | test-writer, code-reviewer |
+| Post Merge Security Check | Merge to `develop` (pom.xml changed) | No | security-reviewer |
+| Pre Release Gate | Before tag `v*` | **Yes** | security-reviewer, api-reviewer, code-reviewer, devops-engineer |
+
+See [`hooks/hooks.md`](hooks/hooks.md) for lifecycle diagram and prompt references.
 
 ## Agent Collaboration Map
 
 ```
                     ┌──────────────────┐
-                    │  Project Manager │
+                    │   Orchestrator   │  ← user-invocable entry point
                     └────────┬─────────┘
-                             │ coordinates
+                             │ delegates via run_subagent
               ┌──────────────┼──────────────┐
               ▼              ▼              ▼
      ┌─────────────┐ ┌────────────┐ ┌──────────────┐
@@ -120,8 +139,22 @@ for the **directory-backend** Spring Boot microservice.
 
 ## Quick Start
 
-1. **New feature**: Use the [Feature Development Workflow](workflows/feature-development.workflow.md)
-2. **Bug fix**: Use the [Bug Fix Workflow](workflows/bug-fix.workflow.md)
-3. **Pre-release**: Use the [Release Workflow](workflows/release.workflow.md)
-4. **Coverage gap**: Use the [Coverage Improvement Workflow](workflows/coverage-improvement.workflow.md)
-5. **Security check**: Use the [Security Audit Workflow](workflows/security-audit.workflow.md)
+| Use Case | Invoke |
+|----------|--------|
+| New feature (end-to-end) | Orchestrator → `full-feature-delivery.prompt.md` |
+| Implement a single endpoint | Developer → `implement-feature.prompt.md` |
+| Fix a bug | Developer → `fix-bug.prompt.md` |
+| Write tests | QA / Test Writer → `write-unit-tests.prompt.md` |
+| Boost coverage | QA / Test Writer → `improve-coverage.prompt.md` |
+| Review a PR | Code Reviewer → `review-code.prompt.md` |
+| Security check | Security Reviewer → `security-audit.prompt.md` |
+| Prepare a release | DevOps Engineer → `prepare-release.prompt.md` |
+| Define a story | Product Owner → `define-story.prompt.md` |
+
+## Infrastructure Counts
+
+- **11** agents (`agents/`)
+- **11** per-agent skill definitions (`skills/<agent>/SKILL.md`) + **35** shared skills (`skills/*.skill.md`)
+- **8** canonical tools (`tools/`) + 1 deprecated (`maven.md`)
+- **12** prompts (`prompts/`)
+- **4** hooks (`hooks/`)

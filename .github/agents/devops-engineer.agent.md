@@ -16,6 +16,12 @@ skills:
   - docker-containerization
   - github-actions
   - maven-build
+skill-definition: '.github/skills/devops-engineer/SKILL.md'
+tool-docs:
+  - '.github/tools/maven-build.tool.md'
+  - '.github/tools/docker-build.tool.md'
+  - '.github/tools/github-cli.tool.md'
+  - '.github/tools/git.tool.md'
 ---
 
 # DevOps Engineer Subagent
