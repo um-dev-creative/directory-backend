@@ -75,7 +75,7 @@ server:
 
 spring:
   ssl:
-    # SSL_KEYSTORE_URL / SSL_TRUSTSTORE_URL (optional, with a scheme, e.g. file:/usr/local/runme/certs/directory/directory.jks) override the
+    # SSL_KEYSTORE_URL / SSL_TRUSTSTORE_URL (optional, with a scheme, e.g. file:/usr/local/runme/certs/directory/directory-rest.jks) override the
     # classpath names: the jar carries the keystores (pom.xml, certs/directory), a mounted path wins when set.
     bundle:
       jks:

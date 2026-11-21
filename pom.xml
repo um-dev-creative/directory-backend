@@ -398,6 +398,10 @@
                  at run time). Same pattern as smartkin-backend, mercury and backbone-rest. -->
             <resource>
                 <directory>certs/directory</directory>
+                <!-- Only the stores: the folder also holds the PEM private key and certificates, which must not end up in the jar -->
+                <includes>
+                    <include>*.jks</include>
+                </includes>
             </resource>
         </resources>
         <finalName>${project.artifactId}</finalName>

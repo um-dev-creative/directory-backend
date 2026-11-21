@@ -16,7 +16,7 @@ flowchart LR
 
 | Piece | Role |
 | --- | --- |
-| `pom.xml` `<resource>certs/directory</resource>` | Copies the stores to the classpath root; a missing folder is skipped by Maven |
+| `pom.xml` `<resource>certs/directory</resource>` | Copies only `*.jks` to the classpath root (the PEM key and certificates stay out of the jar); a missing folder is skipped by Maven |
 | `bootstrap.yml` `${SSL_*_URL:classpath:${SSL_*_LOCATION}}` | One expression for the bundle, Vault, Config Server, Eureka and `umdc.security.truststore.location` |
 | `HttpClientConfig` | Inter-service `RestTemplate`; loads the truststore through `DefaultResourceLoader` (accepts `classpath:`, `file:` or a bare name) |
 | `DirectoryBackendApplication` | `@ComponentScan` excludes `com.umdc.security.config.SecurityConfig` (Keycloak-style resource server) |
