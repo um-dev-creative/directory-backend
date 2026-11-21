@@ -1,6 +1,7 @@
 package com.prx.directory.api.v1.service;
 
 import com.prx.directory.api.v1.to.GetTimezoneCollectionResponse;
+import com.prx.directory.api.v1.to.TimezoneResumeTO;
 import com.prx.directory.api.v1.to.TimezoneTO;
 import com.prx.directory.jpa.entity.TimezoneEntity;
 import com.prx.directory.jpa.repository.TimezoneRepository;
@@ -27,13 +28,15 @@ class TimezoneServiceImplTest {
 
     TimezoneRepository repository;
     TimezoneMapper mapper;
+    TimezoneCacheService cacheService;
     TimezoneServiceImpl service;
 
     @BeforeEach
     void setup() {
         repository = mock(TimezoneRepository.class);
         mapper = Mappers.getMapper(TimezoneMapper.class);
-        service = new TimezoneServiceImpl(repository, mapper);
+        cacheService = mock(TimezoneCacheService.class);
+        service = new TimezoneServiceImpl(repository, mapper, cacheService);
     }
 
     private static TimezoneEntity sampleEntity() {
@@ -58,12 +61,29 @@ class TimezoneServiceImplTest {
     }
 
     @Test
-    @DisplayName("TimezoneServiceImpl: findAll returns collection response")
-    void findAll_returnsCollectionResponse() {
-        when(repository.findAll()).thenReturn(List.of(sampleEntity()));
+    @DisplayName("TimezoneServiceImpl: findAll delegates to TimezoneCacheService and wraps response")
+    void findAll_delegatesToCacheService() {
+        UUID id = UUID.randomUUID();
+        TimezoneResumeTO resumeTO = new TimezoneResumeTO(id, "UTC", "UTC");
+        when(cacheService.getAllTimezones()).thenReturn(List.of(resumeTO));
 
         GetTimezoneCollectionResponse resp = service.findAll();
+
         assertEquals(1, resp.total());
         assertEquals(1, resp.timezones().size());
+        verify(cacheService, times(1)).getAllTimezones();
+        verifyNoInteractions(repository);
+    }
+
+    @Test
+    @DisplayName("TimezoneServiceImpl: findAll returns empty collection when cache is empty")
+    void findAll_returnsEmptyWhenCacheEmpty() {
+        when(cacheService.getAllTimezones()).thenReturn(List.of());
+
+        GetTimezoneCollectionResponse resp = service.findAll();
+
+        assertEquals(0, resp.total());
+        assertTrue(resp.timezones().isEmpty());
     }
 }
+

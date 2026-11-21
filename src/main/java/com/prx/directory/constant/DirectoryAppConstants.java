@@ -40,6 +40,12 @@ public final class DirectoryAppConstants {
     public static final String CAMPAIGN_SORT_DELIMITER = ",";
     public static final String CAMPAIGN_SORT_DESC_PREFIX = "-";
 
+    // Redis cache keys and settings for timezone
+    public static final String TIMEZONE_CACHE_KEY = "timezones:all:v1";
+    public static final String TIMEZONE_CACHE_LOCK_KEY = "timezones:lock";
+    public static final long TIMEZONE_CACHE_DEFAULT_TTL_SECONDS = 86_400L; // 24 hours
+    public static final long TIMEZONE_CACHE_LOCK_TTL_MS = 5_000L;
+
     // Favorite type filters
     public static final String FAVORITE_TYPE_STORES = "stores";
     public static final String FAVORITE_TYPE_PRODUCTS = "products";
