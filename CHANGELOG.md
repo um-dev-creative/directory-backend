@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 This project adheres (loosely) to "Keep a Changelog" and follows semantic versioning where practical.
 
+## [Unreleased] - 2026-11-21 (TLS bundle and session-token security, as in smartkin-backend / mercury / zerobound-rest)
+
+### Changed
+- **Certificates.** The TLS keystores now travel inside the jar: `pom.xml` copies only the `*.jks` of `certs/directory/` (git-ignored: `directory-rest.jks`, `umdc-truststore.jks`, `prx-internal-ca.crt`) onto the classpath. `spring.ssl.bundle.jks.directory-security`, `spring.cloud.vault.ssl`, `spring.cloud.config.tls`, `eureka.client.tls` and `umdc.security.truststore.location` read `${SSL_*_URL:classpath:${SSL_*_LOCATION}}`, so `SSL_KEYSTORE_URL` / `SSL_TRUSTSTORE_URL` (with a scheme) override the classpath names. `HttpClientConfig` resolves that location with a `ResourceLoader` (classpath, `file:` or a bare name). `umdc.security.keystore.*` is no longer read and was removed.
+- **Authentication.** `DirectoryBackendApplication` excludes the library's Keycloak-style `SecurityConfig`; the new `SessionTokenSecurityConfig` is a stateless chain that lets `umdc.api.endpoint` (`/api/v1`) through and denies everything else except health probes and Swagger, and the library's `SessionJwtInterceptor` validates the `session-token` header. The OAuth2 resource-server auto-configurations and the `spring.security.oauth2.resourceserver` block (`AUTH_CERT_URI`) are gone; `umdc.api.endpoint` is new.
+- **Image.** `Dockerfile` is two-stage (Spring Boot layers), no longer `COPY`s five `.crt` files from `src/main/resources`, and imports the internal CA only when the BuildKit secret `prx_internal_ca` is given; new `docker-entrypoint.sh`. Verified: the image builds, the CA lands in the JVM `cacerts`, and the jar carries `certs/directory/*` when present.
+
+### Added
+- `config/local.env` (non-secret, versioned) and `secrets/local.env.example`; `.gitignore` now ignores `certs/` and `secrets/*.env`.
+- `SessionTokenSecurityConfigTest` (4 tests) and `SslLocationPropertiesTest` (3 tests); suite: 591 tests, method coverage 93.1 %. Guides: `docs/user-guide/tls-and-session-security.md`, `docs/technical/tls-and-session-security.md`.
+
+### Notes
+- **Action needed:** put `directory-rest.jks` (the service keystore, not in the repository), `umdc-truststore.jks` and `prx-internal-ca.crt` in `certs/directory/` before building the jar; keystore passwords go in `secrets/local.env` or Vault, never in the repository. Remove `AUTH_CERT_URI` from the environment.
+- `config/local.env` matches the real files: `directory-rest.jks` is JKS, `umdc-truststore.jks` is PKCS12 (`SSL_TRUSTSTORE_TYPE=PKCS12`). Both open with the default `changeit` password: rotate it before production.
+- Not run against a live Vault / Config Server / Backbone: the TLS handshake and the interceptor with real tokens are untested here.
+
+---
+
 ## [Unreleased] - 2026-11-21 (com.umdc migration)
 
 ### Changed

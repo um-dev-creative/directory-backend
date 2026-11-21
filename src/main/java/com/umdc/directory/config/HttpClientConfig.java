@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
@@ -34,7 +34,8 @@ public class HttpClientConfig {
     @Primary
     public RestTemplate interServiceRestTemplate() throws CertificateSecurityException {
         try {
-            Resource trustStoreResource = new ClassPathResource(trustStoreLocation);
+            // "classpath:name", "file:/path" or a bare name (classpath), the same locations the TLS bundle accepts
+            Resource trustStoreResource = new DefaultResourceLoader().getResource(trustStoreLocation);
             SSLContext sslContext = SSLContextBuilder.create()
                     .loadTrustMaterial(trustStoreResource.getURL(), trustStorePassword.toCharArray())
                     .build();

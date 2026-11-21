@@ -12,6 +12,9 @@ umdc:
     version: 0.0.1
   management:
     clientRoles: ${APP_CLIENT_ROLES}
+  # Base path the session interceptor (security-oauth's SessionJwtInterceptor) protects; SessionTokenSecurityConfig opens the same path
+  api:
+    endpoint: /api/v1
   logging:
     trace:
       enabled: ${LOGGING_TRACE_ENABLED}
@@ -20,12 +23,9 @@ umdc:
     jwt:
       secret: ${APP_TOKEN_SECRET}
       expirationMs: ${APP_TOKEN_EXPIRATION}
-    keystore:
-      location: ${SSL_KEYSTORE_LOCATION}
-      password: ${SSL_KEYSTORE_PASSWORD}
-      type: ${SSL_KEYSTORE_TYPE}
+    # Read by HttpClientConfig (inter-service RestTemplate). Same place as the TLS bundle's truststore below.
     truststore:
-      location: ${SSL_TRUSTSTORE_LOCATION}
+      location: ${SSL_TRUSTSTORE_URL:classpath:${SSL_TRUSTSTORE_LOCATION}}
       password: ${SSL_TRUSTSTORE_PASSWORD}
       type: ${SSL_TRUSTSTORE_TYPE}
     auth:
@@ -75,21 +75,26 @@ server:
 
 spring:
   ssl:
+    # SSL_KEYSTORE_URL / SSL_TRUSTSTORE_URL (optional, with a scheme, e.g. file:/usr/local/runme/certs/directory/directory-rest.jks) override the
+    # classpath names: the jar carries the keystores (pom.xml, certs/directory), a mounted path wins when set.
     bundle:
       jks:
         directory-security:
           keystore:
-            location: classpath:${SSL_KEYSTORE_LOCATION}
+            location: ${SSL_KEYSTORE_URL:classpath:${SSL_KEYSTORE_LOCATION}}
             password: ${SSL_KEYSTORE_PASSWORD}
             type: ${SSL_KEYSTORE_TYPE}
           truststore:
-            location: classpath:${SSL_TRUSTSTORE_LOCATION}
+            location: ${SSL_TRUSTSTORE_URL:classpath:${SSL_TRUSTSTORE_LOCATION}}
             password: ${SSL_TRUSTSTORE_PASSWORD}
             type: ${SSL_TRUSTSTORE_TYPE}
   mvc:
     throw-exception-if-no-handler-found: true
   autoconfigure:
-    exclude: org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration
+    # Authentication is the library's SessionJwtInterceptor (see SessionTokenSecurityConfig), not a Keycloak-style resource server
+    exclude:
+      - org.springframework.boot.security.oauth2.server.resource.autoconfigure.OAuth2ResourceServerAutoConfiguration
+      - org.springframework.boot.security.oauth2.server.resource.autoconfigure.web.OAuth2ResourceServerWebSecurityAutoConfiguration
   mustache:
     check-template-location: false
   test:
@@ -120,10 +125,6 @@ spring:
           external:
             issuer-uri: ${AUTH_SERVER_URI}
             jwk-set-uri: ${spring.security.oauth2.client.provider.external.issuer-uri}/protocol/openid-connect/certs
-      resourceserver:
-        jwt:
-          issuer-uri: ${AUTH_SERVER_URI}
-          jwk-set-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}${AUTH_CERT_URI}
   cloud:
     # The Spring Cloud Config specific configurations
     #<><><><><><><><><><><><><><><> VAULT <><><><><><><><><><><><><><>
@@ -131,6 +132,12 @@ spring:
       enabled: ${VAULT_ENABLED}
       token: ${VAULT_TOKEN}
       uri: ${VAULT_SERVER_URI}
+      # Resolved before the TLS bundle exists, so it names the truststore directly. It holds the PRX internal CA that signs every *.tst
+      # certificate (the JVM image also gets it in its cacerts from the Dockerfile).
+      ssl:
+        trust-store: ${SSL_TRUSTSTORE_URL:classpath:${SSL_TRUSTSTORE_LOCATION}}
+        trust-store-password: ${SSL_TRUSTSTORE_PASSWORD}
+        trust-store-type: ${SSL_TRUSTSTORE_TYPE}
       kv:
         backend: PRX
         default-context: ${umdc.app.name}
@@ -153,7 +160,7 @@ spring:
       # TLS configuration for the Config client — trusts the private CA on prx-qa.config-server.tst
       tls:
         enabled: true
-        trust-store: classpath:${SSL_TRUSTSTORE_LOCATION}
+        trust-store: ${SSL_TRUSTSTORE_URL:classpath:${SSL_TRUSTSTORE_LOCATION}}
         trust-store-password: ${SSL_TRUSTSTORE_PASSWORD}
         trust-store-type: ${SSL_TRUSTSTORE_TYPE}
     openfeign:
@@ -198,6 +205,6 @@ eureka:
   client:
     tls:
       enabled: true
-      trust-store: classpath:${SSL_TRUSTSTORE_LOCATION}
+      trust-store: ${SSL_TRUSTSTORE_URL:classpath:${SSL_TRUSTSTORE_LOCATION}}
       trust-store-password: ${SSL_TRUSTSTORE_PASSWORD}
       trust-store-type: ${SSL_TRUSTSTORE_TYPE}
