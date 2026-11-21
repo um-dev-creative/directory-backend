@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 This project adheres (loosely) to "Keep a Changelog" and follows semantic versioning where practical.
 
+## [Unreleased] - 2026-11-21 (database migration scripts)
+
+### Added
+- `src/main/resources/db/migration/V2__add_deleted_fields_user_favorite.sql`: adds nullable `deleted_at` / `deleted_by` to `directory_site.user_favorite` (used by `UserFavoriteEntity`).
+- `src/main/resources/db/migration/V3__add_profile_image_ref_to_business.sql`: adds nullable `profile_image_ref VARCHAR(512)` to `directory_site.business` (used by `BusinessEntity` and the Cloudflare R2 image upload). It was announced in the 2026-04-12 entry but never committed.
+- Both scripts are idempotent (`ADD COLUMN IF NOT EXISTS`). Guides: `docs/user-guide/database-migrations.md`, `docs/technical/database-migrations.md`.
+
+### Notes
+- Flyway is **not** configured in this project (no dependency, no properties), so the scripts are applied manually; no `V1` exists. No Java, test or runtime configuration changes.
 ## [Unreleased] - 2026-11-21 (project documentation and agent tooling)
 
 ### Added
