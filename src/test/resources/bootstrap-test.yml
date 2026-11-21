@@ -1,4 +1,4 @@
-prx:
+umdc:
   logging:
     trace:
       enabled: false

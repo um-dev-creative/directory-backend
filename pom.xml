@@ -5,11 +5,11 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.8</version>
+        <version>4.0.6</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
-    <groupId>com.prx</groupId>
+    <groupId>com.umdc</groupId>
     <artifactId>directory-backend</artifactId>
     <version>0.0.1</version>
     <name>directory-backend</name>
@@ -24,9 +24,9 @@
             <id>lmata</id>
             <name>Luis Antonio Mata</name>
             <email>luis.antonio.mata@gmail.com</email>
-            <url>www.prx-dev.com</url>
-            <organization>PRX Dev Innova</organization>
-            <organizationUrl>www.prx.com</organizationUrl>
+            <url>www.umdc-dev.com</url>
+            <organization>UM DevCreative</organization>
+            <organizationUrl>www.umdc.com</organizationUrl>
         </developer>
     </developers>
     <scm>
@@ -37,13 +37,13 @@
     </scm>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>21</java.version>
+        <java.version>25</java.version>
         <!-- Use a dedicated jacoco argLine property to avoid conflicts with CI/global agent injection -->
         <jacoco.argLine/>
         <!--        PRX Commons-->
-        <com.prx.commons.version>0.0.1</com.prx.commons.version>
-        <com.prx.commons-services.version>0.0.2</com.prx.commons-services.version>
-        <com.prx.security-oauth.version>0.0.1</com.prx.security-oauth.version>
+        <com.umdc.commons.version>0.0.1</com.umdc.commons.version>
+        <com.umdc.commons-services.version>0.0.1</com.umdc.commons-services.version>
+        <com.umdc.security-oauth.version>0.0.1</com.umdc.security-oauth.version>
         <!--        MAVEN-->
         <maven.compiler.release>${java.version}</maven.compiler.release>
         <maven.compiler.source>${java.version}</maven.compiler.source>
@@ -58,8 +58,8 @@
         <!--        OPEN API -->
         <springdoc.version>2.6.0</springdoc.version>
         <!--        SPRING -->
-        <spring-boot.version>3.5.8</spring-boot.version>
-        <spring-cloud.version>2025.0.1</spring-cloud.version>
+        <spring-boot.version>4.0.6</spring-boot.version>
+        <spring-cloud.version>2025.1.1</spring-cloud.version>
 
         <!-- Centralized versions for previously hardcoded dependency/plugin versions -->
         <postgresql.version>42.7.7</postgresql.version>
@@ -76,7 +76,7 @@
 
         <!--        Test Dependencies-->
         <!--        JUnit 5.x-->
-        <junit.jupiter.version>5.14.1</junit.jupiter.version>
+        <junit.jupiter.version>6.0.3</junit.jupiter.version>
         <!--        Mockito-->
         <mockito.version>5.21.0</mockito.version>
         <!--        JMH (Java Microbenchmark Harness) -->
@@ -164,12 +164,12 @@
         <!-- Note: mapstruct-processor should not be a regular dependency; it's provided to the compiler via maven-compiler-plugin's annotationProcessorPaths -->
         <!--        PRX Dependencies-->
         <dependency>
-            <groupId>com.prx</groupId>
-            <artifactId>prx-commons</artifactId>
-            <version>${com.prx.commons.version}</version>
+            <groupId>com.umdc</groupId>
+            <artifactId>commons</artifactId>
+            <version>${com.umdc.commons.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.prx</groupId>
+            <groupId>com.umdc</groupId>
             <artifactId>commons-services</artifactId>
             <exclusions>
                 <!-- Exclude older springdoc artifacts that pull in javax.servlet (1.8.x) -->
@@ -186,12 +186,12 @@
                     <artifactId>springdoc-openapi-common</artifactId>
                 </exclusion>
             </exclusions>
-            <version>${com.prx.commons-services.version}</version>
+            <version>${com.umdc.commons-services.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.prx</groupId>
+            <groupId>com.umdc</groupId>
             <artifactId>security-oauth</artifactId>
-            <version>${com.prx.security-oauth.version}</version>
+            <version>${com.umdc.security-oauth.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
@@ -659,7 +659,7 @@
                                     <goal>java</goal>
                                 </goals>
                                 <configuration>
-                                    <mainClass>com.prx.directory.benchmark.BenchmarkRunner</mainClass>
+                                    <mainClass>com.umdc.directory.benchmark.BenchmarkRunner</mainClass>
                                     <classpathScope>test</classpathScope>
                                 </configuration>
                             </execution>

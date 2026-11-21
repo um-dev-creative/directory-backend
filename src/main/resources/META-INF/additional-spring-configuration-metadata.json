@@ -1,8 +1,8 @@
 {
   "properties": [
     {
-      "name": "prx.logging.trace.enabled",
+      "name": "umdc.logging.trace.enabled",
       "type": "java.lang.String",
-      "description": "Description for prx.logging.trace.enabled."
+      "description": "Description for umdc.logging.trace.enabled."
   }
 ] }
