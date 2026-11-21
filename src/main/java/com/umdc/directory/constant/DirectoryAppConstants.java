@@ -46,6 +46,14 @@ public final class DirectoryAppConstants {
     public static final long TIMEZONE_CACHE_DEFAULT_TTL_SECONDS = 86_400L; // 24 hours
     public static final long TIMEZONE_CACHE_LOCK_TTL_MS = 5_000L;
 
+    // Business statistics (views)
+    public static final int STATS_DEFAULT_DAYS = 30;
+    public static final int STATS_MAX_DAYS = 365;
+    public static final int STATS_SHORT_WINDOW_DAYS = 7;
+    public static final String STATS_INVALID_DAYS = "days must be between 1 and " + STATS_MAX_DAYS;
+    public static final String STATS_ONLY_OWNER = "Only the owner of the business can see its statistics";
+    public static final String UNAUTHORIZED_MESSAGE = "Unauthorized";
+
     // Favorite type filters
     public static final String FAVORITE_TYPE_STORES = "stores";
     public static final String FAVORITE_TYPE_PRODUCTS = "products";

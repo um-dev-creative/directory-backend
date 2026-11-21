@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 This project adheres (loosely) to "Keep a Changelog" and follows semantic versioning where practical.
 
+## [Unreleased] - 2026-11-21 (business view statistics)
+
+### Added
+- **View counter without personal data.** New table `directory_site.business_view_daily` (migration `V5__create_business_view_daily.sql`, applied by hand): one row per business and UTC day with a number of views. No user id, IP address or user agent is stored anywhere.
+- `POST /api/v1/businesses/{businessId}/views` counts one view for today (UTC) and answers `204`. A view by the owner of the business is not counted; an unknown business is `404`. The increment is one atomic `UPDATE`; the first view of a day inserts the row and a concurrent first view falls back to the `UPDATE` (each step in its own transaction).
+- `GET /api/v1/businesses/{businessId}/stats?days=30` (owner only: `uid` of the session token; `401`/`403`/`404`; `days` 1..365 else `400`): `totalViews`, `viewsToday`, `viewsLast7Days` (independent of a shorter window) and `daily`, one entry per day with zeros included, oldest first.
+- `BusinessRepository.findOwnerId` reads the owner without loading the business. `src/main/resources/api/index.yaml` documents both endpoints. Guides: `docs/user-guide/business-statistics.md`, `docs/technical/business-statistics.md`.
+
+### Tests
+- `BusinessStatsServiceImplTest` (12, fixed clock: the day is the UTC one even when the server zone is already the next day), `BusinessViewDailyRepositoryTest` (5, `@DataJpaTest` on H2: the atomic increment, the range query and the composite key), `BusinessStatsRoutesTest` (5). Adds the test dependency `spring-boot-starter-data-jpa-test`.
+
+### Notes
+- **Action needed:** apply `V5` before deploying (and `V2`-`V4` if pending); Flyway is not configured. Not run on a real PostgreSQL here.
+- Without personal data the counter cannot tell unique visitors apart: it counts page views, and a visitor who reloads is counted again. The BFF rate limit is the only brake.
+
+---
+
 ## [Unreleased] - 2026-11-21 (database migration scripts)
 
 ### Added
