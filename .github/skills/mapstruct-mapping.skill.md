@@ -14,7 +14,7 @@ and DTOs in the **directory-backend** project.
 
 ## Mapper Configuration
 
-All mappers use the shared config from `com.prx.commons.services.config.mapper.MapperAppConfig`:
+All mappers use the shared config from `com.umdc.commons.services.config.mapper.MapperAppConfig`:
 
 ```java
 @Mapper(config = MapperAppConfig.class)
@@ -42,7 +42,7 @@ public interface CampaignMapper {
 
 ## Conventions
 
-- Mapper interfaces live in `com.prx.directory.mapper`.
+- Mapper interfaces live in `com.umdc.directory.mapper`.
 - MapStruct generates implementations at compile time via `maven-compiler-plugin` annotation processor.
 - Use `@Mapping` annotations for field name mismatches.
 - Use `default` methods for complex transformations.

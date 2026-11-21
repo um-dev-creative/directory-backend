@@ -5,6 +5,9 @@ user-invocable: true
 subagent-only: false
 tools: ['read_file', 'grep_search', 'file_search', 'create_file']
 skills: ['api-contract-review', 'acceptance-criteria', 'openapi-specification', 'backlog-management', 'rest-api-design']
+skill-definition: '.github/skills/product-owner/SKILL.md'
+tool-docs:
+  - '.github/tools/openapi-validator.tool.md'
 ---
 
 # Product Owner Agent

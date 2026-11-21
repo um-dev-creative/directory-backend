@@ -7,6 +7,9 @@ tools: ['run_subagent', 'codebase_search', 'insert_edit_into_file', 'replace_str
 skills: ['backlog-management', 'acceptance-criteria', 'risk-assessment']
 user-invocable: true
 subagent-only: false
+skill-definition: '.github/skills/repo-requirements-analyst/SKILL.md'
+tool-docs:
+  - '.github/tools/maven-build.tool.md'
 ---
 # repo-requirements-analyst instructions
 

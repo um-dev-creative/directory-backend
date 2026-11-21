@@ -5,6 +5,11 @@ user-invocable: true
 subagent-only: false
 tools: ['run_in_terminal', 'read_file', 'insert_edit_into_file', 'replace_string_in_file', 'create_file', 'grep_search', 'file_search', 'get_errors']
 skills: ['java-spring-development', 'rest-api-design', 'jpa-persistence', 'mapstruct-mapping', 'feign-integration', 'kafka-messaging', 'api-contract-review', 'junit5-testing']
+skill-definition: '.github/skills/developer/SKILL.md'
+tool-docs:
+  - '.github/tools/maven-build.tool.md'
+  - '.github/tools/git.tool.md'
+  - '.github/tools/openapi-validator.tool.md'
 ---
 
 # Developer Agent
@@ -52,21 +57,21 @@ Controller (*Api.java interface → *Controller.java impl) → Service (*Service
 ### Package Map
 | Package                                     | Purpose                                   |
 |---------------------------------------------|-------------------------------------------|
-| `com.prx.directory.api.v1.controller`       | REST controllers + API interfaces         |
-| `com.prx.directory.api.v1.service`          | Business logic, validation, ResponseEntity |
-| `com.prx.directory.api.v1.to`              | DTOs (records): request/response objects   |
-| `com.prx.directory.jpa.entity`             | JPA entities                               |
-| `com.prx.directory.jpa.repository`         | Spring Data repositories                   |
-| `com.prx.directory.jpa.spec`              | JPA Specifications (dynamic filtering)     |
-| `com.prx.directory.mapper`                 | MapStruct mappers                          |
-| `com.prx.directory.constant`              | Constants (`DirectoryAppConstants`)        |
-| `com.prx.directory.client.backbone`        | Backbone Feign client                      |
-| `com.prx.directory.client.mercury`         | Mercury Feign client                       |
-| `com.prx.directory.kafka.producer`         | Kafka message producers                    |
-| `com.prx.directory.security`              | JWT session services                       |
-| `com.prx.directory.services`              | Cross-cutting services (Auth)              |
-| `com.prx.directory.config`               | Configuration classes (SSL, etc.)          |
-| `com.prx.directory.util`                 | Utility classes (`JwtUtil`)                |
+| `com.umdc.directory.api.v1.controller`       | REST controllers + API interfaces         |
+| `com.umdc.directory.api.v1.service`          | Business logic, validation, ResponseEntity |
+| `com.umdc.directory.api.v1.to`              | DTOs (records): request/response objects   |
+| `com.umdc.directory.jpa.entity`             | JPA entities                               |
+| `com.umdc.directory.jpa.repository`         | Spring Data repositories                   |
+| `com.umdc.directory.jpa.spec`              | JPA Specifications (dynamic filtering)     |
+| `com.umdc.directory.mapper`                 | MapStruct mappers                          |
+| `com.umdc.directory.constant`              | Constants (`DirectoryAppConstants`)        |
+| `com.umdc.directory.client.backbone`        | Backbone Feign client                      |
+| `com.umdc.directory.client.mercury`         | Mercury Feign client                       |
+| `com.umdc.directory.kafka.producer`         | Kafka message producers                    |
+| `com.umdc.directory.security`              | JWT session services                       |
+| `com.umdc.directory.services`              | Cross-cutting services (Auth)              |
+| `com.umdc.directory.config`               | Configuration classes (SSL, etc.)          |
+| `com.umdc.directory.util`                 | Utility classes (`JwtUtil`)                |
 
 ### Domain Entities
 - `UserEntity`, `BusinessEntity`, `ProductEntity`, `CategoryEntity`
@@ -113,7 +118,7 @@ mvn -B -V -e clean verify
 mvn test
 
 # Single test class
-mvn -Dtest=com.prx.directory.api.v1.controller.CampaignControllerTest test
+mvn -Dtest=com.umdc.controller.v1.api.directory.CampaignControllerTest test
 
 # Single test method
 mvn -Dtest=CampaignControllerTest#listCampaignsReturnsOk test

@@ -1,34 +1,9 @@
-# Tool: Maven
+**⚠️ DEPRECATED — This file is a duplicate. Use [`maven-build.tool.md`](maven-build.tool.md) instead.**
 
-Purpose
+See [`maven-build.tool.md`](maven-build.tool.md) for the canonical Maven CLI tool documentation,
+including all build, test, coverage, and static analysis commands for `directory-backend`.
 
-- Build, test, and package the Java Spring Boot application.
-
-Common commands
-
-- Full CI-aligned build (skip tests):
-
-  mvn -DskipTests package
-
-- Full CI-aligned check (same as pipeline):
-
-  mvn -B -V -e clean verify
-
-- Run tests:
-
-  mvn test
-
-- Run a single test class or method:
-
-  mvn -Dtest=com.prx.directory.api.v1.controller.CampaignControllerTest test
-  mvn -Dtest=CampaignControllerTest#listCampaignsReturnsOk test
-
-- Generate JaCoCo coverage report:
-
-  mvn clean test jacoco:report
-
-Notes
-
-- Use the project's `mvnw` wrapper to ensure consistent Maven version across environments.
-- CI enforces JaCoCo and PMD checks; run `mvn pmd:check` locally to pre-empt failures.
-
+Related tools:
+- Static analysis (PMD, Qodana) → [`pmd-qodana.tool.md`](pmd-qodana.tool.md)
+- Dependency scanning → [`dependency-check.tool.md`](dependency-check.tool.md)
+- Sonar → [`sonar-analysis.tool.md`](sonar-analysis.tool.md)

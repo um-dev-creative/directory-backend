@@ -3,10 +3,16 @@ name: API Reviewer
 description: API contract and OpenAPI specification reviewer subagent
 user-invocable: false
 subagent-only: true
-tools: ['read_file', 'grep_search', 'file_search', 'get_errors']
-skills: ['openapi-specification', 'rest-api-design', 'api-contract-review']
+tools: ['read_file', 'grep_search', 'file_search', 'get_errors', 'create_file']
+skills:
+  - openapi-specification
+  - rest-api-design
+  - api-contract-review
+skill-definition: '.github/skills/api-reviewer/SKILL.md'
+tool-docs:
+  - '.github/tools/openapi-validator.tool.md'
+  - '.github/tools/maven-build.tool.md'
 ---
-
 # API Reviewer Subagent
 
 ## Assigned Skills

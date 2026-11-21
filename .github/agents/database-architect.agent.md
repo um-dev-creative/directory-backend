@@ -14,6 +14,9 @@ skills:
   - sql-optimization
   - schema-design
   - spring-data-jpa
+skill-definition: '.github/skills/database-architect/SKILL.md'
+tool-docs:
+  - '.github/tools/maven-build.tool.md'
 ---
 
 # Database Architect Subagent

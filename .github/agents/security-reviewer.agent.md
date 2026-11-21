@@ -15,6 +15,10 @@ skills:
   - owasp-top10
   - jwt-security
   - spring-security
+skill-definition: '.github/skills/security-reviewer/SKILL.md'
+tool-docs:
+  - '.github/tools/dependency-check.tool.md'
+  - '.github/tools/sonar-analysis.tool.md'
 ---
 
 # Security Reviewer Subagent

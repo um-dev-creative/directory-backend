@@ -15,18 +15,18 @@ in the **directory-backend** project.
 ## Feign Clients
 
 ### Backbone Client
-- Interface: `com.prx.directory.client.backbone.BackboneClient`
+- Interface: `com.umdc.backbone.client.directory.BackboneClient`
 - Configurer: `BackboneFeignConfigurer`
 - Purpose: Core platform operations, user management
 
 ### Mercury Client
-- Interface: `com.prx.directory.client.mercury.MercuryClient`
+- Interface: `com.umdc.mercury.client.directory.MercuryClient`
 - Configurer: `MercuryFeignConfigurer`
 - Purpose: Communication/notification service integration
 
 ## Configuration
 
-Feign clients are enabled via `@EnableFeignClients(basePackages = "com.prx.directory.client")`
+Feign clients are enabled via `@EnableFeignClients(basePackages = "com.umdc.directory.client")`
 on the main application class.
 
 Auth credentials are configured per client in `bootstrap.yml` with environment variables:
@@ -35,7 +35,7 @@ Auth credentials are configured per client in `bootstrap.yml` with environment v
 
 ## Interceptor
 
-Request interceptors in `com.prx.directory.client.interceptor` handle token injection
+Request interceptors in `com.umdc.directory.client.interceptor` handle token injection
 and header propagation for outbound Feign requests.
 
 ## Testing

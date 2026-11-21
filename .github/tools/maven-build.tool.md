@@ -33,7 +33,7 @@ mvn clean
 mvn test
 
 # Run single test class
-mvn -Dtest=com.prx.directory.api.v1.controller.CampaignControllerTest test
+mvn -Dtest=com.umdc.controller.v1.api.directory.CampaignControllerTest test
 
 # Run single test method
 mvn -Dtest=CampaignControllerTest#listCampaignsReturnsOk test

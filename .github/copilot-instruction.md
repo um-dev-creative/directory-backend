@@ -6,7 +6,7 @@
 
 ## Architecture and Request Flow
 - Entry point: `src/main/java/com/prx/directory/DirectoryBackendApplication.java`.
-- Package scan/enabled clients include `com.prx.commons.services`, `com.prx.directory`, `com.prx.security`, and Feign clients.
+- Package scan/enabled clients include `com.umdc.commons.services`, `com.umdc.directory`, `com.umdc.security`, and Feign clients.
 - Standard flow: **`*Api.java` interface -> `*Controller.java` -> `*ServiceImpl.java` -> `*Repository.java`**.
 - API interfaces (`*Api.java`) contain Swagger/OpenAPI annotations and default methods; controllers should remain thin.
 - Service layer owns validation, status mapping, and typically returns `ResponseEntity<?>`.
@@ -54,7 +54,7 @@ mvn -B -V -e clean verify
 mvn test
 
 # Run one test class
-mvn -Dtest=com.prx.directory.api.v1.controller.CampaignControllerTest test
+mvn -Dtest=com.umdc.controller.v1.api.directory.CampaignControllerTest test
 
 # Run one test method
 mvn -Dtest=CampaignControllerTest#listCampaignsReturnsOk test

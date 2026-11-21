@@ -35,7 +35,7 @@ Directory Backend is the backend microservice that powers the Directory platform
 Key capabilities
 - CRUD APIs for campaigns, businesses, products and users (exposed under `/api/v1/*`).
 - Search and filter capabilities (specifications based on JPA criteria).
-- Kafka messages for e.g. outgoing email notifications (TO classes under `com.prx.directory.kafka.to`).
+- Kafka messages for e.g. outgoing email notifications (TO classes under `com.umdc.directory.kafka.to`).
 - Centralized dependency and plugin version management in `pom.xml` for predictable upgrades.
 
 Quick links
@@ -75,7 +75,7 @@ Run tests
 mvn test
 
 # Run a single test class
-mvn -Dtest=com.prx.directory.kafka.to.EmailMessageTOTest test
+mvn -Dtest=com.umdc.to.kafka.directory.EmailMessageTOTest test
 ```
 
 Run locally
@@ -125,6 +125,20 @@ Contact
 -------
 - If you need help with build issues, dependency upgrades, or test coverage, open an issue and assign it to the team owners.
 
+Mercury integration (configuration essentials)
+----------------------------------------------
+Directory Backend calls Mercury through `com.umdc.directory.client.mercury.MercuryClient`:
+
+- `POST /api/v1/auth/token` with a registered alias/password gets a Mercury token for the M2M endpoints
+  (`/api/v1/verification-code`, `/api/v1/mail`). Mercury no longer requires the `session-token-bkd` header (it is
+  ignored). The alias/password must match Mercury's `umdc.mercury.login-clients`. Repeated wrong credentials are
+  throttled (`429` + `Retry-After`).
+- For user-scoped Mercury operations (campaigns, templates) send the calling service's
+  `Authorization: Bearer <Backbone opaque token>` **and** the end user's `session-token`.
+- The session secret is **not** used by this service to talk to Mercury, but Mercury and backbone-rest must share
+  `APP_TOKEN_SECRET` (and Mercury must trust backbone-rest's `JWT_ISSUER`/`JWT_AUDIENCE`) for end-user tokens to work.
+  See Mercury's `docs/tec/en/06-environment-configuration.md`.
+
 License
 -------
 This repository includes a `LICENSE` file at the project root — follow it for reuse/redistribution rules.
@@ -132,6 +146,6 @@ This repository includes a `LICENSE` file at the project root — follow it for 
 Acknowledgements
 ----------------
 - Project tooling: Maven, JaCoCo, PMD
-- Integrations: backbone, mercury (internal clients visible under `com.prx.directory.client.*`)
+- Integrations: backbone, mercury (internal clients visible under `com.umdc.directory.client.*`)
 
 [![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-light.svg)](https://sonarcloud.io/summary/new_code?id=umdc-directory-backend)

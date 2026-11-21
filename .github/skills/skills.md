@@ -3,7 +3,27 @@
 This folder catalogs reusable skills that AI agents can call as part of their work in
 `directory-backend`. Each skill file uses front matter plus markdown sections.
 
-## Complete Skill List
+## Per-Agent Skill Definitions
+
+Each agent has a dedicated `SKILL.md` in its own subfolder that consolidates project-specific patterns, naming conventions, error handling, key files, constraints, and a checklist.
+
+| Agent | Skill Definition File |
+|---|---|
+| Orchestrator | `orchestrator/SKILL.md` |
+| Developer | `developer/SKILL.md` |
+| QA / Test Writer | `test-writer/SKILL.md` |
+| Code Reviewer | `code-reviewer/SKILL.md` |
+| Security Reviewer | `security-reviewer/SKILL.md` |
+| DevOps Engineer | `devops-engineer/SKILL.md` |
+| API Reviewer | `api-reviewer/SKILL.md` |
+| Database Architect | `database-architect/SKILL.md` |
+| Product Owner | `product-owner/SKILL.md` |
+| Project Manager | `project-manager/SKILL.md` |
+| Repo Requirements Analyst | `repo-requirements-analyst/SKILL.md` |
+
+## Shared Skill Library
+
+The flat `*.skill.md` files are shared skills referenced by multiple agents.
 
 | Skill | File | Used By |
 |---|---|---|
@@ -43,4 +63,4 @@ This folder catalogs reusable skills that AI agents can call as part of their wo
 | SQL Optimization | `sql-optimization.skill.md` | Database Architect |
 | Test Design Patterns | `test-design-patterns.skill.md` | QA / Test Writer |
 
-Keep this list synchronized with `agents/*.agent.md` whenever skill references are added or removed.
+Keep both tables synchronized with `agents/*.agent.md` whenever skill references are added or removed.
