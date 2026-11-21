@@ -1,0 +1,100 @@
+package com.umdc.directory.api.v1.controller;
+
+import com.umdc.directory.api.v1.service.FavoriteService;
+import com.umdc.directory.api.v1.to.FavoriteCreateRequest;
+import com.umdc.directory.api.v1.to.FavoriteResponse;
+import com.umdc.directory.api.v1.to.FavoriteUpdateRequest;
+import com.umdc.directory.constant.FavoriteType;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class FavoriteControllerTest {
+
+    @Mock
+    private FavoriteService favoriteService;
+
+    @InjectMocks
+    private FavoriteController favoriteController;
+
+    @Test
+    @DisplayName("createFavorite should return CREATED when service creates new favorite")
+    void createFavoriteShouldReturnCreated() {
+        FavoriteCreateRequest request = new FavoriteCreateRequest(FavoriteType.STORE, UUID.randomUUID());
+        FavoriteResponse response = new FavoriteResponse(UUID.randomUUID(), FavoriteType.STORE.name(), request.itemId(), UUID.randomUUID(), LocalDateTime.now(), LocalDateTime.now(), true);
+        when(favoriteService.createFavorite(any(), any(FavoriteCreateRequest.class))).thenReturn(ResponseEntity.status(HttpStatus.CREATED).body(response));
+
+        ResponseEntity<FavoriteResponse> result = favoriteController.createFavorite("token", request);
+
+        assertEquals(HttpStatus.CREATED, result.getStatusCode());
+        assertEquals(response, result.getBody());
+    }
+
+    @Test
+    @DisplayName("createFavorite should return BAD_REQUEST when request invalid")
+    void createFavoriteShouldReturnBadRequest() {
+        when(favoriteService.createFavorite(any(), any())).thenReturn(ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
+
+        ResponseEntity<FavoriteResponse> result = favoriteController.createFavorite("token", null);
+
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("updateFavorite should return BAD_REQUEST when request is null")
+    void updateFavoriteShouldReturnBadRequestWhenRequestIsNull() {
+        ResponseEntity<FavoriteResponse> result = favoriteController.updateFavorite("token", UUID.randomUUID(), null);
+
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("updateFavorite should call service when request is valid")
+    void updateFavoriteShouldCallServiceWhenRequestIsValid() {
+        UUID favoriteId = UUID.randomUUID();
+        UUID productId = UUID.randomUUID();
+        FavoriteUpdateRequest request = new FavoriteUpdateRequest(productId, false);
+        FavoriteResponse response = new FavoriteResponse(favoriteId, "PRODUCT", productId, UUID.randomUUID(), LocalDateTime.now(), LocalDateTime.now(), false);
+        when(favoriteService.updateFavorite(any(), any(UUID.class), any(FavoriteUpdateRequest.class))).thenReturn(ResponseEntity.ok(response));
+
+        ResponseEntity<FavoriteResponse> result = favoriteController.updateFavorite("token", favoriteId, request);
+
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(response, result.getBody());
+    }
+
+    @Test
+    @DisplayName("deleteFavorite should return NO_CONTENT when service deletes")
+    void deleteFavoriteShouldReturnNoContentWhenServiceDeletes() {
+        UUID favoriteId = UUID.randomUUID();
+        when(favoriteService.deleteFavorite(any(), any(UUID.class))).thenReturn(ResponseEntity.noContent().build());
+
+        ResponseEntity<Void> result = favoriteController.deleteFavorite("token", favoriteId);
+
+        assertEquals(HttpStatus.NO_CONTENT, result.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("deleteFavorite should return FORBIDDEN when service returns forbidden")
+    void deleteFavoriteShouldReturnForbiddenWhenServiceForbidden() {
+        UUID favoriteId = UUID.randomUUID();
+        when(favoriteService.deleteFavorite(any(), any(UUID.class))).thenReturn(ResponseEntity.status(HttpStatus.FORBIDDEN).build());
+
+        ResponseEntity<Void> result = favoriteController.deleteFavorite("token", favoriteId);
+
+        assertEquals(HttpStatus.FORBIDDEN, result.getStatusCode());
+    }
+}

@@ -23,7 +23,7 @@ sequenceDiagram
 | `client/mercury/MercuryAuthClient` | Feign client of mercury's `POST /api/v1/auth/token`. **No `configuration`** either: its `Authorization` is the Backbone M2M token and `MercuryFeignConfigurer` would add a second one. |
 | `client/mercury/MercuryClient` | Calls that carry mercury's token in `session-token` (`confirmCode`, `isVerificationCodeDone`). |
 
-Properties (`bootstrap.yml`, `prx.clients.mercury.m2m`): `client-id` (`MERCURY_M2M_CLIENT_ID`), `client-secret` (`MERCURY_M2M_CLIENT_SECRET`),
+Properties (`bootstrap.yml`, `umdc.clients.mercury.m2m`): `client-id` (`MERCURY_M2M_CLIENT_ID`), `client-secret` (`MERCURY_M2M_CLIENT_SECRET`),
 `scopes` (`MERCURY_M2M_SCOPES`, default `mercury:message:read,mercury:message:write`). An empty id or secret makes `MercuryTokens.token()` throw
 `IllegalStateException`; the context still starts. Tokens and the secret are never logged (the records override `toString`). mercury lets a client act
 only on the application Backbone ties it to (403 otherwise). The Feign base URLs are still the ones hard-coded in the `@FeignClient` annotations.

@@ -34,3 +34,10 @@ build/
 .vscode/
 
 .nx/polygraph
+
+### Container build and run (same split as smartkin-backend, mercury and zerobound-rest) ###
+# TLS material: certs/directory/ holds directory-rest.jks, umdc-truststore.jks and prx-internal-ca.crt. Never commit.
+certs/
+# Bootstrap secrets (VAULT_TOKEN, keystore passwords): copy secrets/local.env.example. config/*.env carries no credentials and is versioned.
+secrets/*.env
+!config/*.env
