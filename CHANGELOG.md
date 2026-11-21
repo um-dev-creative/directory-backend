@@ -11,7 +11,35 @@ This project adheres (loosely) to "Keep a Changelog" and follows semantic versio
 ### Tests
 - Method coverage of the whole project went from 67.75 % (437/645) to 93.95 % (606/645). New: `TransferObjectsSmokeTest` (every record builds, prints and keeps `equals`/`hashCode` consistent), `MapperImplementationsTest` (every MapStruct method runs on fully populated arguments), `DefaultInterfaceMethodsTest` (every default method of the service/API interfaces answers 501 or throws `UnsupportedOperationException`), plus `SessionJwtServiceImplTest`, `KafkaProducerConfigTest` and `MercuryTokensTest`. The first three discover their classes from the classpath, so new records, mappers and interfaces are covered without editing them; their fixtures are in `src/test/java/com/prx/directory/support`. They are smoke tests: they prove nothing throws, not that a mapping is semantically right.
 
+---
+
+## [Unreleased] - 2026-04-16 (Redis timezone cache)
+
+### Added
+- **Redis caching layer for timezone queries** — implements `TimezoneCacheService` / `TimezoneCacheServiceImpl` to serve the timezone list from Redis (`timezones:all:v1`) instead of hitting PostgreSQL on every request.
+  - `TimezoneCacheService` — new interface exposing `getAllTimezones()`, `refreshTimezones()`, and `invalidateTimezones()`.
+  - `TimezoneCacheServiceImpl` — `@Service` backed by `StringRedisTemplate`. Implements:
+    - Cache-hit path: deserializes JSON from Redis and returns without touching the DB.
+    - Cache-miss path with stampede protection: acquires a short-lived Redis lock (`timezones:lock`, default 5 s TTL) before loading from PostgreSQL. Other instances that cannot acquire the lock fall back to a direct DB read.
+    - Redis outage: any `DataAccessException` while reading the cache is logged as `WARN` and the list is read straight from PostgreSQL, so `/api/v1/timezones` keeps working without Redis.
+    - `refreshTimezones()` — forces a DB reload and overwrites the cached value (TTL 24 h by default, fixed; see `TIMEZONE_CACHE_DEFAULT_TTL_SECONDS`).
+    - `invalidateTimezones()` — deletes the cache key so the next read triggers a fresh DB load.
+    - Structured `DEBUG` / `INFO` / `WARN` / `ERROR` logging for all cache lifecycle events.
+  - `TimezoneServiceImpl` — updated to accept `TimezoneCacheService` via constructor injection. `findAll()` now delegates to `TimezoneCacheService#getAllTimezones()` instead of calling `TimezoneRepository` directly. `getTimezonesPageable(Pageable)` is unchanged.
+  - `DirectoryAppConstants` — added constants: `TIMEZONE_CACHE_KEY`, `TIMEZONE_CACHE_LOCK_KEY`, `TIMEZONE_CACHE_DEFAULT_TTL_SECONDS`, `TIMEZONE_CACHE_LOCK_TTL_MS`.
+  - `spring-boot-starter-data-redis` dependency added to `pom.xml` (version managed by Spring Boot BOM).
+- **Documentation** — `docs/user-guide/timezone-redis-cache.md` and `docs/technical/timezone-redis-cache.md`.
+- **Unit tests** — 11 new / updated test cases:
+  - `TimezoneCacheServiceImplTest` (8 tests) — covers Redis unavailable (DB fallback), cache-hit (no DB call), cache-miss with lock acquired (DB load + Redis write), cache-miss with lock not acquired (fallback to DB, no Redis write), bad JSON deserialization returning empty list, `refreshTimezones` writing to Redis, `invalidateTimezones` deleting the key, and the invalidate-then-get flow triggering a reload.
+  - `TimezoneServiceImplTest` (3 tests, updated) — updated constructor call to inject `TimezoneCacheService` mock; `findAll` tests now verify delegation to the cache service and assert no repository interaction.
+
+### Changed
+- `TimezoneServiceImpl` constructor signature extended with `TimezoneCacheService` parameter (no API contract change).
+
+---
+
 ## [Unreleased] - 2026-04-12
+
 
 ### Added
 - **Business profile image upload via Cloudflare R2** — new `POST /api/v1/businesses/images/{businessId}` endpoint stores the profile image in R2 and persists the public URL in the business record.
