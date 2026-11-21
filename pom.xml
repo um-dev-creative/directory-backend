@@ -387,6 +387,19 @@
     </dependencyManagement>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <!-- The TLS bundle (spring.ssl.bundle.jks.directory-security in bootstrap.yml) reads classpath:${SSL_KEYSTORE_LOCATION} and
+                 classpath:${SSL_TRUSTSTORE_LOCATION} unless SSL_KEYSTORE_URL / SSL_TRUSTSTORE_URL name another place. The real keystores
+                 live in certs/directory/ (git-ignored) and are copied onto the classpath root here, so they travel inside the jar.
+                 Maven skips a missing directory, so a checkout without certs/directory/ still builds (the app then needs the keystores
+                 at run time). Same pattern as smartkin-backend, mercury and backbone-rest. -->
+            <resource>
+                <directory>certs/directory</directory>
+            </resource>
+        </resources>
         <finalName>${project.artifactId}</finalName>
         <plugins>
             <plugin>
