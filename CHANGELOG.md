@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 This project adheres (loosely) to "Keep a Changelog" and follows semantic versioning where practical.
 
+## [Unreleased] - 2026-11-21 (com.umdc migration)
+
+### Changed
+- **Breaking for operators.** Base package renamed `com.prx.directory` → `com.umdc.directory` (main and test sources), Maven `groupId` `com.prx` → `com.umdc`, and the shared libraries now come from the `com.umdc` group (`commons`, `commons-services`, `security-oauth`, version `0.0.1`).
+- **Platform upgrade:** Spring Boot `3.5.8` → `4.0.6`, Spring Cloud `2025.0.1` → `2025.1.1`, JUnit `5.14.1` → `6.0.3`, and **Java `21` → `25`** (the `com.umdc` `security-oauth` artifact is compiled for Java 25). `Dockerfile` (`amazoncorretto:25-alpine`) and the `build`, `ci` and `qodana` workflows follow.
+- **Configuration keys moved** from `prx.*` to `umdc.*` (`umdc.security.jwt`, `umdc.security.auth.clients`, `umdc.security.keystore|truststore`, `umdc.logging.trace.enabled`, `umdc.database-cert`, `umdc.db.ssl.*`, `umdc.directory.*`, `umdc.verification.code.template.id`, `umdc.clients.mercury.m2m.*`). The roles variable is now `APP_CLIENT_ROLES` (was `AUTH_ROLE_ID`) and the SSL stores use `SSL_KEYSTORE_*` / `SSL_TRUSTSTORE_*`. **Action needed:** update Vault / Config Server before deploying. See `docs/technical/umdc-migration.md` and `docs/user-guide/umdc-migration.md`.
+- `BackendFeignConfigurer` now requests tokens with a `RestTemplate` that uses the `directory-security` SSL bundle; `DataSourceSslConfig` no longer declares `@EntityScan` (Spring Boot 4 scans from the application package).
+
+### Added
+- `RedisConfig` (`LettuceConnectionFactory` from `DataRedisProperties`, supports `redis://` / `rediss://` URLs, SSL, username/password, default 10 s timeouts) so the timezone cache keeps working on Spring Boot 4.
+- `HttpClientConfig` and `CertificateSecurityException` in `com.umdc.directory.config`; new `banner.txt`.
+
+### Tests
+- `RedisConfigTest` (4 tests). Mockito-based tests migrated to `MockitoExtension`. Full suite: 584 tests, method coverage 93.1 %.
+
+---
+
 ## [Unreleased] - 2026-11-13
 
 ### Changed

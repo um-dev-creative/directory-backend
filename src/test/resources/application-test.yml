@@ -31,7 +31,7 @@ server:
   ssl:
     enabled: false
 
-prx:
+umdc:
   logging:
     trace:
       enabled: false
