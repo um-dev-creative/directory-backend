@@ -16,12 +16,12 @@ This skill covers Spring Kafka outbound messaging patterns in the **directory-ba
 ### Email Message Producer
 - Interface: `EmailMessageProducerService`
 - Implementation: `EmailMessageProducerServiceImpl`
-- Package: `com.prx.directory.kafka.producer`
+- Package: `com.umdc.directory.kafka.producer`
 - Purpose: Send email notification events to Kafka topics for downstream processing.
 
 ### Kafka Configuration
-- Config class: `com.prx.directory.kafka.config`
-- DTOs: `com.prx.directory.kafka.to` — message payload records
+- Config class: `com.umdc.directory.kafka.config`
+- DTOs: `com.umdc.directory.kafka.to` — message payload records
 
 ## Pattern
 

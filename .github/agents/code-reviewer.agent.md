@@ -14,6 +14,11 @@ skills:
   - spring-boot-best-practices
   - clean-code
   - pmd-analysis
+skill-definition: '.github/skills/code-reviewer/SKILL.md'
+tool-docs:
+  - '.github/tools/sonar-analysis.tool.md'
+  - '.github/tools/pmd-qodana.tool.md'
+  - '.github/tools/maven-build.tool.md'
 ---
 
 # Code Reviewer Subagent
@@ -38,7 +43,7 @@ adherence to project conventions, and potential issues.
 
 - API interfaces (`*Api.java`) hold Swagger annotations + default methods; controllers are thin.
 - Services return `ResponseEntity` directly — not raw domain objects.
-- DTOs are Java records in `com.prx.directory.api.v1.to`.
+- DTOs are Java records in `com.umdc.directory.api.v1.to`.
 - Constants live in `DirectoryAppConstants` — no new string literals.
 - MapStruct mappers use shared `MapperAppConfig`.
 - `MESSAGE_HEADER` / `MESSAGE_ERROR_HEADER` used for response headers.

@@ -12,6 +12,17 @@ This project adheres (loosely) to "Keep a Changelog" and follows semantic versio
 
 ### Notes
 - Flyway is **not** configured in this project (no dependency, no properties), so the scripts are applied manually; no `V1` exists. No Java, test or runtime configuration changes.
+## [Unreleased] - 2026-11-21 (project documentation and agent tooling)
+
+### Added
+- Project documentation under `docs/`: `PROJECT_DOCUMENTATION.md`, `TECHNICAL_DOCUMENTATION.md`, `ARCHITECTURE_DIAGRAMS.md`, business-analyst set (`COMPLETE_PROJECT_DOCUMENTATION_FOR_BA.md`, `BA_QUICK_REFERENCE.md`, `BA_VISUAL_SUMMARY.md`), `DOCUMENTATION_INDEX.md`, `DELIVERY_SUMMARY.md`, `BUSINESS_PROFILE_IMAGE_API.md`, `esp8266.md`.
+- AI-assistant tooling under `.github/`: agents (including the orchestrator), skills, prompts, hooks and tool descriptions.
+- Task backlog under `issues/` and `youtrack/`, plus `variables_reference.md` and `ISSUE-business-patch-contacttype-transient.md`.
+- `docs/user-guide/project-documentation.md` and `docs/technical/project-documentation.md`: where each document lives.
+
+### Changed
+- `BUILD_VALIDATION_REPORT.md` moved to `docs/BUILD_VALIDATION_REPORT.md`; `README.md` and the agent/skill/tool files refreshed.
+- Documentation only: no source, test or configuration file changes.
 ## [Unreleased] - 2026-11-21 (TLS bundle and session-token security, as in smartkin-backend / mercury / zerobound-rest)
 
 ### Changed
