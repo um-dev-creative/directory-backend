@@ -1181,6 +1181,37 @@ paths:
             example:
               userId: 6da59e82-77b4-4e25-a711-d9072c29fa5e
               verificationCode: 2078-8657
+  /api/v1/businesses/{businessId}/views:
+    post:
+      summary: Count a view of a business
+      description: Adds one view to today's (UTC) counter. Nothing about the viewer is stored (no user, IP or user agent); a view by the owner of the business is not counted.
+      parameters:
+        - { name: businessId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: session-token, in: header, required: true, schema: { type: string } }
+      responses:
+        '204':
+          description: Counted (or ignored because the viewer is the owner)
+        '404':
+          description: Business not found
+  /api/v1/businesses/{businessId}/stats:
+    get:
+      summary: Views summary of a business (owner only)
+      description: Window of 1 to 365 days ending today (UTC), default 30.
+      parameters:
+        - { name: businessId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: days, in: query, schema: { type: integer, minimum: 1, maximum: 365, default: 30 } }
+        - { name: session-token, in: header, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: '{ businessId, from, to, totalViews, viewsToday, viewsLast7Days, daily: [ { date: yyyy-MM-dd, views } ] } - one entry per day, zeros included, oldest first'
+        '400':
+          description: days out of range
+        '401':
+          description: Unauthorized
+        '403':
+          description: The caller is not the owner of the business
+        '404':
+          description: Business not found
   /api/v1/businesses/search:
     get:
       summary: Search businesses by city, category and text

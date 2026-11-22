@@ -36,6 +36,10 @@ public interface BusinessRepository extends JpaRepository<BusinessEntity, UUID>,
     @Query("SELECT b FROM BusinessEntity b LEFT JOIN FETCH b.digitalContacts dc LEFT JOIN FETCH dc.contactTypeEntity WHERE b.id = :businessId")
     Optional<BusinessEntity> findBusinessWithDigitalContactsById(@Param("businessId") UUID businessId);
 
+    /// Id of the user who owns the business, without loading the business; empty when it does not exist.
+    @Query("SELECT b.userEntityFk.id FROM BusinessEntity b WHERE b.id = :businessId")
+    Optional<UUID> findOwnerId(@Param("businessId") UUID businessId);
+
     /// The search (`BusinessSpecifications`) reads the category name of every row, so it is fetched with the page.
     @Override
     @EntityGraph(attributePaths = {"categoryFk"})
