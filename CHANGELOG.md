@@ -15,6 +15,7 @@ This project adheres (loosely) to "Keep a Changelog" and follows semantic versio
 ### Notes
 - **Native runtime is not verified.** The image builds and the executable starts, but with placeholder configuration it stops at `No spring.config.import property` (Config Server) and, with Config Server/Vault disabled, at `no ServletWebServerFactory bean` (AOT conditions are fixed at build time with `config/native-aot.env`). It has not been run against real Config Server, Vault, PostgreSQL and Redis. The JVM image is the supported one until that is checked.
 - `pom.xml`: profile `native` pins `httpclient` 4.5.14 (Eureka brings 4.5.3, which breaks the AWS SDK GraalVM metadata); it applies only with `-Pnative`.
+- `Dockerfile.native` uses `native-image-community:25-ol9`: the `:25` tag aborts with `Fatal glibc error: CPU does not support x86-64-v3` on hosts without that instruction set (amd64 emulation, older CPUs).
 - The native image needs about 8 GB of memory for Docker and a long build; the JVM image is unchanged.
 
 ## [Unreleased] - 2026-11-21 (business view statistics)

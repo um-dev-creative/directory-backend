@@ -27,6 +27,7 @@ flowchart LR
 The native image **builds** (554 MB) and the executable starts, but it has **not been verified against real Config Server, Vault, PostgreSQL and Redis**. With placeholder configuration it stops at `No spring.config.import property`; with Config Server disabled it reports `no ServletWebServerFactory bean`, which may be an AOT-time condition mismatch and must be investigated with the real environment. Use the JVM image for deployments until then.
 
 ## Decisions
+- **Builder image `25-ol9`:** the plain `:25` tag fails on CPUs without x86-64-v3 (`Fatal glibc error: CPU does not support x86-64-v3`); OL9 needs only x86-64-v2. Override with `--build-arg GRAALVM_IMAGE=...`.
 - **httpclient pin:** profile `native` in `pom.xml` pins `httpclient` 4.5.14 (Eureka brings 4.5.3; the AWS SDK `apache-client` GraalVM metadata references `RequestConfig.Builder.setNormalizeUri`, absent there). Only with `-Pnative`.
 - **Maven inside the container** for native: Spring AOT must run on the compiled classes, so a prebuilt jar is not enough. The private `com.umdc.*` repositories need credentials, passed as the BuildKit secret `maven_settings` (mounted at `/root/.m2/settings.xml`, not kept in a layer). The Maven repository is a cache mount.
 - **AOT placeholders:** Spring AOT loads `bootstrap.yml`, whose `${VARS}` have no default. `config/native-aot.env` (versioned, no credentials) gives them placeholder values for the build only; they are not compiled into the executable, real values come from the environment/Vault/Config Server at runtime.

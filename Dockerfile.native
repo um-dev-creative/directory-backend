@@ -12,7 +12,9 @@
 # prx_internal_ca is optional. The keystores under certs/directory (git-ignored) must exist in the build context: they are compiled into
 # the executable as classpath resources. Compiling needs ~8 GB of memory for Docker.
 
-ARG GRAALVM_IMAGE=ghcr.io/graalvm/native-image-community:25
+# -ol9: the plain `:25` tag is built on a newer Oracle Linux whose glibc aborts on CPUs without x86-64-v3 ("Fatal glibc error: CPU does not
+# support x86-64-v3"), e.g. amd64 under emulation or older hosts. OL9 needs only x86-64-v2; the executable still runs on the newer glibc of the runtime image.
+ARG GRAALVM_IMAGE=ghcr.io/graalvm/native-image-community:25-ol9
 ARG RUNTIME_IMAGE=debian:bookworm-slim
 
 FROM ${GRAALVM_IMAGE} AS build
