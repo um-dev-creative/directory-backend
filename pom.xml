@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.6</version>
+        <version>4.1.2</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -41,44 +41,54 @@
         <!-- Use a dedicated jacoco argLine property to avoid conflicts with CI/global agent injection -->
         <jacoco.argLine/>
         <!--        PRX Commons-->
-        <com.umdc.commons.version>0.0.1</com.umdc.commons.version>
-        <com.umdc.commons-services.version>0.0.1</com.umdc.commons-services.version>
-        <com.umdc.security-oauth.version>0.0.1</com.umdc.security-oauth.version>
+        <com.umdc.commons.version>0.0.4</com.umdc.commons.version>
+        <com.umdc.commons-services.version>0.0.3</com.umdc.commons-services.version>
+        <com.umdc.security-oauth.version>0.0.3</com.umdc.security-oauth.version>
         <!--        MAVEN-->
         <maven.compiler.release>${java.version}</maven.compiler.release>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
-        <maven.compiler.plugin.version>3.14.1</maven.compiler.plugin.version>
+        <maven.compiler.plugin.version>3.15.0</maven.compiler.plugin.version>
         <maven.resource.plugin.version>3.3.1</maven.resource.plugin.version>
-        <maven.plugin.javadoc.version>3.6.3</maven.plugin.javadoc.version>
-        <maven.plugin.jacoco.version>0.8.14</maven.plugin.jacoco.version>
+        <maven.plugin.javadoc.version>3.12.0</maven.plugin.javadoc.version>
+        <maven.plugin.jacoco.version>0.8.15</maven.plugin.jacoco.version>
         <maven.plugin.pmd.version>3.28.0</maven.plugin.pmd.version>
         <maven.plugin.jxr.version>3.0.0</maven.plugin.jxr.version>
-        <maven.surefire.version>3.5.2</maven.surefire.version>
+        <maven.surefire.version>3.5.6</maven.surefire.version>
         <!--        OPEN API -->
-        <springdoc.version>2.6.0</springdoc.version>
+        <springdoc.version>3.1.0</springdoc.version>
         <!--        SPRING -->
-        <spring-boot.version>4.0.6</spring-boot.version>
-        <spring-cloud.version>2025.1.1</spring-cloud.version>
+        <spring-boot.version>4.1.2</spring-boot.version>
+        <spring-cloud.version>2025.1.4</spring-cloud.version>
 
+        <!-- Security overrides of the Spring Boot 4.1.2 BOM, aligned with backbone-rest -->
+        <!-- hibernate-validator: Expression Language injection advisory -->
+        <hibernate-validator.version>9.1.6.Final</hibernate-validator.version>
+        <!-- Jackson 2 (jackson-databind/core) and Jackson 3 (tools.jackson, via spring-cloud-config): Snyk-reported CVEs -->
+        <jackson-2-bom.version>2.21.8</jackson-2-bom.version>
+        <jackson-bom.version>3.1.8</jackson-bom.version>
+        <!-- logback-classic (spring-boot-starter-logging): Snyk-reported CVE fixed in 1.6.3 -->
+        <logback.version>1.6.6</logback.version>
+        <!-- Transitive via eureka-client (compile scope, ships in the runtime jar): GHSA-7r82-7xv7-xcpj, fixed in 4.5.13 -->
+        <httpclient.version>4.5.14</httpclient.version>
         <!-- Centralized versions for previously hardcoded dependency/plugin versions -->
-        <postgresql.version>42.7.7</postgresql.version>
-        <google.gson.version>2.13.2</google.gson.version>
+        <postgresql.version>42.7.14</postgresql.version>
+        <google.gson.version>2.14.0</google.gson.version>
         <mapstruct.version>1.6.3</mapstruct.version>
-        <jwt.version>0.12.3</jwt.version>
-        <snakeyaml.version>2.5</snakeyaml.version>
-        <org.json.version>20250517</org.json.version>
-        <plexus.utils.version>4.0.2</plexus.utils.version>
-        <rewrite.plugin.version>5.42.0</rewrite.plugin.version>
-        <rewrite.recipe.version>5.21.0</rewrite.recipe.version>
-        <asm.version>9.7</asm.version>
-        <commons-lang3.version>3.18.0</commons-lang3.version>
+        <jwt.version>0.13.0</jwt.version>
+        <snakeyaml.version>2.6</snakeyaml.version>
+        <org.json.version>20260814</org.json.version>
+        <plexus.utils.version>4.1.0</plexus.utils.version>
+        <rewrite.plugin.version>6.46.1</rewrite.plugin.version>
+        <rewrite.recipe.version>6.37.1</rewrite.recipe.version>
+        <asm.version>9.10.1</asm.version>
+        <commons-lang3.version>3.21.0</commons-lang3.version>
 
         <!--        Test Dependencies-->
         <!--        JUnit 5.x-->
-        <junit.jupiter.version>6.0.3</junit.jupiter.version>
+        <junit.jupiter.version>6.1.3</junit.jupiter.version>
         <!--        Mockito-->
-        <mockito.version>5.21.0</mockito.version>
+        <mockito.version>5.24.0</mockito.version>
         <!--        JMH (Java Microbenchmark Harness) -->
         <jmh.version>1.37</jmh.version>
 
@@ -350,6 +360,11 @@
                 <version>${mapstruct.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>${httpclient.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
                 <version>${springdoc.version}</version>
@@ -547,7 +562,7 @@
             <plugin>
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-maven-plugin</artifactId>
-                <version>1.4</version>
+                <version>1.5</version>
                 <executions>
                     <execution>
                         <phase>integration-test</phase>

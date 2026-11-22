@@ -1,6 +1,6 @@
 # directory-backend — Technical Documentation
 
-> **Version:** 0.0.1 &nbsp;|&nbsp; **Java:** 21 &nbsp;|&nbsp; **Spring Boot:** 3.5.8 &nbsp;|&nbsp; **Spring Cloud:** 2025.0.1  
+> **Version:** 0.0.1 &nbsp;|&nbsp; **Java:** 25 &nbsp;|&nbsp; **Spring Boot:** 4.1.2 &nbsp;|&nbsp; **Spring Cloud:** 2025.1.4  
 > **Last Updated:** April 19, 2026
 
 ---
@@ -57,12 +57,12 @@ The service is designed as a **Spring Boot microservice** integrated into the PR
 mindmap
   root((directory-backend))
     Runtime
-      Java 21
-      Spring Boot 3.5.8
-      Spring Cloud 2025.0.1
+      Java 25
+      Spring Boot 4.1.2
+      Spring Cloud 2025.1.4
     API Layer
       Spring MVC
-      springdoc-openapi 2.6.0
+      springdoc-openapi 3.1.0
       OpenAPI 3.0
     Persistence
       Spring Data JPA
@@ -72,7 +72,7 @@ mindmap
       MapStruct 1.6.3
     Security
       Spring Security OAuth2
-      JWT 0.12.3
+      JWT 0.13.0
       TLS 1.3
     Messaging
       Apache Kafka
@@ -100,13 +100,13 @@ mindmap
 
 | Library | Version | Purpose |
 |---------|---------|---------|
-| Spring Boot | 3.5.8 | Application framework |
-| Spring Cloud | 2025.0.1 | Service discovery, config |
-| Java | 21 | Runtime (LTS) |
+| Spring Boot | 4.1.2 | Application framework |
+| Spring Cloud | 2025.1.4 | Service discovery, config |
+| Java | 25 | Runtime (LTS) |
 | PostgreSQL Driver | 42.7.7 | Database connectivity |
 | MapStruct | 1.6.3 | DTO ↔ Entity mapping |
-| JWT (jjwt) | 0.12.3 | Token parsing and validation |
-| springdoc-openapi | 2.6.0 | OpenAPI 3.0 documentation |
+| JWT (jjwt) | 0.13.0 | Token parsing and validation |
+| springdoc-openapi | 3.1.0 | OpenAPI 3.0 documentation |
 | JaCoCo | 0.8.14 | Code coverage enforcement |
 | PMD | 3.28.0 | Static analysis |
 | JUnit Jupiter | 5.14.1 | Unit/integration testing |
@@ -958,7 +958,7 @@ public interface CampaignMapper {
 ```mermaid
 flowchart LR
     CODE["Source Code Push / PR"] --> BUILD["mvn -B -V -e clean verify"]
-    BUILD --> COMPILE["javac Java 21"]
+    BUILD --> COMPILE["javac Java 25"]
     BUILD --> TEST["JUnit 5 + Mockito"]
     BUILD --> COV["JaCoCo >= 80% line coverage"]
     BUILD --> PMD["PMD 3.28.0 ruleset.xml 0 violations"]
