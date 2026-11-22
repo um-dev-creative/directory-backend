@@ -54,6 +54,22 @@ public final class DirectoryAppConstants {
     public static final String STATS_ONLY_OWNER = "Only the owner of the business can see its statistics";
     public static final String UNAUTHORIZED_MESSAGE = "Unauthorized";
 
+    // Locations (sedes), cities and business search
+    public static final String CITY_NOT_FOUND = "City not found";
+    public static final String LOCATION_NOT_FOUND = "Location not found";
+    public static final String LOCATION_REQUEST_BODY_REQUIRED = "Request body is required";
+    public static final String LOCATION_CITY_REQUIRED = "cityId is required";
+    public static final String LOCATION_ADDRESS_REQUIRED = "addressLine is required";
+    public static final String LOCATION_FIELD_TOO_LONG = "A field exceeds its maximum length (name 120, addressLine 200, postalCode 10, phone 30)";
+    public static final String LOCATION_COORDINATES_PAIR = "latitude and longitude must be sent together";
+    public static final String LOCATION_COORDINATES_RANGE = "latitude must be between -90 and 90 and longitude between -180 and 180";
+    public static final String LOCATION_MAIN_CANNOT_BE_UNSET = "A business needs a main location: make another location the main one instead";
+    public static final int LOCATION_NAME_MAX = 120;
+    public static final int LOCATION_ADDRESS_MAX = 200;
+    public static final int LOCATION_POSTAL_CODE_MAX = 10;
+    public static final int LOCATION_PHONE_MAX = 30;
+    public static final String SEARCH_INVALID_PAGINATION = "page must be >= 1 and per_page between 1 and " + MAX_PER_PAGE;
+
     // Favorite type filters
     public static final String FAVORITE_TYPE_STORES = "stores";
     public static final String FAVORITE_TYPE_PRODUCTS = "products";

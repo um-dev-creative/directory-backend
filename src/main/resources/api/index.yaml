@@ -1212,6 +1212,120 @@ paths:
           description: The caller is not the owner of the business
         '404':
           description: Business not found
+  /api/v1/businesses/search:
+    get:
+      summary: Search businesses by city, category and text
+      description: Paginated (page is 1-based, per_page 1..100, default 10). Filters are combined with AND; results are ordered by name. category_id includes its sub-categories; city is ignored when city_id is sent.
+      parameters:
+        - { name: city_id, in: query, schema: { type: string, format: uuid } }
+        - { name: city, in: query, schema: { type: string } }
+        - { name: category_id, in: query, schema: { type: string, format: uuid } }
+        - { name: q, in: query, schema: { type: string } }
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: per_page, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 10 } }
+        - { name: session-token, in: header, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: 'Page of businesses with their locations: { total_count, page, per_page, total_pages, data: [ { id, name, description, categoryId, categoryName, verified, profileImageRef, locations: [Location] } ] }'
+        '400':
+          description: Invalid page or per_page (reason in the message-error header)
+  /api/v1/cities:
+    get:
+      summary: List the cities of the catalogue
+      parameters:
+        - { name: country, in: query, description: 'ISO 3166-1 alpha-2, e.g. CA', schema: { type: string } }
+        - { name: q, in: query, description: Text found in the city name, schema: { type: string } }
+        - { name: session-token, in: header, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: '[ { id, name, province, country } ] ordered by name'
+  /api/v1/businesses/{businessId}/locations:
+    parameters:
+      - { name: businessId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: session-token, in: header, required: true, schema: { type: string } }
+    get:
+      summary: List the locations of a business (main first)
+      responses:
+        '200':
+          description: '[Location]'
+        '404':
+          description: Business not found
+    post:
+      summary: Create a location (owner only)
+      description: The first location is always the main one; main=true on a later one replaces the previous main.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cityId, addressLine]
+              properties:
+                cityId: { type: string, format: uuid }
+                name: { type: string, maxLength: 120 }
+                addressLine: { type: string, maxLength: 200 }
+                postalCode: { type: string, maxLength: 10 }
+                phone: { type: string, maxLength: 30 }
+                latitude: { type: number, minimum: -90, maximum: 90, description: Sent together with longitude }
+                longitude: { type: number, minimum: -180, maximum: 180, description: Sent together with latitude }
+                main: { type: boolean }
+      responses:
+        '201':
+          description: 'Location: { id, businessId, city: { id, name, province, country }, name, addressLine, postalCode, phone, latitude, longitude, main, createdAt, lastUpdate }'
+        '400':
+          description: Invalid body or unknown city (reason in the message-error header)
+        '401':
+          description: Unauthorized
+        '403':
+          description: The caller is not the owner of the business
+        '404':
+          description: Business not found
+  /api/v1/businesses/{businessId}/locations/{locationId}:
+    parameters:
+      - { name: businessId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: locationId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: session-token, in: header, required: true, schema: { type: string } }
+    patch:
+      summary: Update a location (owner only)
+      description: Only the fields that are sent change. main=true makes it the main location; main=false on the main one is rejected (400).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cityId: { type: string, format: uuid }
+                name: { type: string, maxLength: 120 }
+                addressLine: { type: string, maxLength: 200 }
+                postalCode: { type: string, maxLength: 10 }
+                phone: { type: string, maxLength: 30 }
+                latitude: { type: number }
+                longitude: { type: number }
+                main: { type: boolean }
+      responses:
+        '200':
+          description: The updated Location
+        '400':
+          description: Invalid body, unknown city or main=false on the main location
+        '401':
+          description: Unauthorized
+        '403':
+          description: The caller is not the owner of the business
+        '404':
+          description: Business or location not found
+    delete:
+      summary: Delete a location (owner only)
+      description: If it was the main one, the oldest remaining location becomes the main one.
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          description: Unauthorized
+        '403':
+          description: The caller is not the owner of the business
+        '404':
+          description: Business or location not found
 components:
   securitySchemes:
     BearerAuth:
