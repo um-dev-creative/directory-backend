@@ -625,6 +625,23 @@
     </distributionManagement>
 
     <profiles>
+        <!--
+            native profile (extends the one of spring-boot-starter-parent; used by Dockerfile.native). Eureka drags in httpclient 4.5.3, whose
+            API is older than what the AWS SDK apache-client GraalVM metadata registers (RequestConfig.Builder.setNormalizeUri), so native-image
+            fails to parse that metadata. The JVM build is unaffected: the pin applies only with -Pnative.
+        -->
+        <profile>
+            <id>native</id>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.httpcomponents</groupId>
+                        <artifactId>httpclient</artifactId>
+                        <version>4.5.14</version>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
+        </profile>
         <profile>
             <id>coverage</id>
             <build>

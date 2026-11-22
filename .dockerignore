@@ -1,0 +1,25 @@
+# Docker build context: only what the images need. Secrets and local files never enter the context.
+.git
+.github
+.idea
+.codegraph
+.codex
+.opencode
+.claude
+docs
+issues
+youtrack
+htmlReport
+secrets
+config/*
+!config/native-aot.env
+default.env
+*.env
+certs-file.zip
+*.md
+*.iml
+*.sarif.json
+opencode.json
+# The JVM image copies only the packaged jar; the native image builds from source inside the container.
+target/*
+!target/directory-backend.jar

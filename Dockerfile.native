@@ -1,0 +1,68 @@
+# syntax=docker/dockerfile:1
+
+# Native (GraalVM) image of directory-backend: no JVM at runtime, much faster start and smaller memory than the JVM image (`Dockerfile`).
+# Unlike the JVM image it compiles from source inside the container (Spring AOT + native-image), so it needs the private Maven settings
+# (the com.umdc.* artifacts live in a private repository) as a BuildKit secret. Build it with `./docker-build.sh native`, or by hand:
+#
+#   docker build -f Dockerfile.native \
+#     --secret id=maven_settings,src=$HOME/.m2/settings.xml \
+#     --secret id=prx_internal_ca,src=certs/directory/prx-internal-ca.crt \
+#     -t lamata/directory-backend:0.0.1-native .
+#
+# prx_internal_ca is optional. The keystores under certs/directory (git-ignored) must exist in the build context: they are compiled into
+# the executable as classpath resources. Compiling needs ~8 GB of memory for Docker.
+
+ARG GRAALVM_IMAGE=ghcr.io/graalvm/native-image-community:25
+ARG RUNTIME_IMAGE=debian:bookworm-slim
+
+FROM ${GRAALVM_IMAGE} AS build
+WORKDIR /workspace
+COPY .mvn .mvn
+COPY mvnw pom.xml ./
+COPY src src
+COPY certs certs
+COPY config/native-aot.env config/native-aot.env
+
+# Spring AOT loads bootstrap.yml, whose ${VARS} have no default: config/native-aot.env gives them placeholder values for the build only.
+# Spring AOT + native-image (the `native` profile of spring-boot-starter-parent runs Spring AOT; the native-maven-plugin goal is called by its coordinates because the pom does not declare the plugin). PMD/CPD are quality gates of `mvn verify`, not
+# of the image. The Maven repository is a cache mount, so a rebuild does not download everything again.
+RUN --mount=type=secret,id=maven_settings,target=/root/.m2/settings.xml \
+    --mount=type=cache,target=/root/.m2/repository \
+    set -a && . ./config/native-aot.env && set +a \
+    && ./mvnw -B -Pnative -DskipTests -Dpmd.skip=true -Dcpd.skip=true \
+       package org.graalvm.buildtools:native-maven-plugin:compile-no-fork
+
+# Truststore = JDK cacerts (+ the internal CA when the optional secret is given), so outbound calls to the *.tst services verify.
+RUN --mount=type=secret,id=prx_internal_ca,target=/run/secrets/prx-internal-ca.crt,required=false \
+    cp "$JAVA_HOME/lib/security/cacerts" /workspace/truststore.jks && chmod u+w /workspace/truststore.jks \
+    && if [ -f /run/secrets/prx-internal-ca.crt ]; then \
+      keytool -importcert -alias prx-internal-ca -keystore /workspace/truststore.jks -file /run/secrets/prx-internal-ca.crt -storepass changeit -noprompt; \
+    fi
+
+FROM ${RUNTIME_IMAGE}
+LABEL version="0.0.1"
+LABEL description="Directory Backend API (native)"
+LABEL maintainer="Luis Mata luis.antonio.mata@gmail.com"
+
+WORKDIR /usr/local/runme
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates wget \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --system appmng && useradd --system --gid appmng --no-create-home jvapps
+
+COPY --from=build /workspace/target/directory-backend directory-backend
+COPY --from=build /workspace/truststore.jks truststore.jks
+COPY docker-entrypoint.native.sh docker-entrypoint.sh
+
+RUN chown -R jvapps:appmng . \
+    && chmod 750 directory-backend docker-entrypoint.sh \
+    && chmod 440 truststore.jks
+
+USER jvapps:appmng
+
+EXPOSE 8197
+# Liveness over the container's own loopback; the certificate is not verified because it only reaches this process.
+HEALTHCHECK --interval=15s --timeout=3s --start-period=30s --retries=5 \
+  CMD wget --no-check-certificate -qO- https://127.0.0.1:8197/actuator/health/liveness || exit 1
+CMD ["./docker-entrypoint.sh"]
