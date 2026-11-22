@@ -396,6 +396,17 @@
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
+                <excludes>
+                    <exclude>build-versions.properties</exclude>
+                </excludes>
+            </resource>
+            <!-- Versions printed in the startup banner (Spring Cloud and the UMDC libraries); only this file is filtered (@..@) -->
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>build-versions.properties</include>
+                </includes>
             </resource>
             <!-- The TLS bundle (spring.ssl.bundle.jks.directory-security in bootstrap.yml) reads classpath:${SSL_KEYSTORE_LOCATION} and
                  classpath:${SSL_TRUSTSTORE_LOCATION} unless SSL_KEYSTORE_URL / SSL_TRUSTSTORE_URL name another place. The real keystores

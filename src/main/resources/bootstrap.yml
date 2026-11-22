@@ -74,6 +74,9 @@ server:
       min-response-size: 1024
 
 spring:
+  config:
+    # Versions the startup banner prints (src/main/resources/build-versions.properties, filtered by Maven)
+    import: "optional:classpath:build-versions.properties"
   ssl:
     # SSL_KEYSTORE_URL / SSL_TRUSTSTORE_URL (optional, with a scheme, e.g. file:/usr/local/runme/certs/directory/directory-rest.jks) override the
     # classpath names: the jar carries the keystores (pom.xml, certs/directory), a mounted path wins when set.
