@@ -2,7 +2,12 @@ package com.umdc.directory.jpa.repository;
 
 import com.umdc.directory.jpa.entity.BusinessEntity;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -15,7 +20,7 @@ import java.util.UUID;
  * This interface extends JpaRepository to provide CRUD operations for BusinessEntity.
  * The primary key type of BusinessEntity is UUID.
  */
-public interface BusinessRepository extends JpaRepository<BusinessEntity, UUID> {
+public interface BusinessRepository extends JpaRepository<BusinessEntity, UUID>, JpaSpecificationExecutor<BusinessEntity> {
 
     @Query("SELECT bu FROM BusinessEntity bu WHERE bu.userEntityFk.id = :userId")
     Set<BusinessEntity> findByUserEntityFk(@NotNull @Param("userId") UUID userId);
@@ -30,5 +35,10 @@ public interface BusinessRepository extends JpaRepository<BusinessEntity, UUID> 
 
     @Query("SELECT b FROM BusinessEntity b LEFT JOIN FETCH b.digitalContacts dc LEFT JOIN FETCH dc.contactTypeEntity WHERE b.id = :businessId")
     Optional<BusinessEntity> findBusinessWithDigitalContactsById(@Param("businessId") UUID businessId);
+
+    /// The search (`BusinessSpecifications`) reads the category name of every row, so it is fetched with the page.
+    @Override
+    @EntityGraph(attributePaths = {"categoryFk"})
+    Page<BusinessEntity> findAll(Specification<BusinessEntity> spec, Pageable pageable);
 
 }

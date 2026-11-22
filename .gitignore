@@ -41,3 +41,6 @@ certs/
 # Bootstrap secrets (VAULT_TOKEN, keystore passwords): copy secrets/local.env.example. config/*.env carries no credentials and is versioned.
 secrets/*.env
 !config/*.env
+
+# macOS
+.DS_Store

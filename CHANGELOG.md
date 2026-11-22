@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 This project adheres (loosely) to "Keep a Changelog" and follows semantic versioning where practical.
 
+## [Unreleased] - 2026-11-21 (locations and search by city)
+
+### Added
+- **Cities catalogue and business locations (sedes).** New `directory_site.city` and `directory_site.location` tables (migration `V4__create_city_and_location.sql`, applied by hand like `V2`/`V3`), seeded with Toronto and eight more Ontario cities. A location points to a business and to a city and carries an address, optional name, postal code, phone and coordinates, and a `main` flag (at most one main location per business, enforced by a partial unique index; the first location is always the main one). Indexes on `business_fk`, `city_fk` and `lower(city.name)`.
+- `GET /api/v1/cities?country=&q=` lists the catalogue.
+- `GET|POST /api/v1/businesses/{businessId}/locations` and `PATCH|DELETE /api/v1/businesses/{businessId}/locations/{locationId}`: any session can read; only the owner of the business (the `uid` of the `session-token`) can create, change or delete. Making a location main demotes the previous one; deleting the main one promotes the oldest remaining one; `main=false` on the main location is rejected (400).
+- `GET /api/v1/businesses/search?city_id=|city=&category_id=&q=&page=&per_page=`: paginated search of businesses by city (id or name), category (sub-categories included) and text (name or description, `%` and `_` are literals), same envelope as the product listing, ordered by name then id, each result with its locations. Locations are loaded with one extra query per page.
+- `BusinessRepository` now extends `JpaSpecificationExecutor` (`BusinessSpecifications`, `CitySpecifications`); `src/main/resources/api/index.yaml` documents the new endpoints.
+- Guides: `docs/user-guide/locations-and-search.md`, `docs/technical/locations-and-search.md`.
+
+### Tests
+- `BusinessSearchRepositoryTest` (12, `@DataJpaTest` on H2 in PostgreSQL mode: real queries for the city `EXISTS`, the category/parent join, `LIKE ... ESCAPE`, the locations queries and the cities filter), `LocationServiceImplTest` (24), `CityServiceImplTest`, `BusinessSearchServiceImplTest` (3) and `LocationAndSearchRoutesTest` (8, URLs, parameters, and that `/businesses/search` is not taken for `/businesses/{id}`). New test dependency `spring-boot-starter-data-jpa-test` (`@DataJpaTest` lives there since Spring Boot 4).
+- Found by the repository test: Spring Data JPA 4 rejects `null` specifications, so absent filters return `Specification.unrestricted()`.
+
+### Notes
+- **Action needed:** apply `V4` before deploying (and `V2`/`V3` if they were not applied yet). Not run against a real PostgreSQL here; H2 stands in for it in the tests.
+- Search needs a `session-token` like the rest of `/api/v1/**`; the BFF supplies it.
+
+---
+
 ## [Unreleased] - 2026-11-21 (database migration scripts)
 
 ### Added
