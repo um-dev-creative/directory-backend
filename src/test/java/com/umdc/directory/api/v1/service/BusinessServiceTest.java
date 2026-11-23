@@ -29,7 +29,7 @@ class BusinessServiceTest {
                 "www.example.com"
                 );
 
-        ResponseEntity<BusinessCreateResponse> response = businessService.create(request);
+        ResponseEntity<BusinessCreateResponse> response = businessService.create(request, "token");
 
         assertEquals(HttpStatus.NOT_IMPLEMENTED, response.getStatusCode());
     }
@@ -37,7 +37,7 @@ class BusinessServiceTest {
     @Test
     @DisplayName("Create business with null request")
     void createBusinessWithNullRequest() {
-        ResponseEntity<BusinessCreateResponse> response = businessService.create(null);
+        ResponseEntity<BusinessCreateResponse> response = businessService.create(null, "token");
 
         assertEquals(HttpStatus.NOT_IMPLEMENTED, response.getStatusCode());
     }

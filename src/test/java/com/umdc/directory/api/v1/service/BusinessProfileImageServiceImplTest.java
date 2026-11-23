@@ -8,6 +8,8 @@ import com.umdc.commons.services.cloudflare.to.ImageReferenceResponse;
 import com.umdc.commons.services.cloudflare.to.ImageUploadRequest;
 import com.umdc.commons.services.cloudflare.to.ImageUploadResponse;
 import com.umdc.directory.jpa.entity.BusinessEntity;
+import com.umdc.directory.jpa.entity.UserEntity;
+import com.umdc.directory.support.TestTokens;
 import com.umdc.directory.jpa.repository.BusinessRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,6 +43,20 @@ class BusinessProfileImageServiceImplTest {
     private BusinessProfileImageServiceImpl service;
 
     private static final byte[] IMAGE_BYTES = new byte[]{1, 2, 3};
+    private static final UUID OWNER_ID = UUID.randomUUID();
+    private static final String OWNER_TOKEN = TestTokens.forUser(OWNER_ID);
+
+    private static BusinessEntity businessOf(UUID businessId, UUID ownerId) {
+        BusinessEntity entity = new BusinessEntity();
+        entity.setId(businessId);
+        if (ownerId != null) {
+            UserEntity owner = new UserEntity();
+            owner.setId(ownerId);
+            entity.setUserFk(owner);
+        }
+        return entity;
+    }
+
     private static final String PUBLIC_URL = "https://cdn.example.com/businesses/photo.jpg";
 
     // -------------------------------------------------------------------------
@@ -48,22 +64,18 @@ class BusinessProfileImageServiceImplTest {
     // -------------------------------------------------------------------------
 
     @Test
-    @DisplayName("upload - explicit objectKey is used as-is")
-    void upload_withExplicitKey_usesProvidedKey() throws ImageValidationException, ImageUploadException {
-        String key = "businesses/custom-key.jpg";
-        when(r2.uploadImage(IMAGE_BYTES, key, "image/jpeg")).thenReturn(key);
-        when(r2.getPublicUrl(key)).thenReturn(PUBLIC_URL);
+    @DisplayName("upload - client objectKey is ignored and a server key is generated")
+    void upload_withExplicitKey_ignoresClientKey() throws ImageValidationException, ImageUploadException {
+        String key = "other-user/overwrite-me.jpg";
+        when(r2.uploadImage(eq(IMAGE_BYTES), argThat(k -> k.startsWith("businesses/") && !k.equals(key)), eq("image/jpeg"))).thenReturn("k");
+        when(r2.getPublicUrl(anyString())).thenReturn(PUBLIC_URL);
 
-        ImageUploadRequest request = ImageUploadRequest.of(key, IMAGE_BYTES, "image/jpeg");
-        ResponseEntity<ImageUploadResponse> response = service.upload(request);
+        ResponseEntity<ImageUploadResponse> response = service.upload(ImageUploadRequest.of(key, IMAGE_BYTES, "image/jpeg"));
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(key, response.getBody().objectKey());
-        assertEquals(PUBLIC_URL, response.getBody().publicUrl());
-        assertEquals("image/jpeg", response.getBody().contentType());
-        assertEquals(IMAGE_BYTES.length, response.getBody().size());
-        verify(r2).uploadImage(IMAGE_BYTES, key, "image/jpeg");
+        assertNotEquals(key, response.getBody().objectKey());
+        assertTrue(response.getBody().objectKey().startsWith("businesses/"));
+        verify(r2, never()).uploadImage(any(), eq(key), anyString());
     }
 
     @Test
@@ -111,15 +123,14 @@ class BusinessProfileImageServiceImplTest {
     @DisplayName("uploadForBusiness - business found, uploads and persists URL")
     void uploadForBusiness_found_uploadsAndPersistsUrl() throws ImageValidationException, ImageUploadException {
         UUID businessId = UUID.randomUUID();
-        BusinessEntity entity = new BusinessEntity();
-        entity.setId(businessId);
+        BusinessEntity entity = businessOf(businessId, OWNER_ID);
 
         when(businessRepository.findById(businessId)).thenReturn(Optional.of(entity));
         when(r2.uploadImage(eq(IMAGE_BYTES), argThat(k -> k.startsWith("businesses/" + businessId)), eq("image/png"))).thenReturn("key");
         when(r2.getPublicUrl(anyString())).thenReturn(PUBLIC_URL);
         when(businessRepository.save(entity)).thenReturn(entity);
 
-        ResponseEntity<ImageUploadResponse> response = service.uploadForBusiness(businessId, IMAGE_BYTES, "image/png");
+        ResponseEntity<ImageUploadResponse> response = service.uploadForBusiness(businessId, IMAGE_BYTES, "image/png", OWNER_TOKEN);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -136,7 +147,7 @@ class BusinessProfileImageServiceImplTest {
         UUID businessId = UUID.randomUUID();
         when(businessRepository.findById(businessId)).thenReturn(Optional.empty());
 
-        ResponseEntity<ImageUploadResponse> response = service.uploadForBusiness(businessId, IMAGE_BYTES, "image/jpeg");
+        ResponseEntity<ImageUploadResponse> response = service.uploadForBusiness(businessId, IMAGE_BYTES, "image/jpeg", OWNER_TOKEN);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertNull(response.getBody());
@@ -148,19 +159,52 @@ class BusinessProfileImageServiceImplTest {
     @DisplayName("uploadForBusiness - key is scoped to businessId/uuid.ext")
     void uploadForBusiness_keyIncludesBusinessId() throws ImageValidationException, ImageUploadException {
         UUID businessId = UUID.randomUUID();
-        BusinessEntity entity = new BusinessEntity();
-        entity.setId(businessId);
+        BusinessEntity entity = businessOf(businessId, OWNER_ID);
 
         when(businessRepository.findById(businessId)).thenReturn(Optional.of(entity));
         when(r2.uploadImage(any(), anyString(), anyString())).thenReturn("key");
         when(r2.getPublicUrl(anyString())).thenReturn(PUBLIC_URL);
         when(businessRepository.save(any())).thenReturn(entity);
 
-        service.uploadForBusiness(businessId, IMAGE_BYTES, "image/webp");
+        service.uploadForBusiness(businessId, IMAGE_BYTES, "image/webp", OWNER_TOKEN);
 
         verify(r2).uploadImage(eq(IMAGE_BYTES),
                 argThat(k -> k.startsWith("businesses/" + businessId + "/") && k.endsWith(".webp")),
                 eq("image/webp"));
+    }
+
+    @Test
+    @DisplayName("uploadForBusiness - another user (not the owner) gets 403 and nothing is stored")
+    void uploadForBusiness_notOwner_returns403() throws ImageValidationException, ImageUploadException {
+        UUID businessId = UUID.randomUUID();
+        when(businessRepository.findById(businessId)).thenReturn(Optional.of(businessOf(businessId, UUID.randomUUID())));
+
+        ResponseEntity<ImageUploadResponse> response = service.uploadForBusiness(businessId, IMAGE_BYTES, "image/png", OWNER_TOKEN);
+
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        verifyNoInteractions(r2);
+        verify(businessRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("uploadForBusiness - business without owner gets 403")
+    void uploadForBusiness_noOwner_returns403() throws ImageValidationException, ImageUploadException {
+        UUID businessId = UUID.randomUUID();
+        when(businessRepository.findById(businessId)).thenReturn(Optional.of(businessOf(businessId, null)));
+
+        assertEquals(HttpStatus.FORBIDDEN,
+                service.uploadForBusiness(businessId, IMAGE_BYTES, "image/png", OWNER_TOKEN).getStatusCode());
+        verifyNoInteractions(r2);
+    }
+
+    @Test
+    @DisplayName("uploadForBusiness - missing or invalid token gets 401 without touching the repository")
+    void uploadForBusiness_noToken_returns401() throws ImageValidationException, ImageUploadException {
+        UUID businessId = UUID.randomUUID();
+
+        assertEquals(HttpStatus.UNAUTHORIZED, service.uploadForBusiness(businessId, IMAGE_BYTES, "image/png", null).getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, service.uploadForBusiness(businessId, IMAGE_BYTES, "image/png", "garbage").getStatusCode());
+        verifyNoInteractions(r2, businessRepository);
     }
 
     // -------------------------------------------------------------------------

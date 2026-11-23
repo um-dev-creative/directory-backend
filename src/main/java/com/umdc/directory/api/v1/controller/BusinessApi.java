@@ -41,11 +41,14 @@ public interface BusinessApi {
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                 schema = @Schema(implementation = BusinessCreateResponse.class))),
         @ApiResponse(responseCode = "400", description = "Invalid request data", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Missing or invalid session token", content = @Content),
+        @ApiResponse(responseCode = "403", description = "The userId of the body is not the user of the token", content = @Content),
         @ApiResponse(responseCode = DirectoryAppConstants.INTERNAL_SERVER_ERROR_CODE, description = DirectoryAppConstants.INTERNAL_SERVER_ERROR_MESSAGE, content = @Content)
     })
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    default ResponseEntity<BusinessCreateResponse> post(@RequestBody BusinessCreateRequest businessCreateRequest) {
-        return this.getService().create(businessCreateRequest);
+    default ResponseEntity<BusinessCreateResponse> post(@RequestBody BusinessCreateRequest businessCreateRequest,
+            @RequestHeader(value = SESSION_TOKEN_KEY, required = false) String sessionToken) {
+        return this.getService().create(businessCreateRequest, sessionToken);
     }
 
     // Finds a business by its ID.
@@ -106,14 +109,17 @@ public interface BusinessApi {
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = BusinessUpdateResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid request data (validation error)", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid session token", content = @Content),
+            @ApiResponse(responseCode = "403", description = "User is not the owner of the business", content = @Content),
             @ApiResponse(responseCode = "404", description = "Business not found or referenced entity (category/user) not found", content = @Content),
             @ApiResponse(responseCode = DirectoryAppConstants.INTERNAL_SERVER_ERROR_CODE, description = DirectoryAppConstants.INTERNAL_SERVER_ERROR_MESSAGE, content = @Content)
     })
     @PatchMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     default ResponseEntity<BusinessUpdateResponse> update(
             @Parameter(description = "Business UUID") @PathVariable("id") UUID id,
-            @RequestBody BusinessUpdateRequest request) {
-        return getService().update(id, request);
+            @RequestBody BusinessUpdateRequest request,
+            @RequestHeader(value = SESSION_TOKEN_KEY, required = false) String sessionToken) {
+        return getService().update(id, request, sessionToken);
     }
 
     /**

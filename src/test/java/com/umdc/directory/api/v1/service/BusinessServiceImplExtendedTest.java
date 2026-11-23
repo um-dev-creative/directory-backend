@@ -34,6 +34,17 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class BusinessServiceImplExtendedTest {
+    private static final UUID OWNER_ID = UUID.randomUUID();
+    private static final String OWNER_TOKEN = com.umdc.directory.support.TestTokens.forUser(OWNER_ID);
+
+    /** Marks the entity as owned by the user of {@link #OWNER_TOKEN}. */
+    private static BusinessEntity owned(BusinessEntity entity) {
+        UserEntity owner = new UserEntity();
+        owner.setId(OWNER_ID);
+        entity.setUserFk(owner);
+        return entity;
+    }
+
 
     @Mock
      UserService userService;
@@ -78,7 +89,7 @@ class BusinessServiceImplExtendedTest {
         when(businessRepository.save(entity)).thenReturn(entity);
         when(businessMapper.toBusinessCreateResponse(entity)).thenReturn(expected);
 
-        ResponseEntity<BusinessCreateResponse> result = service.create(request);
+        ResponseEntity<BusinessCreateResponse> result = service.create(request, com.umdc.directory.support.TestTokens.forUser(request.userId()));
 
         assertEquals(HttpStatus.CREATED, result.getStatusCode());
         assertNotNull(result.getBody());
@@ -88,7 +99,7 @@ class BusinessServiceImplExtendedTest {
     @Test
     @DisplayName("create - null request returns BAD_REQUEST")
     void create_nullRequest() {
-        ResponseEntity<BusinessCreateResponse> result = service.create(null);
+        ResponseEntity<BusinessCreateResponse> result = service.create(null, com.umdc.directory.support.TestTokens.forUser(UUID.randomUUID()));
 
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
         assertNotNull(result.getHeaders().get("message"));
@@ -102,7 +113,7 @@ class BusinessServiceImplExtendedTest {
                 null, UUID.randomUUID(), "test@example.com", "contact@example.com",
                 "support@example.com", "https://example.com");
 
-        ResponseEntity<BusinessCreateResponse> result = service.create(request);
+        ResponseEntity<BusinessCreateResponse> result = service.create(request, com.umdc.directory.support.TestTokens.forUser(request.userId()));
 
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
         assertNotNull(result.getHeaders().get("message"));
@@ -115,20 +126,20 @@ class BusinessServiceImplExtendedTest {
                 UUID.fromString("00000000-0000-0000-0000-000000000000"), UUID.randomUUID(),
                 "test@example.com", "contact@example.com", "support@example.com", "https://example.com");
 
-        ResponseEntity<BusinessCreateResponse> result = service.create(request);
+        ResponseEntity<BusinessCreateResponse> result = service.create(request, com.umdc.directory.support.TestTokens.forUser(request.userId()));
 
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
         assertNotNull(result.getHeaders().get("message"));
     }
 
     @Test
-    @DisplayName("create - null userId returns BAD_REQUEST")
+    @DisplayName("create - null body userId falls back to the token user (user not found -> BAD_REQUEST)")
     void create_nullUserId() {
         BusinessCreateRequest request = new BusinessCreateRequest("Test Business", "Description",
                 UUID.randomUUID(), null, "test@example.com", "contact@example.com",
                 "support@example.com", "https://example.com");
 
-        ResponseEntity<BusinessCreateResponse> result = service.create(request);
+        ResponseEntity<BusinessCreateResponse> result = service.create(request, com.umdc.directory.support.TestTokens.forUser(UUID.randomUUID()));
 
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
         assertNotNull(result.getHeaders().get("message"));
@@ -141,7 +152,7 @@ class BusinessServiceImplExtendedTest {
                 UUID.randomUUID(), UUID.fromString("00000000-0000-0000-0000-000000000000"),
                 "test@example.com", "contact@example.com", "support@example.com", "https://example.com");
 
-        ResponseEntity<BusinessCreateResponse> result = service.create(request);
+        ResponseEntity<BusinessCreateResponse> result = service.create(request, com.umdc.directory.support.TestTokens.forUser(request.userId()));
 
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
         assertNotNull(result.getHeaders().get("message"));
@@ -154,7 +165,7 @@ class BusinessServiceImplExtendedTest {
                 UUID.randomUUID(), UUID.randomUUID(), "test@example.com", "contact@example.com",
                 "support@example.com", "not-a-valid-url");
 
-        ResponseEntity<BusinessCreateResponse> result = service.create(request);
+        ResponseEntity<BusinessCreateResponse> result = service.create(request, com.umdc.directory.support.TestTokens.forUser(request.userId()));
 
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
         assertNotNull(result.getHeaders().get("message"));
@@ -169,7 +180,7 @@ class BusinessServiceImplExtendedTest {
 
         when(businessRepository.findByName("Existing Business")).thenReturn(Optional.of(new BusinessEntity()));
 
-        ResponseEntity<BusinessCreateResponse> result = service.create(request);
+        ResponseEntity<BusinessCreateResponse> result = service.create(request, com.umdc.directory.support.TestTokens.forUser(request.userId()));
 
         assertEquals(HttpStatus.CONFLICT, result.getStatusCode());
         assertNotNull(result.getHeaders().get("message"));
@@ -185,7 +196,7 @@ class BusinessServiceImplExtendedTest {
         when(businessRepository.findByName(anyString())).thenReturn(Optional.empty());
         when(backboneClient.findUserById(any(UUID.class))).thenReturn(null);
 
-        ResponseEntity<BusinessCreateResponse> result = service.create(request);
+        ResponseEntity<BusinessCreateResponse> result = service.create(request, com.umdc.directory.support.TestTokens.forUser(request.userId()));
 
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
         assertNotNull(result.getHeaders().get("message"));
@@ -203,7 +214,7 @@ class BusinessServiceImplExtendedTest {
         when(backboneClient.findUserById(any(UUID.class))).thenReturn(userResponse);
         when(businessMapper.toSource(request)).thenThrow(new RuntimeException("DB error"));
 
-        ResponseEntity<BusinessCreateResponse> result = service.create(request);
+        ResponseEntity<BusinessCreateResponse> result = service.create(request, com.umdc.directory.support.TestTokens.forUser(request.userId()));
 
         assertEquals(HttpStatus.CONFLICT, result.getStatusCode());
         assertNotNull(result.getHeaders().get("message"));
@@ -237,7 +248,7 @@ class BusinessServiceImplExtendedTest {
         when(backboneClient.userPartialUpdate(any(UUID.class), any(BackboneUserUpdateRequest.class)))
                 .thenReturn(ResponseEntity.ok().build());
 
-        ResponseEntity<BusinessCreateResponse> result = service.create(request);
+        ResponseEntity<BusinessCreateResponse> result = service.create(request, com.umdc.directory.support.TestTokens.forUser(request.userId()));
 
         assertEquals(HttpStatus.CREATED, result.getStatusCode());
         verify(backboneClient).userPartialUpdate(any(UUID.class), any(BackboneUserUpdateRequest.class));
@@ -251,7 +262,7 @@ class BusinessServiceImplExtendedTest {
         entity.setId(businessId);
         BusinessTO expected = mock(BusinessTO.class);
 
-        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(entity));
+        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(owned(entity)));
         when(businessMapper.toBusinessTO(entity)).thenReturn(expected);
 
         ResponseEntity<BusinessTO> result = service.findById(businessId);
@@ -519,7 +530,7 @@ class BusinessServiceImplExtendedTest {
                 "https://updated-example.com"
         );
 
-        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(business));
+        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(owned(business)));
         when(backboneClient.findAllContactType()).thenReturn(List.of(
                 new ContactType(UUID.randomUUID(), ContactTypeKey.EML.name(), "email", true),
                 new ContactType(UUID.randomUUID(), ContactTypeKey.WBH.name(), "website", true),
@@ -528,7 +539,7 @@ class BusinessServiceImplExtendedTest {
         ));
         when(businessRepository.save(any(BusinessEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ResponseEntity<BusinessUpdateResponse> response = service.update(businessId, request);
+        ResponseEntity<BusinessUpdateResponse> response = service.update(businessId, request, OWNER_TOKEN);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -538,7 +549,7 @@ class BusinessServiceImplExtendedTest {
     @Test
     @DisplayName("update - null request returns BAD_REQUEST")
     void update_nullRequest() {
-        ResponseEntity<BusinessUpdateResponse> response = service.update(UUID.randomUUID(), null);
+        ResponseEntity<BusinessUpdateResponse> response = service.update(UUID.randomUUID(), null, OWNER_TOKEN);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getHeaders().get("message"));
@@ -562,7 +573,7 @@ class BusinessServiceImplExtendedTest {
 
         when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.empty());
 
-        ResponseEntity<BusinessUpdateResponse> response = service.update(businessId, request);
+        ResponseEntity<BusinessUpdateResponse> response = service.update(businessId, request, OWNER_TOKEN);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
@@ -588,7 +599,7 @@ class BusinessServiceImplExtendedTest {
                 null
         );
 
-        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(business));
+        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(owned(business)));
         when(backboneClient.findAllContactType()).thenReturn(List.of(
                 new ContactType(emailContactTypeId, ContactTypeKey.EML.name(), "email", true),
                 new ContactType(UUID.randomUUID(), ContactTypeKey.WBH.name(), "website", true),
@@ -597,7 +608,7 @@ class BusinessServiceImplExtendedTest {
         ));
         when(businessRepository.save(any(BusinessEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ResponseEntity<BusinessUpdateResponse> response = service.update(businessId, request);
+        ResponseEntity<BusinessUpdateResponse> response = service.update(businessId, request, OWNER_TOKEN);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(business.getDigitalContacts());
@@ -626,12 +637,12 @@ class BusinessServiceImplExtendedTest {
                 null
         );
 
-        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(business));
+        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(owned(business)));
         when(backboneClient.findAllContactType()).thenReturn(List.of(
                 new ContactType(UUID.randomUUID(), ContactTypeKey.WBH.name(), "website", true)
         ));
 
-        ResponseEntity<BusinessUpdateResponse> response = service.update(businessId, request);
+        ResponseEntity<BusinessUpdateResponse> response = service.update(businessId, request, OWNER_TOKEN);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertTrue(Objects.requireNonNull(response.getHeaders().getFirst("message")).contains("Contact type not found for key EML"));

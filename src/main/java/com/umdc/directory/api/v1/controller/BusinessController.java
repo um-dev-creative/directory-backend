@@ -20,8 +20,8 @@ public class BusinessController implements BusinessApi {
     }
 
     @Override
-    public ResponseEntity<BusinessCreateResponse> post(BusinessCreateRequest businessCreateRequest) {
-        return businessService.create(businessCreateRequest);
+    public ResponseEntity<BusinessCreateResponse> post(BusinessCreateRequest businessCreateRequest, String sessionToken) {
+        return businessService.create(businessCreateRequest, sessionToken);
     }
 
     @Override
@@ -35,8 +35,8 @@ public class BusinessController implements BusinessApi {
     }
 
     @Override
-    public ResponseEntity<BusinessUpdateResponse> update(UUID id, BusinessUpdateRequest request) {
-        return businessService.update(id, request);
+    public ResponseEntity<BusinessUpdateResponse> update(UUID id, BusinessUpdateRequest request, String sessionToken) {
+        return businessService.update(id, request, sessionToken);
     }
 
     @Override
