@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 This project adheres (loosely) to "Keep a Changelog" and follows semantic versioning where practical.
 
+## [Unreleased] - 2026-11-23 (pending work after Phase 0 and QA release runbook)
+
+### Added
+- Consolidated list of pending work (security, data, contract, quality, stubs) and what Phase 1 and Phase 2 still have to cover, after merging PR #120 to #124.
+- QA release runbook: affected components, new properties and recommended values, build and deploy steps, 12 smoke tests, rollback and per-PR impact.
+- Guides: `docs/user-guide/pending-and-qa-runbook.md`, `docs/technical/pending-and-qa-runbook.md` (Mermaid diagrams).
+
+### Notes
+- Documentation only: no code, API, schema or configuration change.
+- Merged `development` (`0d30a87`) verified with `mvn -B clean verify`: 745 tests pass, `jacoco-check` met, JaCoCo method coverage 93.4 % (778 of 833).
+- The SonarQube workflow ("Build and analyze") fails on `development` itself (scanner bootstrapping); not caused by these changes.
+- Phase 1 (nearby/map, opening hours, geocoding) is unfinished and has no PR; `api/index.yaml` is not yet updated.
+
 ## [Unreleased] - 2026-11-23 (MVP product and architecture analysis)
 
 ### Added
