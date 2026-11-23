@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 This project adheres (loosely) to "Keep a Changelog" and follows semantic versioning where practical.
 
+## [Unreleased] - 2026-11-22 (startup banner versions)
+
+### Added
+- The startup banner (`banner.txt`, same lettering as `backbone-rest`) now also prints `Spring Cloud <version> | UMDC libraries <version>` after the Spring Boot version. The versions come from `src/main/resources/build-versions.properties`, filtered by Maven (`@spring-cloud.version@`, `@com.umdc.commons.version@`; only that file is filtered) and imported by `spring.config.import` in `bootstrap.yml`. A missing value prints `n/a` and never stops the startup.
+- `BannerVersionsTest` (3): the filtered file has real versions, the banner and `bootstrap.yml` reference it, and the banner renders with no unresolved placeholder.
+- Guides: `docs/user-guide/startup-banner.md`, `docs/technical/startup-banner.md`.
+
+### Notes
+- Verified with a real Spring startup (bootstrap context off). Not verified with the bootstrap context enabled; there the worst case is `n/a`.
+- 664 tests pass; JaCoCo method coverage 93.25 %.
+
 ## [Unreleased] - 2026-11-22 (dependency update)
 
 ### Changed
