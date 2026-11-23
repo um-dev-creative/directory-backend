@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 This project adheres (loosely) to "Keep a Changelog" and follows semantic versioning where practical.
 
+## [Unreleased] - 2026-11-22 (container images: JVM and native)
+
+### Added
+- `Dockerfile.native`: GraalVM native image. Compiles from source in the container (`./mvnw -Pnative package`, profile inherited from `spring-boot-starter-parent`) and runs on `debian:bookworm-slim` as a non-root user with the same port and `HEALTHCHECK` as the JVM image. The private Maven settings and the optional internal CA are BuildKit secrets, never stored in a layer; the truststore is the JDK `cacerts` plus the CA.
+- `docker-entrypoint.native.sh` (native options only) and `docker-build.sh jvm|native|all`, which builds `lamata/directory-backend:<version>` (`Dockerfile`) and `:<version>-native` (`Dockerfile.native`).
+- `config/native-aot.env`: placeholder values (no credentials) so Spring AOT can load `bootstrap.yml` during the native build.
+- `.dockerignore`: keeps `secrets/`, `*.env`, `config/` and `.git` out of the build context; only `target/directory-backend.jar` of `target/` is sent.
+- Guides: `docs/user-guide/docker-images.md`, `docs/technical/docker-images.md`.
+
+### Notes
+- **Native runtime is not verified.** The image builds and the executable starts, but with placeholder configuration it stops at `No spring.config.import property` (Config Server) and, with Config Server/Vault disabled, at `no ServletWebServerFactory bean` (AOT conditions are fixed at build time with `config/native-aot.env`). It has not been run against real Config Server, Vault, PostgreSQL and Redis. The JVM image is the supported one until that is checked.
+- `Dockerfile.native` uses `native-image-community:25-ol9`: the `:25` tag aborts with `Fatal glibc error: CPU does not support x86-64-v3` on hosts without that instruction set (amd64 emulation, older CPUs).
+- The native image needs about 8 GB of memory for Docker and a long build; the JVM image is unchanged.
+
 ## [Unreleased] - 2026-11-22 (startup banner versions)
 
 ### Added
