@@ -1,6 +1,6 @@
 # Phase 0 platform: closed docs, rate limiting, Flyway, coverage
 
-Technical guide for the platform changes of Phase 0 (flow C). Product context: `docs/technical/mvp-product-analysis.md`.
+Technical guide for the platform changes of Phase 0 (flow C).
 
 ## 1. Swagger / api-docs closed outside dev and test
 

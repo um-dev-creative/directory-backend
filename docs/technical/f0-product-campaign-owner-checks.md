@@ -1,6 +1,6 @@
 # Owner checks on product and campaign writes (technical guide)
 
-Implements RF-01 part 2 of `docs/technical/mvp-product-analysis.md`.
+Implements RF-01 part 2 of the MVP requirements (the analysis is kept outside the repository).
 
 ## Design
 
