@@ -52,12 +52,12 @@ public class CampaignStatusCounter {
 
         Expression<Long> activeCount = cb.sum(
                 cb.<Long>selectCase()
-                        .when(cb.equal(root.get("status"), "ACTIVE"), 1L)
+                        .when(cb.and(cb.isTrue(root.get("active")), cb.greaterThanOrEqualTo(root.get("endDate"), now)), 1L)
                         .otherwise(0L));
 
         Expression<Long> inactiveCount = cb.sum(
                 cb.<Long>selectCase()
-                        .when(cb.equal(root.get("status"), "INACTIVE"), 1L)
+                        .when(cb.isFalse(root.get("active")), 1L)
                         .otherwise(0L));
 
         Expression<Long> expiredCount = cb.sum(

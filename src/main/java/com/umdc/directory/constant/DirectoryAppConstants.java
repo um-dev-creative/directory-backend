@@ -21,6 +21,9 @@ public final class DirectoryAppConstants {
     public static final String CAMPAIGN_REQUEST_BODY_REQUIRED = "Request body is required";
     public static final String CAMPAIGN_NOT_FOUND = "Campaign not found";
     public static final String CAMPAIGN_MODIFIED_BY_ANOTHER_REQUEST = "Campaign has been modified by another request. Please refresh and try again.";
+    public static final String CAMPAIGN_TYPE_INVALID = "type must be one of PROMOTION, EVENT, ANNOUNCEMENT";
+    public static final String CAMPAIGN_STATUS_INVALID = "status must be one of DRAFT, SCHEDULED, ACTIVE, PAUSED, EXPIRED";
+    public static final String CAMPAIGN_TRANSITION_NOT_ALLOWED = "Campaign status transition not allowed";
     public static final String CAMPAIGN_START_DATE_AFTER_END_DATE = "startDate must be before or equal to endDate";
     public static final String CATEGORY_NOT_FOUND = "Category not found";
     public static final String BUSINESS_NOT_FOUND = "Business not found";

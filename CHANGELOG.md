@@ -177,6 +177,25 @@ This project adheres (loosely) to "Keep a Changelog" and follows semantic versio
 
 ---
 
+## [Unreleased] - 2026-11-23 (F2-B campaigns: type, lifecycle status, deactivate/reactivate, visibility)
+
+### Added
+- Campaign `type` enum (`PROMOTION`, `EVENT`, `ANNOUNCEMENT`; default `PROMOTION` on create; `400` for any other value on create and `PATCH`).
+- Computed lifecycle `status` (`DRAFT`, `SCHEDULED`, `ACTIVE`, `PAUSED`, `EXPIRED`) in `CampaignTO` and in the list items. Only `DRAFT` is stored; the rest comes from `active`, `start_date` and `end_date` (`CampaignStatus.compute`).
+- `POST /api/v1/campaigns/{id}/deactivate`, `/reactivate` and `/publish` (owner only, `session-token`): `200` with the campaign, `401`, `403`, `404`, `409` when the status transition is not allowed (transition table in `CampaignStatus`).
+- List filters `status` and `type` on `GET /api/v1/campaigns`; the existing `business_id` filter lists the campaigns of a business.
+- Migration `V10__campaign_type_status.sql` (idempotent, applied by hand): normalises `type`, clears legacy free-text `status`, adds CHECK constraints and an index on `(business_fk, active, end_date)`.
+- Guides: `docs/user-guide/f2-campaigns.md`, `docs/technical/f2-campaigns.md` (Mermaid diagrams).
+
+### Changed
+- Visibility: `GET /api/v1/campaigns` and `GET /api/v1/campaigns/{id}` show consumers only `SCHEDULED` and `ACTIVE` campaigns; the owner (optional `session-token`) also sees draft, paused and expired ones of its businesses. A hidden campaign answers `404` on `GET /{id}`.
+- `PATCH` rejects with `409` a change that would make an illegal status transition (for example reviving an expired campaign by moving its end date). It keeps the `lastUpdate` check and the `202 Accepted` answer.
+- The `active`/`inactive` counters of the list response now use the `active` flag and the end date (they compared a stored `status` text before); `expired` is unchanged.
+- Legacy aliases (`q`, `category_id`, `business_id`, `start_date_*`, `end_date_*`) keep working; `CampaignUpdateRequest` gained an optional `type` and keeps its old constructor.
+
+### Notes
+- `src/main/resources/api/index.yaml` is not changed here; the endpoint list is in the technical guide.
+
 ## [Unreleased] - 2026-11-23 (F1-A geo search: nearby and map)
 
 ### Added

@@ -39,9 +39,9 @@ class CampaignControllerTest {
     void listCampaignsReturnsOk() {
         CampaignResumeTO resume = new CampaignResumeTO(UUID.randomUUID(), "t", null, null, "Automotive", null, "ACTIVE");
         CampaignListResponse response = new CampaignListResponse(0, 1, 20, 0, 0L, 0L, 0L, List.of(resume));
-        when(campaignService.list(eq(1), eq(20), eq("-start_date"), any())).thenReturn(ResponseEntity.ok(response));
+        when(campaignService.list(eq(1), eq(20), eq("-start_date"), any(), any())).thenReturn(ResponseEntity.ok(response));
 
-        ResponseEntity<CampaignListResponse> result = campaignController.listCampaigns(1, 20, "-start_date", Collections.emptyMap());
+        ResponseEntity<CampaignListResponse> result = campaignController.listCampaigns(1, 20, "-start_date", Collections.emptyMap(), null);
 
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals(response, result.getBody());
@@ -52,9 +52,9 @@ class CampaignControllerTest {
     void getByIdDelegates() {
         UUID id = UUID.randomUUID();
         CampaignTO to = new CampaignTO(id, "n", null, null, null, null, null, null, null, null, true);
-        when(campaignService.find(id)).thenReturn(ResponseEntity.ok(to));
+        when(campaignService.find(eq(id), any())).thenReturn(ResponseEntity.ok(to));
 
-        ResponseEntity<CampaignTO> resp = campaignController.getById(id);
+        ResponseEntity<CampaignTO> resp = campaignController.getById(id, null);
         assertEquals(HttpStatus.OK, resp.getStatusCode());
         assertEquals(to, resp.getBody());
     }
@@ -72,5 +72,31 @@ class CampaignControllerTest {
         ResponseEntity<CampaignUpdateResponse> resp = campaignController.update(id, request, "tok");
         assertEquals(HttpStatus.ACCEPTED, resp.getStatusCode());
         assertEquals(updatedResp, resp.getBody());
+    }
+
+    @Test
+    @DisplayName("deactivate, reactivate and publish delegate to the service with the token")
+    void lifecycleDelegates() {
+        UUID id = UUID.randomUUID();
+        CampaignTO to = org.mockito.Mockito.mock(CampaignTO.class);
+        when(campaignService.deactivate(id, "t")).thenReturn(ResponseEntity.ok(to));
+        when(campaignService.reactivate(id, "t")).thenReturn(ResponseEntity.ok(to));
+        when(campaignService.publish(id, "t")).thenReturn(ResponseEntity.status(HttpStatus.CONFLICT).build());
+
+        assertEquals(HttpStatus.OK, campaignController.deactivate(id, "t").getStatusCode());
+        assertEquals(HttpStatus.OK, campaignController.reactivate(id, "t").getStatusCode());
+        assertEquals(HttpStatus.CONFLICT, campaignController.publish(id, "t").getStatusCode());
+    }
+
+    @Test
+    @DisplayName("default service answers 501 for the new lifecycle calls and falls back for list and find")
+    void defaultServiceMethods() {
+        CampaignService plain = new CampaignService() { };
+        UUID id = UUID.randomUUID();
+        assertEquals(HttpStatus.NOT_IMPLEMENTED, plain.deactivate(id, "t").getStatusCode());
+        assertEquals(HttpStatus.NOT_IMPLEMENTED, plain.reactivate(id, "t").getStatusCode());
+        assertEquals(HttpStatus.NOT_IMPLEMENTED, plain.publish(id, "t").getStatusCode());
+        assertEquals(HttpStatus.NOT_IMPLEMENTED, plain.find(id, "t").getStatusCode());
+        assertEquals(HttpStatus.NOT_IMPLEMENTED, plain.list(1, 1, null, Collections.emptyMap(), "t").getStatusCode());
     }
 }

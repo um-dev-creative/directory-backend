@@ -267,4 +267,22 @@ class CampaignFilterParserTest {
         LocalDateTime instant = LocalDateTime.parse("2025-11-01T00:00:00");
         assertDoesNotThrow(() -> parser.validateDateRanges(instant, instant, instant, instant));
     }
+
+    @Test
+    void parseStatus_validBlankAndInvalid() {
+        assertEquals(com.umdc.directory.constant.CampaignStatus.PAUSED, parser.parseStatus(java.util.Map.of("status", "paused")));
+        assertNull(parser.parseStatus(java.util.Map.of("status", " ")));
+        assertNull(parser.parseStatus(java.util.Map.of()));
+        assertNull(parser.parseStatus(null));
+        assertThrows(IllegalArgumentException.class, () -> parser.parseStatus(java.util.Map.of("status", "x")));
+    }
+
+    @Test
+    void parseType_validBlankAndInvalid() {
+        assertEquals("EVENT", parser.parseType(java.util.Map.of("type", "event")));
+        assertNull(parser.parseType(java.util.Map.of("type", "")));
+        assertNull(parser.parseType(java.util.Map.of()));
+        assertNull(parser.parseType(null));
+        assertThrows(IllegalArgumentException.class, () -> parser.parseType(java.util.Map.of("type", "x")));
+    }
 }

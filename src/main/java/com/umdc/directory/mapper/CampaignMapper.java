@@ -2,6 +2,7 @@ package com.umdc.directory.mapper;
 
 import com.umdc.commons.services.config.mapper.MapperAppConfig;
 import com.umdc.directory.api.v1.to.CampaignResumeTO;
+import com.umdc.directory.constant.CampaignStatus;
 import com.umdc.directory.api.v1.to.CampaignTO;
 import com.umdc.directory.api.v1.to.OfferTO;
 import com.umdc.directory.jpa.entity.BusinessEntity;
@@ -33,7 +34,7 @@ public interface CampaignMapper {
     @Mapping(target = "categoryName", source = "categoryFk.name")
     @Mapping(target = "terms", source = "terms")
     @Mapping(target = "active", source = "active")
-    @Mapping(target = "status", source = "status")
+    @Mapping(target = "status", expression = "java(lifecycleStatus(entity))")
     @Mapping(target = "discount", source = "discount", qualifiedByName = "scaleTwo")
     @Mapping(target = "type", source = "type")
     CampaignTO toTO(CampaignEntity entity);
@@ -49,7 +50,14 @@ public interface CampaignMapper {
     // New lightweight mapping for list summaries
     @Mapping(target = "categoryName", source = "categoryFk.name")
     @Mapping(target = "discount", source = "discount", qualifiedByName = "scaleTwo")
+    @Mapping(target = "status", expression = "java(lifecycleStatus(entity))")
     CampaignResumeTO toResumeTO(CampaignEntity entity);
+
+    /// Computed lifecycle status (DRAFT, SCHEDULED, ACTIVE, PAUSED, EXPIRED) at the current time.
+    default String lifecycleStatus(CampaignEntity entity) {
+        return CampaignStatus.compute(entity.getStatus(), entity.getActive(), entity.getStartDate(),
+                entity.getEndDate(), java.time.LocalDateTime.now()).name();
+    }
 
     @Named("toCategoryEntity")
     default CategoryEntity toCategoryEntity(java.util.UUID id) {
