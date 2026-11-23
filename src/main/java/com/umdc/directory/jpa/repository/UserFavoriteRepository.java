@@ -1,6 +1,8 @@
 package com.umdc.directory.jpa.repository;
 
 import com.umdc.directory.jpa.entity.UserFavoriteEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -29,6 +31,17 @@ public interface UserFavoriteRepository extends JpaRepository<UserFavoriteEntity
             + "LEFT JOIN FETCH uf.product "
             + "LEFT JOIN FETCH uf.campaign "
             + "WHERE uf.user.id = :" + USER_ID + " AND uf.active = true";
+    String BUCKET = "bucket";
+    /** Bucket of a favorite: 0 = store, 1 = product, 2 = offer (keeps the stores, products, offers order). */
+    String BUCKET_EXPR = "CASE WHEN uf.business IS NOT NULL THEN 0 WHEN uf.product IS NOT NULL THEN 1 ELSE 2 END";
+    String Q_PAGE_WHERE = " WHERE uf.user.id = :" + USER_ID + " AND uf.active = true"
+            + " AND (:" + BUCKET + " < 0 OR " + BUCKET_EXPR + " = :" + BUCKET + ")";
+    String Q_PAGE_BY_USER = "SELECT uf FROM UserFavoriteEntity uf "
+            + "LEFT JOIN FETCH uf.business b "
+            + "LEFT JOIN FETCH uf.product p "
+            + "LEFT JOIN FETCH uf.campaign c"
+            + Q_PAGE_WHERE + " ORDER BY " + BUCKET_EXPR + " ASC";
+    String Q_PAGE_COUNT = "SELECT COUNT(uf) FROM UserFavoriteEntity uf" + Q_PAGE_WHERE;
     String Q_FIND_BY_BUSINESS = "SELECT uf FROM UserFavoriteEntity uf WHERE uf.business.id = :" + BUSINESS_ID;
     String Q_FIND_BY_USER_AND_BUSINESS = Q_USER_PREFIX + USER_ID + " AND uf.business.id = :" + BUSINESS_ID;
     String Q_COUNT_ACTIVE_BY_USER = "SELECT COUNT(uf) FROM UserFavoriteEntity uf WHERE uf.user.id = :" + USER_ID + " AND uf.active = true";
@@ -91,4 +104,17 @@ public interface UserFavoriteRepository extends JpaRepository<UserFavoriteEntity
      */
     @Query(Q_FIND_BY_USER_AND_CAMPAIGN)
     Optional<UserFavoriteEntity> findByUserIdAndCampaignId(@Param(USER_ID) UUID userId, @Param(CAMPAIGN_ID) UUID campaignId);
+
+    /**
+     * Database-paginated active favorites of a user, ordered by type bucket (stores, products,
+     * offers) and then by the sort carried in the {@link Pageable}. The sort may reference the
+     * aliases {@code uf}, {@code b}, {@code p} and {@code c}.
+     *
+     * @param userId   the user's UUID
+     * @param bucket   0 stores, 1 products, 2 offers, negative for all types
+     * @param pageable page request (0-based) with optional sort
+     * @return one page of favorites with their targets fetched
+     */
+    @Query(value = Q_PAGE_BY_USER, countQuery = Q_PAGE_COUNT)
+    Page<UserFavoriteEntity> findPageByUser(@Param(USER_ID) UUID userId, @Param(BUCKET) int bucket, Pageable pageable);
 }

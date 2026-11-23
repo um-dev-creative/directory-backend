@@ -100,7 +100,7 @@ class FavoriteServiceImplTest {
             userEntity.setId(userId);
             saved.setUser(userEntity);
 
-            when(userFavoriteRepository.save(any())).thenReturn(saved);
+            when(userFavoriteRepository.saveAndFlush(any())).thenReturn(saved);
             when(favoriteMapper.toResponse(any(UserFavoriteEntity.class))).thenReturn(favoriteResponse);
 
             ResponseEntity<FavoriteResponse> resp = favoriteService.createFavorite("token", new FavoriteCreateRequest(FavoriteType.STORE, businessId));
@@ -167,7 +167,6 @@ class FavoriteServiceImplTest {
         try (MockedStatic<JwtUtil> mockedStatic = Mockito.mockStatic(JwtUtil.class)) {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
             when(userFavoriteRepository.findById(favId)).thenReturn(Optional.of(existing));
-            when(productRepository.findById(productId)).thenReturn(Optional.of(new ProductEntity()));
 
             ResponseEntity<FavoriteResponse> resp = favoriteService.updateFavorite("token", favId, req);
             assertEquals(HttpStatus.FORBIDDEN, resp.getStatusCode());
@@ -192,7 +191,7 @@ class FavoriteServiceImplTest {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
             when(userFavoriteRepository.findById(favId)).thenReturn(Optional.of(existing));
             when(productRepository.findById(productId)).thenReturn(Optional.of(new ProductEntity()));
-            when(userFavoriteRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+            when(userFavoriteRepository.saveAndFlush(any())).thenAnswer(i -> i.getArgument(0));
             when(favoriteMapper.toResponse(any(UserFavoriteEntity.class))).thenReturn(favoriteResponse);
 
             ResponseEntity<FavoriteResponse> resp = favoriteService.updateFavorite("token", favId, req);

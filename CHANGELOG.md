@@ -48,6 +48,19 @@ This project adheres (loosely) to "Keep a Changelog" and follows semantic versio
 - Not run against Vault, Config Server, Kafka or a real PostgreSQL: smoke-test in a real environment before releasing.
 - Supersedes Dependabot PR #105 (plexus-utils), now at 4.1.0.
 
+## [Unreleased] - 2026-11-23 (F0-B favorites)
+
+### Fixed
+- `GET /api/v1/favorites` no longer answers `501` when `sort` is sent. `sort=created_at|name[,asc|desc]` is implemented (a bare field sorts ascending; the default is `created_at,desc`). An unknown field, direction or format answers `400`, and so do an unknown `type` and `size < 1`.
+- Pagination now runs in the database (`UserFavoriteRepository.findPageByUser`, one query plus a count) instead of loading every favorite and slicing it in memory. The page stays 0-based (a negative `page` is treated as `0`) and `size` is capped at 100. The combined result keeps the order stores, then products, then offers.
+- `PUT /api/v1/favorites/{id}` resolves the target according to the type of the favorite (store, offer or product) instead of always looking up a product. The owner check now runs before the target lookup, and moving a favorite onto a target the user already has active answers `409`.
+- Creating a favorite that was soft-deleted reactivates it (`201`, `deleted_at` and `deleted_by` cleared) instead of answering `409`; only an active duplicate answers `409`. Setting `active=true` through update clears the soft-delete fields as well.
+- A unique-constraint violation from a concurrent duplicate (`DataIntegrityViolationException`) is mapped to `409` on create and update (`saveAndFlush`; both methods are no longer wrapped in a class-level transaction so the violation does not poison it).
+
+### Added
+- `UserFavoriteRepositoryTest` (real queries on H2) and `FavoriteServiceImplF0Test`; the old `501` and in-memory pagination tests were replaced.
+- User guide `docs/user-guide/f0-favorites.md` and technical guide `docs/technical/f0-favorites.md`, which includes the proposed partial unique index and `CHECK num_nonnulls` script for the migrations flow (no DDL is applied by this change).
+
 ## [Unreleased] - 2026-11-21 (business view statistics)
 
 ### Added

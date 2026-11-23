@@ -3,6 +3,8 @@ package com.umdc.directory.api.v1.service;
 import com.umdc.directory.api.v1.to.*;
 import com.umdc.directory.constant.DirectoryAppConstants;
 import com.umdc.directory.constant.FavoriteType;
+import com.umdc.directory.jpa.entity.BusinessEntity;
+import com.umdc.directory.jpa.entity.CampaignEntity;
 import com.umdc.directory.jpa.entity.ProductEntity;
 import com.umdc.directory.jpa.entity.UserEntity;
 import com.umdc.directory.jpa.entity.UserFavoriteEntity;
@@ -15,6 +17,12 @@ import com.umdc.directory.mapper.CampaignMapper;
 import com.umdc.directory.mapper.FavoriteMapper;
 import com.umdc.directory.mapper.ProductMapper;
 import com.umdc.directory.util.JwtUtil;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.JpaSort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -31,6 +39,12 @@ import java.util.function.Supplier;
 public class FavoriteServiceImpl implements FavoriteService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FavoriteServiceImpl.class);
+    private static final int BUCKET_STORE = 0;
+    private static final int BUCKET_PRODUCT = 1;
+    private static final int BUCKET_OFFER = 2;
+    private static final int MAX_PAGE_SIZE = 100;
+    private static final int MIN_PAGE_SIZE = 1;
+    private static final int SORT_PARTS_MAX = 2;
 
     private final UserFavoriteRepository userFavoriteRepository;
     private final BusinessRepository businessRepository;
@@ -60,7 +74,6 @@ public class FavoriteServiceImpl implements FavoriteService {
     }
 
     @Override
-    @Transactional
     public ResponseEntity<FavoriteResponse> createFavorite(String sessionToken, FavoriteCreateRequest request) {
         // validate request
         if (Objects.isNull(request)) {
@@ -98,28 +111,39 @@ public class FavoriteServiceImpl implements FavoriteService {
     @Override
     @Transactional(readOnly = true)
     public ResponseEntity<FavoritesResponse> getFavorites(String sessionToken, String type, int page, int size, String sort) {
-        // Return 501 Not Implemented if sort parameter is provided
-        if (sort != null && !sort.isBlank()) {
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
-        }
-
         UUID userId = JwtUtil.getUidFromToken(sessionToken);
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        // findByUserId uses LEFT JOIN FETCH for business/product/campaign, so no N+1 lazy loads.
-        List<UserFavoriteEntity> favsList = userFavoriteRepository.findByUserId(userId);
+        int bucket = -1;
+        if (Objects.nonNull(type) && !type.isBlank()) {
+            bucket = switch (type.trim().toLowerCase(Locale.ROOT)) {
+                case DirectoryAppConstants.FAVORITE_TYPE_STORES -> BUCKET_STORE;
+                case DirectoryAppConstants.FAVORITE_TYPE_PRODUCTS -> BUCKET_PRODUCT;
+                case DirectoryAppConstants.FAVORITE_TYPE_OFFERS -> BUCKET_OFFER;
+                default -> -2;
+            };
+            if (bucket == -2) {
+                return ResponseEntity.badRequest().build();
+            }
+        }
+        if (size < MIN_PAGE_SIZE) {
+            return ResponseEntity.badRequest().build();
+        }
+        Sort order = parseSort(sort);
+        if (order == null) {
+            return ResponseEntity.badRequest().build();
+        }
 
-        // Single-pass partition: benchmark showed 3 separate stream traversals are 10–14×
-        // slower and allocate 2.3–5.5× more bytes than one enhanced-for loop (see
-        // FavoriteStreamBenchmark). Pre-sized lists avoid ArrayList resize copies.
-        int bucket = favsList.size() / 3 + 1;
-        List<BusinessTO> stores   = new ArrayList<>(bucket);
-        List<ProductCreateResponse> products = new ArrayList<>(bucket);
-        List<OfferTO> offers      = new ArrayList<>(bucket);
+        // Pagination is done by the database (0-based page). Targets are fetched with the page.
+        Pageable pageable = PageRequest.of(Math.max(0, page), Math.min(size, MAX_PAGE_SIZE), order);
+        Page<UserFavoriteEntity> result = userFavoriteRepository.findPageByUser(userId, bucket, pageable);
 
-        for (UserFavoriteEntity fav : favsList) {
+        List<BusinessTO> stores = new ArrayList<>();
+        List<ProductCreateResponse> products = new ArrayList<>();
+        List<OfferTO> offers = new ArrayList<>();
+        for (UserFavoriteEntity fav : result.getContent()) {
             if (fav.getBusiness() != null) {
                 stores.add(businessMapper.toBusinessTO(fav.getBusiness()));
             } else if (fav.getProduct() != null) {
@@ -128,62 +152,43 @@ public class FavoriteServiceImpl implements FavoriteService {
                 offers.add(campaignMapper.toOfferTO(fav.getCampaign()));
             }
         }
+        return ResponseEntity.ok(new FavoritesResponse(stores, products, offers));
+    }
 
-        // Apply type filter with pagination
-        if (Objects.nonNull(type) && !type.isBlank()) {
-            String t = type.trim().toLowerCase(Locale.ROOT);
-            return switch (t) {
-                case DirectoryAppConstants.FAVORITE_TYPE_STORES -> {
-                    List<BusinessTO> paginatedStores = paginateList(stores, page, size);
-                    yield ResponseEntity.ok(new FavoritesResponse(paginatedStores, List.of(), List.of()));
+    /**
+     * Parses {@code field[,direction]}. Fields: {@code created_at} (or {@code createdAt}) and {@code name};
+     * directions {@code asc|desc}. Returns null when the value is invalid. The default is created_at desc.
+     */
+    private Sort parseSort(String sort) {
+        Sort.Direction direction = Sort.Direction.DESC;
+        String field = "created_at";
+        if (sort != null && !sort.isBlank()) {
+            String[] parts = sort.split(",", -1);
+            if (parts.length > SORT_PARTS_MAX) {
+                return null;
+            }
+            field = parts[0].trim().toLowerCase(Locale.ROOT);
+            if (parts.length == SORT_PARTS_MAX) {
+                direction = switch (parts[1].trim().toLowerCase(Locale.ROOT)) {
+                    case "asc" -> Sort.Direction.ASC;
+                    case "desc" -> Sort.Direction.DESC;
+                    default -> null;
+                };
+                if (direction == null) {
+                    return null;
                 }
-                case DirectoryAppConstants.FAVORITE_TYPE_PRODUCTS -> {
-                    List<ProductCreateResponse> paginatedProducts = paginateList(products, page, size);
-                    yield ResponseEntity.ok(new FavoritesResponse(List.of(), paginatedProducts, List.of()));
-                }
-                case DirectoryAppConstants.FAVORITE_TYPE_OFFERS -> {
-                    List<OfferTO> paginatedOffers = paginateList(offers, page, size);
-                    yield ResponseEntity.ok(new FavoritesResponse(List.of(), List.of(), paginatedOffers));
-                }
-                default -> ResponseEntity.badRequest().build();
-            };
-        }
-
-        // Pagination: When no type filter is specified, paginate across the combined list
-        // to ensure the total number of items returned respects the size parameter.
-        // Create a combined list with ordering: stores, then products, then offers
-        record FavoriteItem(Object item, String itemType) {}
-
-        List<FavoriteItem> combined = new ArrayList<>(stores.size() + products.size() + offers.size());
-        stores.forEach(s -> combined.add(new FavoriteItem(s, DirectoryAppConstants.FAVORITE_TYPE_STORES)));
-        products.forEach(p -> combined.add(new FavoriteItem(p, DirectoryAppConstants.FAVORITE_TYPE_PRODUCTS)));
-        offers.forEach(o -> combined.add(new FavoriteItem(o, DirectoryAppConstants.FAVORITE_TYPE_OFFERS)));
-
-        // Apply pagination to the combined list
-        int from = Math.max(0, page * size);
-        int to = Math.min(combined.size(), from + size);
-        List<FavoriteItem> paginatedItems = from < to ? combined.subList(from, to) : List.of();
-
-        // Separate back into type-specific lists
-        List<BusinessTO> storesPage = new ArrayList<>();
-        List<ProductCreateResponse> productsPage = new ArrayList<>();
-        List<OfferTO> offersPage = new ArrayList<>();
-
-        for (FavoriteItem item : paginatedItems) {
-            switch (item.itemType()) {
-                case DirectoryAppConstants.FAVORITE_TYPE_STORES  -> storesPage.add((BusinessTO) item.item());
-                case DirectoryAppConstants.FAVORITE_TYPE_PRODUCTS -> productsPage.add((ProductCreateResponse) item.item());
-                case DirectoryAppConstants.FAVORITE_TYPE_OFFERS -> offersPage.add((OfferTO) item.item());
-                default -> ResponseEntity.notFound().build();
+            } else {
+                direction = Sort.Direction.ASC;
             }
         }
-
-        FavoritesResponse response = new FavoritesResponse(storesPage, productsPage, offersPage);
-        return ResponseEntity.ok(response);
+        return switch (field) {
+            case "created_at", "createdat" -> Sort.by(direction, "createdAt").and(Sort.by("id"));
+            case "name" -> JpaSort.unsafe(direction, "COALESCE(b.name, p.name, c.title)").and(Sort.by("id"));
+            default -> null;
+        };
     }
 
     @Override
-    @Transactional
     public ResponseEntity<FavoriteResponse> updateFavorite(String sessionToken, UUID favoriteId, FavoriteUpdateRequest request) {
         if (Objects.isNull(request)) {
             return ResponseEntity.badRequest().build();
@@ -195,30 +200,58 @@ public class FavoriteServiceImpl implements FavoriteService {
         }
 
         Optional<UserFavoriteEntity> opt = userFavoriteRepository.findById(favoriteId);
-        if (opt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        HttpStatus denied = accessDenied(opt, userId);
+        if (denied != null) {
+            return ResponseEntity.status(denied).build();
         }
-        Optional<ProductEntity> productOpt = productRepository.findById(request.id());
+        UserFavoriteEntity entity = opt.orElseThrow();
 
-        if(productOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        // The target is resolved according to the type of the favorite (store, offer or product).
+        UUID targetId = request.id();
+        Optional<UserFavoriteEntity> sameTarget;
+        if (entity.getBusiness() != null) {
+            Optional<BusinessEntity> target = businessRepository.findById(targetId);
+            if (target.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+            entity.setBusiness(target.get());
+            sameTarget = userFavoriteRepository.findByUserIdAndBusinessId(userId, targetId);
+        } else if (entity.getCampaign() != null) {
+            Optional<CampaignEntity> target = campaignRepository.findById(targetId);
+            if (target.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+            entity.setCampaign(target.get());
+            sameTarget = userFavoriteRepository.findByUserIdAndCampaignId(userId, targetId);
+        } else {
+            Optional<ProductEntity> target = productRepository.findById(targetId);
+            if (target.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+            entity.setProduct(target.get());
+            sameTarget = userFavoriteRepository.findByUserIdAndProductId(userId, targetId);
         }
 
-        UserFavoriteEntity entity = opt.get();
-        // Authorization: only the owner may update (admins not modeled here)
-        if (Objects.isNull(entity.getUser()) || !userId.equals(entity.getUser().getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        entity.setProduct(productOpt.get());
-
-        // Apply mutable field: only 'active' can be updated (for soft-delete)
+        // Apply mutable field: 'active' (soft-delete / reactivation)
         if (request.active() != null) {
             entity.setActive(request.active());
+            if (request.active()) {
+                entity.setDeletedAt(null);
+                entity.setDeletedBy(null);
+            }
+        }
+
+        // Another active favorite of the same user and target would be a duplicate.
+        boolean duplicate = sameTarget.isPresent()
+                && !favoriteId.equals(sameTarget.get().getId())
+                && Boolean.TRUE.equals(sameTarget.get().getActive())
+                && Boolean.TRUE.equals(entity.getActive());
+        if (duplicate) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
         entity.setUpdatedAt(LocalDateTime.now());
-        UserFavoriteEntity saved = userFavoriteRepository.save(entity);
-        return ResponseEntity.ok(favoriteMapper.toResponse(saved));
+        return persist(entity, HttpStatus.OK);
     }
 
     @Override
@@ -230,16 +263,11 @@ public class FavoriteServiceImpl implements FavoriteService {
         }
 
         Optional<UserFavoriteEntity> opt = userFavoriteRepository.findById(favoriteId);
-        if (opt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        HttpStatus denied = accessDenied(opt, userId);
+        if (denied != null) {
+            return ResponseEntity.status(denied).build();
         }
-
-        UserFavoriteEntity entity = opt.get();
-        // Authorization: allow owner only for now. Admin role not modeled in JWT parsing.
-        // When admin support is available extend this check accordingly.
-        if (Objects.isNull(entity.getUser()) || !userId.equals(entity.getUser().getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        UserFavoriteEntity entity = opt.orElseThrow();
 
         // Soft-delete: mark inactive and set audit fields
         entity.setActive(false);
@@ -254,10 +282,19 @@ public class FavoriteServiceImpl implements FavoriteService {
         return ResponseEntity.noContent().build();
     }
 
-    private <T> List<T> paginateList(List<T> list, int page, int size) {
-        int from = Math.max(0, page * size);
-        int to = Math.min(list.size(), from + size);
-        return from < to ? list.subList(from, to) : List.of();
+    /**
+     * Owner-only authorization (admins are not modeled): 404 when the favorite is missing,
+     * 403 when it belongs to another user, null when access is granted.
+     */
+    private HttpStatus accessDenied(Optional<UserFavoriteEntity> favorite, UUID userId) {
+        if (favorite.isEmpty()) {
+            return HttpStatus.NOT_FOUND;
+        }
+        UserEntity owner = favorite.get().getUser();
+        if (Objects.isNull(owner) || !userId.equals(owner.getId())) {
+            return HttpStatus.FORBIDDEN;
+        }
+        return null;
     }
 
     private <T> ResponseEntity<FavoriteResponse> processFavorite(UserEntity user,
@@ -270,14 +307,37 @@ public class FavoriteServiceImpl implements FavoriteService {
         }
         var existing = existingFinder.get();
         if (existing.isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            UserFavoriteEntity previous = existing.get();
+            if (Boolean.TRUE.equals(previous.getActive())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            }
+            // Soft-deleted favorite: reactivate it instead of failing with 409.
+            previous.setActive(true);
+            previous.setDeletedAt(null);
+            previous.setDeletedBy(null);
+            previous.setUpdatedAt(LocalDateTime.now());
+            return persist(previous, HttpStatus.CREATED);
         }
         UserFavoriteEntity fav = new UserFavoriteEntity(user);
         setter.accept(fav, entityOpt.get());
         fav.setCreatedAt(LocalDateTime.now());
         fav.setUpdatedAt(LocalDateTime.now());
         fav.setActive(true);
-        UserFavoriteEntity saved = userFavoriteRepository.save(fav);
-        return ResponseEntity.status(HttpStatus.CREATED).body(favoriteMapper.toResponse(saved));
+        return persist(fav, HttpStatus.CREATED);
+    }
+
+    /**
+     * Saves and flushes so a unique-index violation (concurrent duplicate) surfaces here and is
+     * answered with 409. Callers are intentionally not transactional: a constraint violation
+     * would otherwise mark the surrounding transaction rollback-only.
+     */
+    private ResponseEntity<FavoriteResponse> persist(UserFavoriteEntity entity, HttpStatus okStatus) {
+        try {
+            UserFavoriteEntity saved = userFavoriteRepository.saveAndFlush(entity);
+            return ResponseEntity.status(okStatus).body(favoriteMapper.toResponse(saved));
+        } catch (DataIntegrityViolationException ex) {
+            LOGGER.warn("Favorite rejected by a database constraint (duplicate): {}", ex.getMostSpecificCause().getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
     }
 }
