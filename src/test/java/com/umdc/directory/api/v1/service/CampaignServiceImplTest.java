@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static com.umdc.directory.support.OwnerTokens.forUser;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -34,6 +35,9 @@ class CampaignServiceImplTest {
     private CampaignMapper campaignMapper;
     private CampaignStatusCounter statusCounter;
     private CampaignServiceImpl service;
+    private final UUID userId = UUID.randomUUID();
+    private final UUID ownBiz = UUID.randomUUID();
+    private final String token = forUser(userId);
 
     @BeforeEach
     void setup() {
@@ -42,6 +46,7 @@ class CampaignServiceImplTest {
         businessRepository = Mockito.mock(BusinessRepository.class);
         campaignMapper = Mockito.mock(CampaignMapper.class);
         statusCounter = Mockito.mock(CampaignStatusCounter.class);
+        when(businessRepository.findOwnerId(ownBiz)).thenReturn(Optional.of(userId));
         service = new CampaignServiceImpl(campaignRepository, categoryRepository, businessRepository, campaignMapper, statusCounter);
     }
 
@@ -51,7 +56,7 @@ class CampaignServiceImplTest {
         when(to.categoryId()).thenReturn(null);
         when(to.businessId()).thenReturn(UUID.randomUUID());
 
-        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> service.create(to));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> service.create(to, token));
     }
 
     @Test
@@ -61,7 +66,7 @@ class CampaignServiceImplTest {
         CampaignTO to = new CampaignTO(null, "n", "d", null, null, cat, biz, null, null, null, true);
 
         when(categoryRepository.existsById(cat)).thenReturn(true);
-        when(businessRepository.existsById(biz)).thenReturn(true);
+        when(businessRepository.findOwnerId(biz)).thenReturn(Optional.of(userId));
 
         CampaignEntity entity = new CampaignEntity();
         when(campaignMapper.toEntity(to)).thenReturn(entity);
@@ -69,7 +74,7 @@ class CampaignServiceImplTest {
         when(campaignRepository.save(entity)).thenReturn(saved);
         when(campaignMapper.toTO(saved)).thenReturn(new CampaignTO(UUID.randomUUID(), "n", "d", null, null, cat, biz, null, null, null, true));
 
-        ResponseEntity<CampaignTO> result = service.create(to);
+        ResponseEntity<CampaignTO> result = service.create(to, token);
         assertEquals(HttpStatus.CREATED, result.getStatusCode());
         verify(campaignRepository).save(entity);
     }
@@ -81,10 +86,13 @@ class CampaignServiceImplTest {
         when(req.lastUpdate()).thenReturn(LocalDateTime.parse("2025-11-01T00:00:00"));
 
         CampaignEntity existing = new CampaignEntity();
+        var b = new com.umdc.directory.jpa.entity.BusinessEntity();
+        b.setId(ownBiz);
+        existing.setBusinessFk(b);
         existing.setLastUpdate(LocalDateTime.parse("2025-11-02T00:00:00"));
         when(campaignRepository.findById(id)).thenReturn(Optional.of(existing));
 
-        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> service.update(id, req));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> service.update(id, req, token));
     }
 
     @Test

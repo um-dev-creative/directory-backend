@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+import static com.umdc.security.constant.ConstantApp.SESSION_TOKEN_KEY;
+
 // REST controller for product-related operations.
 @Tag(name = "products", description = "The Product API")
 public interface ProductApi {
@@ -38,12 +40,15 @@ public interface ProductApi {
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                 schema = @Schema(implementation = ProductCreateResponse.class))),
         @ApiResponse(responseCode = "400", description = "Invalid request data", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Missing or invalid session token", content = @Content),
+        @ApiResponse(responseCode = "403", description = "The user does not own any business", content = @Content),
         @ApiResponse(responseCode = DirectoryAppConstants.INTERNAL_SERVER_ERROR_CODE, description = DirectoryAppConstants.INTERNAL_SERVER_ERROR_MESSAGE, content = @Content)
     })
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    default ResponseEntity<ProductCreateResponse> createProduct(@RequestBody ProductCreateRequest productCreateRequest) {
+    default ResponseEntity<ProductCreateResponse> createProduct(@RequestBody ProductCreateRequest productCreateRequest,
+                                                                @RequestHeader(SESSION_TOKEN_KEY) String sessionToken) {
         // The controller could override the default implementation
-        return getProductService().create(productCreateRequest);
+        return getProductService().create(productCreateRequest, sessionToken);
     }
 
     // Links a product to a business.
@@ -56,12 +61,16 @@ public interface ProductApi {
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                 schema = @Schema(implementation = LinkBusinessProductResponse.class))),
         @ApiResponse(responseCode = "400", description = "Invalid request data", content = @Content),
+        @ApiResponse(responseCode = "401", description = "Missing or invalid session token", content = @Content),
+        @ApiResponse(responseCode = "403", description = "The user does not own the business", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Business not found", content = @Content),
         @ApiResponse(responseCode = DirectoryAppConstants.INTERNAL_SERVER_ERROR_CODE, description = DirectoryAppConstants.INTERNAL_SERVER_ERROR_MESSAGE, content = @Content)
     })
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE, path = "/link")
-    default ResponseEntity<LinkBusinessProductResponse> linkProductToBusiness(@RequestBody LinkBusinessProductRequest businessProductLinkCreateRequest) {
+    default ResponseEntity<LinkBusinessProductResponse> linkProductToBusiness(@RequestBody LinkBusinessProductRequest businessProductLinkCreateRequest,
+                                                                              @RequestHeader(SESSION_TOKEN_KEY) String sessionToken) {
         // The controller could override the default implementation
-        return getProductService().linkProductToBusiness(businessProductLinkCreateRequest);
+        return getProductService().linkProductToBusiness(businessProductLinkCreateRequest, sessionToken);
     }
 
     // Lists products for a business with pagination.

@@ -33,6 +33,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static com.umdc.directory.support.OwnerTokens.forUser;
 import static org.mockito.Mockito.when;
 
 @DisplayName("ProductServiceImpl - unit tests for product business logic")
@@ -52,6 +53,9 @@ class ProductServiceImplTest {
     @InjectMocks
     ProductServiceImpl productService;
 
+    private final UUID userId = UUID.randomUUID();
+    private final String token = forUser(userId);
+
     @Test
     @DisplayName("Create product successfully")
     void createProductSuccessfully() {
@@ -59,11 +63,12 @@ class ProductServiceImplTest {
         ProductEntity product = new ProductEntity();
         ProductCreateResponse response = new ProductCreateResponse(UUID.randomUUID(), "Example Product", "This is an example product description.", null, null, UUID.randomUUID());
 
+        when(businessRepository.countByUserId(userId)).thenReturn(1);
         when(productMapper.toProductEntity(any(ProductCreateRequest.class))).thenReturn(product);
         when(productRepository.save(any(ProductEntity.class))).thenReturn(product);
         when(productMapper.toProductCreateResponse(any(ProductEntity.class))).thenReturn(response);
 
-        ResponseEntity<ProductCreateResponse> result = productService.create(request);
+        ResponseEntity<ProductCreateResponse> result = productService.create(request, token);
 
         assertEquals(HttpStatus.CREATED, result.getStatusCode());
         assertEquals(response, result.getBody());
@@ -72,7 +77,7 @@ class ProductServiceImplTest {
     @Test
     @DisplayName("Create product with null request")
     void createProductWithNullRequest() {
-        ResponseEntity<ProductCreateResponse> response = productService.create(null);
+        ResponseEntity<ProductCreateResponse> response = productService.create(null, token);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
@@ -81,6 +86,7 @@ class ProductServiceImplTest {
     @DisplayName("Link product to business successfully")
     void linkProductToBusinessSuccessfully() {
         LinkBusinessProductRequest request = new LinkBusinessProductRequest(UUID.randomUUID(), UUID.randomUUID());
+        when(businessRepository.findOwnerId(request.businessId())).thenReturn(java.util.Optional.of(userId));
         BusinessProductEntity entity = new BusinessProductEntity();
         entity.setId(new BusinessProductEntityId(UUID.randomUUID(), UUID.randomUUID()));
         LinkBusinessProductResponse response = new LinkBusinessProductResponse(UUID.randomUUID(), UUID.randomUUID(), null, null, true);
@@ -89,7 +95,7 @@ class ProductServiceImplTest {
         when(businessProductRepository.save(any(BusinessProductEntity.class))).thenReturn(entity);
         when(businessProductMapper.toLinkBusinessProductResponse(any(BusinessProductEntity.class))).thenReturn(response);
 
-        ResponseEntity<LinkBusinessProductResponse> result = productService.linkProductToBusiness(request);
+        ResponseEntity<LinkBusinessProductResponse> result = productService.linkProductToBusiness(request, token);
 
         assertEquals(HttpStatus.CREATED, result.getStatusCode());
         assertEquals(response, result.getBody());
@@ -98,7 +104,7 @@ class ProductServiceImplTest {
     @Test
     @DisplayName("Link product to business with null request")
     void linkProductToBusinessWithNullRequest() {
-        ResponseEntity<LinkBusinessProductResponse> response = productService.linkProductToBusiness(null);
+        ResponseEntity<LinkBusinessProductResponse> response = productService.linkProductToBusiness(null, token);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
@@ -107,12 +113,13 @@ class ProductServiceImplTest {
     @DisplayName("Link product to business with null entity id")
     void linkProductToBusinessWithNullEntityId() {
         LinkBusinessProductRequest request = new LinkBusinessProductRequest(UUID.randomUUID(), UUID.randomUUID());
+        when(businessRepository.findOwnerId(request.businessId())).thenReturn(java.util.Optional.of(userId));
         BusinessProductEntity entity = new BusinessProductEntity();
 
         when(businessProductMapper.toSource(any(LinkBusinessProductRequest.class))).thenReturn(entity);
         when(businessProductRepository.save(any(BusinessProductEntity.class))).thenReturn(entity);
 
-        ResponseEntity<LinkBusinessProductResponse> result = productService.linkProductToBusiness(request);
+        ResponseEntity<LinkBusinessProductResponse> result = productService.linkProductToBusiness(request, token);
 
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
     }

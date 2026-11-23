@@ -8,10 +8,13 @@ import com.umdc.directory.api.v1.to.ProductCreateResponse;
 import com.umdc.directory.api.v1.to.ProductListResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
+
+import static com.umdc.security.constant.ConstantApp.SESSION_TOKEN_KEY;
 
 @RestController
 @RequestMapping("/api/v1/products")
@@ -24,13 +27,15 @@ public class ProductController implements ProductApi {
     }
 
     @Override
-    public ResponseEntity<ProductCreateResponse> createProduct(@Valid ProductCreateRequest productCreateRequest) {
-        return productService.create(productCreateRequest);
+    public ResponseEntity<ProductCreateResponse> createProduct(@Valid ProductCreateRequest productCreateRequest,
+                                                         @RequestHeader(SESSION_TOKEN_KEY) String sessionToken) {
+        return productService.create(productCreateRequest, sessionToken);
     }
 
     @Override
-    public ResponseEntity<LinkBusinessProductResponse> linkProductToBusiness(@Valid LinkBusinessProductRequest businessProductLinkCreateRequest) {
-        return productService.linkProductToBusiness(businessProductLinkCreateRequest);
+    public ResponseEntity<LinkBusinessProductResponse> linkProductToBusiness(@Valid LinkBusinessProductRequest businessProductLinkCreateRequest,
+                                                                              @RequestHeader(SESSION_TOKEN_KEY) String sessionToken) {
+        return productService.linkProductToBusiness(businessProductLinkCreateRequest, sessionToken);
     }
 
     @Override

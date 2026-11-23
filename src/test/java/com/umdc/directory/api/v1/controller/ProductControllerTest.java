@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -50,9 +51,9 @@ class ProductControllerTest {
                 LocalDateTime.now(),
                 UUID.randomUUID()
         );
-        when(productService.create(any(ProductCreateRequest.class))).thenReturn(ResponseEntity.status(HttpStatus.CREATED).body(response));
+        when(productService.create(any(ProductCreateRequest.class), eq("tok"))).thenReturn(ResponseEntity.status(HttpStatus.CREATED).body(response));
 
-        ResponseEntity<ProductCreateResponse> result = productController.createProduct(request);
+        ResponseEntity<ProductCreateResponse> result = productController.createProduct(request, "tok");
 
         assertEquals(HttpStatus.CREATED, result.getStatusCode());
         assertEquals(response, result.getBody());
@@ -61,9 +62,9 @@ class ProductControllerTest {
     @Test
     @DisplayName("createProduct should return BAD_REQUEST status with invalid request")
     void createProductShouldReturnBadRequestStatusWithInvalidRequest() {
-        when(productService.create(any())).thenReturn(ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
+        when(productService.create(any(), eq("tok"))).thenReturn(ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
 
-        ResponseEntity<ProductCreateResponse> result = productController.createProduct(null);
+        ResponseEntity<ProductCreateResponse> result = productController.createProduct(null, "tok");
 
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
     }
@@ -82,9 +83,9 @@ class ProductControllerTest {
                 LocalDateTime.now(),
                 true
         );
-        when(productService.linkProductToBusiness(any(LinkBusinessProductRequest.class))).thenReturn(ResponseEntity.ok(response));
+        when(productService.linkProductToBusiness(any(LinkBusinessProductRequest.class), eq("tok"))).thenReturn(ResponseEntity.ok(response));
 
-        ResponseEntity<LinkBusinessProductResponse> result = productController.linkProductToBusiness(request);
+        ResponseEntity<LinkBusinessProductResponse> result = productController.linkProductToBusiness(request, "tok");
 
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals(response, result.getBody());
@@ -97,9 +98,9 @@ class ProductControllerTest {
                 UUID.randomUUID(),
                 UUID.randomUUID()
         );
-        when(productService.linkProductToBusiness(any(LinkBusinessProductRequest.class))).thenReturn(ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
+        when(productService.linkProductToBusiness(any(LinkBusinessProductRequest.class), eq("tok"))).thenReturn(ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
 
-        ResponseEntity<LinkBusinessProductResponse> result = productController.linkProductToBusiness(request);
+        ResponseEntity<LinkBusinessProductResponse> result = productController.linkProductToBusiness(request, "tok");
 
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
     }

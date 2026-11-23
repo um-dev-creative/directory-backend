@@ -35,7 +35,7 @@ class ProductApiTest {
                 UUID.randomUUID()
         );
 
-        ResponseEntity<ProductCreateResponse> result = productApi.createProduct(request);
+        ResponseEntity<ProductCreateResponse> result = productApi.createProduct(request, "tok");
 
         assertEquals(HttpStatus.NOT_IMPLEMENTED, result.getStatusCode());
     }
@@ -48,7 +48,7 @@ class ProductApiTest {
                 UUID.randomUUID()
         );
 
-        ResponseEntity<?> result = productApi.linkProductToBusiness(request);
+        ResponseEntity<?> result = productApi.linkProductToBusiness(request, "tok");
 
         assertEquals(HttpStatus.NOT_IMPLEMENTED, result.getStatusCode());
     }

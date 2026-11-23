@@ -29,12 +29,14 @@ public interface CampaignService {
      * <ul>
      *   <li>201 CREATED when the campaign is persisted successfully</li>
      *   <li>400 BAD REQUEST when validation fails (missing required fields, invalid dates, missing FKs)</li>
-     *   <li>404 NOT FOUND optionally if related entities are looked up and not found (implementation-specific)</li>
+     *   <li>401 UNAUTHORIZED when the session token is missing or invalid</li>
+     *   <li>403 FORBIDDEN when the token user does not own the business</li>
+     *   <li>404 NOT FOUND when the business does not exist; optionally if related entities are looked up and not found (implementation-specific)</li>
      * </ul>
      * @param campaignTO inbound campaign transfer object; must include title, startDate, endDate, businessId, categoryId
      * @return ResponseEntity containing the persisted CampaignTO (including generated id, timestamps) or error status
      */
-    default ResponseEntity<CampaignTO> create(CampaignTO campaignTO) {
+    default ResponseEntity<CampaignTO> create(CampaignTO campaignTO, String token) {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
@@ -76,13 +78,15 @@ public interface CampaignService {
      *   <li>200 OK when the campaign is updated successfully</li>
      *   <li>400 BAD REQUEST when validation fails (invalid field lengths, invalid dates, invalid FKs)</li>
      *   <li>404 NOT FOUND when the campaign or related entities (category/business) don't exist</li>
+     *   <li>401 UNAUTHORIZED when the session token is missing or invalid</li>
+     *   <li>403 FORBIDDEN when the token user does not own the campaign's business (or the target business)</li>
      *   <li>409 CONFLICT when optimistic locking detects a concurrent modification</li>
      * </ul>
      * @param id unique identifier of the campaign to update
      * @param request update request with optional fields (only provided fields will be updated)
      * @return ResponseEntity containing a minimal CampaignUpdateResponse (id + lastUpdate) with HTTP 202 Accepted on success, or an error status
      */
-    default ResponseEntity<CampaignUpdateResponse> update(UUID id, CampaignUpdateRequest request) {
+    default ResponseEntity<CampaignUpdateResponse> update(UUID id, CampaignUpdateRequest request, String token) {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 }
