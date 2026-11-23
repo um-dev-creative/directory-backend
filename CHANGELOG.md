@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 This project adheres (loosely) to "Keep a Changelog" and follows semantic versioning where practical.
 
+## [Unreleased] - 2026-11-23 (MVP product and architecture analysis)
+
+### Added
+- Analysis of the first phase (MVP, Toronto / GTA) for businesses and consumers: current state verified in the code, functional requirements RF-01 to RF-12 with MoSCoW priority, non-functional requirements, geo search design (`nearby`, `map`, `geocode`, saved searches), proposed migration V6, map provider comparison, test strategy, marketing capabilities and gaps, 12-week plan and risk register.
+- Guides: `docs/user-guide/mvp-product-analysis.md`, `docs/technical/mvp-product-analysis.md` (Mermaid diagrams).
+
+### Notes
+- Documentation only: no code, API, schema or configuration change. The proposed V6 script and endpoints are not implemented.
+- Findings verified in the code: no owner check in campaign and product writes, business `create` reads `userId` from the body (`BusinessServiceImpl.java:89`), Swagger is `permitAll`, favourites `sort` answers `501`. Findings from a reviewer and not re-verified are marked as such in the technical guide.
+- `issues/created/TASK-002` (campaign update "not implemented") and `TEST_COVERAGE_SUMMARY.md` (`com/prx` paths) are stale; not changed here.
+- 664 tests pass; JaCoCo method coverage 93.25 % (760 of 815). `mvn test` alone does not hand the agent to Surefire here (the `jacoco.argLine` property stays empty), so coverage was measured by passing `-Djacoco.argLine=-javaagent:<jacoco agent>=destfile=target/jacoco.exec` and then `jacoco:report`.
+
 ## [Unreleased] - 2026-11-22 (container images: JVM and native)
 
 ### Added
