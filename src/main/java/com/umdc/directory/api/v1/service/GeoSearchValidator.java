@@ -93,6 +93,15 @@ public final class GeoSearchValidator {
                 text(q), resolvedLimit);
     }
 
+    /// Validated filters without geometry (saved searches that have no point or bbox).
+    public record Filters(UUID categoryId, UUID cityId, String text) {
+    }
+
+    /// @throws GeoSearchException when an id is not a UUID or the text is too long
+    public static Filters filters(String categoryId, String cityId, String q) {
+        return new Filters(uuid(categoryId, "category_id"), uuid(cityId, "city_id"), text(q));
+    }
+
     private static boolean blank(String value) {
         return value == null || value.isBlank();
     }
