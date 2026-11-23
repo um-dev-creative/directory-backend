@@ -9,6 +9,7 @@ import com.umdc.directory.jpa.repository.BusinessRepository;
 import com.umdc.directory.jpa.repository.ProductRepository;
 import com.umdc.directory.mapper.BusinessProductMapper;
 import com.umdc.directory.mapper.ProductMapper;
+import com.umdc.directory.util.JwtUtil;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,9 +62,17 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ResponseEntity<ProductCreateResponse> create(@Valid ProductCreateRequest productCreateRequest) {
+    public ResponseEntity<ProductCreateResponse> create(@Valid ProductCreateRequest productCreateRequest, String token) {
         if(Objects.isNull(productCreateRequest)) {
             return ResponseEntity.badRequest().build();
+        }
+        // A product is a catalogue item without a business: only owners of at least one business may create one.
+        var userId = JwtUtil.getUidFromToken(token);
+        if (Objects.isNull(userId)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        if (businessRepository.countByUserId(userId) <= 0) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         return new ResponseEntity<>(
                 productMapper.toProductCreateResponse(productRepository
@@ -72,9 +81,20 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ResponseEntity<LinkBusinessProductResponse> linkProductToBusiness(LinkBusinessProductRequest businessProductLinkCreateRequest) {
-        if(Objects.isNull(businessProductLinkCreateRequest)) {
+    public ResponseEntity<LinkBusinessProductResponse> linkProductToBusiness(LinkBusinessProductRequest businessProductLinkCreateRequest, String token) {
+        if(Objects.isNull(businessProductLinkCreateRequest) || Objects.isNull(businessProductLinkCreateRequest.businessId())) {
             return ResponseEntity.badRequest().build();
+        }
+        var userId = JwtUtil.getUidFromToken(token);
+        if (Objects.isNull(userId)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        var ownerId = businessRepository.findOwnerId(businessProductLinkCreateRequest.businessId());
+        if (ownerId.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        if (!userId.equals(ownerId.get())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         var businessProductEntityResult = businessProductRepository.save(businessProductMapper.toSource(businessProductLinkCreateRequest));
         if(Objects.isNull(businessProductEntityResult.getId())) {

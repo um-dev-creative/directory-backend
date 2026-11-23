@@ -21,11 +21,11 @@ import java.util.UUID;
  */
 public interface ProductService {
 
-    default ResponseEntity<ProductCreateResponse> create(ProductCreateRequest productCreateRequest) {
+    default ResponseEntity<ProductCreateResponse> create(ProductCreateRequest productCreateRequest, String token) {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
-    default ResponseEntity<LinkBusinessProductResponse> linkProductToBusiness(LinkBusinessProductRequest businessProductLinkCreateRequest) {
+    default ResponseEntity<LinkBusinessProductResponse> linkProductToBusiness(LinkBusinessProductRequest businessProductLinkCreateRequest, String token) {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 

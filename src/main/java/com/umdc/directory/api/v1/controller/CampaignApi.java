@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.umdc.security.constant.ConstantApp.SESSION_TOKEN_KEY;
+
 @Tag(name = "campaigns", description = "The Campaign API")
 public interface CampaignApi {
 
@@ -55,8 +57,9 @@ public interface CampaignApi {
             @ApiResponse(responseCode = DirectoryAppConstants.INTERNAL_SERVER_ERROR_CODE, description = DirectoryAppConstants.INTERNAL_SERVER_ERROR_MESSAGE, content = @Content)
     })
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    default ResponseEntity<CampaignTO> create(@RequestBody CampaignTO campaignTO) {
-        return this.getService().create(campaignTO);
+    default ResponseEntity<CampaignTO> create(@RequestBody CampaignTO campaignTO,
+                                              @RequestHeader(SESSION_TOKEN_KEY) String sessionToken) {
+        return this.getService().create(campaignTO, sessionToken);
     }
 
     @Operation(summary = "Get campaign by id",
@@ -117,6 +120,8 @@ public interface CampaignApi {
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = CampaignUpdateResponse.class))),
             @ApiResponse(responseCode = HTTP_400, description = "Invalid payload data (validation error)", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid session token", content = @Content),
+            @ApiResponse(responseCode = "403", description = "The user does not own the campaign's business", content = @Content),
             @ApiResponse(responseCode = "404", description = "Campaign not found or referenced entity (category/business) not found", content = @Content),
             @ApiResponse(responseCode = "409", description = "Concurrency conflict - campaign was modified by another request", content = @Content),
             @ApiResponse(responseCode = DirectoryAppConstants.INTERNAL_SERVER_ERROR_CODE, description = DirectoryAppConstants.INTERNAL_SERVER_ERROR_MESSAGE, content = @Content)
@@ -124,8 +129,9 @@ public interface CampaignApi {
     @PatchMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     default ResponseEntity<CampaignUpdateResponse> update(
             @Parameter(description = "Campaign UUID") @PathVariable("id") UUID id,
-            @Valid @RequestBody CampaignUpdateRequest request) {
+            @Valid @RequestBody CampaignUpdateRequest request,
+            @RequestHeader(SESSION_TOKEN_KEY) String sessionToken) {
         // Delegate entirely to the service implementation. Service controls status and body.
-        return getService().update(id, request);
+        return getService().update(id, request, sessionToken);
     }
 }

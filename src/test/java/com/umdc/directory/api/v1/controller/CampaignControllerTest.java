@@ -67,9 +67,9 @@ class CampaignControllerTest {
         LocalDateTime lastUpdate = LocalDateTime.now();
         CampaignUpdateResponse updatedResp = new CampaignUpdateResponse(id, lastUpdate);
 
-        when(campaignService.update(eq(id), eq(request))).thenReturn(ResponseEntity.status(HttpStatus.ACCEPTED).body(updatedResp));
+        when(campaignService.update(eq(id), eq(request), eq("tok"))).thenReturn(ResponseEntity.status(HttpStatus.ACCEPTED).body(updatedResp));
 
-        ResponseEntity<CampaignUpdateResponse> resp = campaignController.update(id, request);
+        ResponseEntity<CampaignUpdateResponse> resp = campaignController.update(id, request, "tok");
         assertEquals(HttpStatus.ACCEPTED, resp.getStatusCode());
         assertEquals(updatedResp, resp.getBody());
     }

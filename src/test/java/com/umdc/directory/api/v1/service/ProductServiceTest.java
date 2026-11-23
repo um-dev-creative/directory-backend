@@ -22,7 +22,7 @@ class ProductServiceTest {
                 "Example Product",
                 "This is an example product description.",
                 UUID.randomUUID());
-        ResponseEntity<ProductCreateResponse> response = productService.create(request);
+        ResponseEntity<ProductCreateResponse> response = productService.create(request, "tok");
 
         assertEquals(HttpStatus.NOT_IMPLEMENTED, response.getStatusCode());
     }
@@ -30,7 +30,7 @@ class ProductServiceTest {
     @Test
     @DisplayName("Create product with null request")
     void createProductWithNullRequest() {
-        ResponseEntity<ProductCreateResponse> response = productService.create(null);
+        ResponseEntity<ProductCreateResponse> response = productService.create(null, "tok");
 
         assertEquals(HttpStatus.NOT_IMPLEMENTED, response.getStatusCode());
     }

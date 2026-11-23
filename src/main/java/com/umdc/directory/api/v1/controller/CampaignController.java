@@ -23,8 +23,8 @@ public class CampaignController implements CampaignApi {
     }
 
     @Override
-    public ResponseEntity<CampaignTO> create(CampaignTO campaignTO) {
-        return campaignService.create(campaignTO);
+    public ResponseEntity<CampaignTO> create(CampaignTO campaignTO, String sessionToken) {
+        return campaignService.create(campaignTO, sessionToken);
     }
 
     @Override
@@ -38,7 +38,7 @@ public class CampaignController implements CampaignApi {
     }
 
     @Override
-    public ResponseEntity<CampaignUpdateResponse> update(UUID id, CampaignUpdateRequest request) {
-        return campaignService.update(id, request);
+    public ResponseEntity<CampaignUpdateResponse> update(UUID id, CampaignUpdateRequest request, String sessionToken) {
+        return campaignService.update(id, request, sessionToken);
     }
 }

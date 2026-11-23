@@ -11,6 +11,7 @@ import com.umdc.directory.jpa.repository.CategoryRepository;
 import com.umdc.directory.jpa.spec.CampaignCriteria;
 import com.umdc.directory.jpa.spec.CampaignSpecifications;
 import com.umdc.directory.mapper.CampaignMapper;
+import com.umdc.directory.util.JwtUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +30,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -58,7 +60,11 @@ public class CampaignServiceImpl implements CampaignService {
 
     @Override
     @Transactional
-    public ResponseEntity<CampaignTO> create(CampaignTO campaignTO) {
+    public ResponseEntity<CampaignTO> create(CampaignTO campaignTO, String token) {
+        UUID userId = JwtUtil.getUidFromToken(token);
+        if (Objects.isNull(userId)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         // Validate FK existence
         UUID categoryId = campaignTO.categoryId();
         UUID businessId = campaignTO.businessId();
@@ -73,8 +79,12 @@ public class CampaignServiceImpl implements CampaignService {
         if (!categoryRepository.existsById(categoryId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, DirectoryAppConstants.CATEGORY_NOT_FOUND);
         }
-        if (!businessRepository.existsById(businessId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, DirectoryAppConstants.BUSINESS_NOT_FOUND);
+        var ownerId = businessRepository.findOwnerId(businessId);
+        if (ownerId.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        if (!userId.equals(ownerId.get())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
         CampaignEntity entity = campaignMapper.toEntity(campaignTO);
@@ -169,7 +179,11 @@ public class CampaignServiceImpl implements CampaignService {
 
     @Override
     @Transactional
-    public ResponseEntity<CampaignUpdateResponse> update(UUID id, CampaignUpdateRequest request) {
+    public ResponseEntity<CampaignUpdateResponse> update(UUID id, CampaignUpdateRequest request, String token) {
+        UUID userId = JwtUtil.getUidFromToken(token);
+        if (Objects.isNull(userId)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         if (Objects.isNull(id)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, DirectoryAppConstants.CAMPAIGN_ID_REQUIRED);
         }
@@ -180,6 +194,27 @@ public class CampaignServiceImpl implements CampaignService {
         // Find existing campaign
         CampaignEntity existingCampaign = campaignRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, DirectoryAppConstants.CAMPAIGN_NOT_FOUND));
+
+        // Owner check on the business that owns the existing campaign
+        var currentBusiness = existingCampaign.getBusinessFk();
+        Optional<UUID> currentOwner = Objects.isNull(currentBusiness) ? Optional.empty()
+                : businessRepository.findOwnerId(currentBusiness.getId());
+        if (currentOwner.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, DirectoryAppConstants.BUSINESS_NOT_FOUND);
+        }
+        if (!userId.equals(currentOwner.get())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+        // Moving the campaign to another business requires owning the target as well
+        if (Objects.nonNull(request.businessId()) && !request.businessId().equals(currentBusiness.getId())) {
+            Optional<UUID> targetOwner = businessRepository.findOwnerId(request.businessId());
+            if (targetOwner.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, DirectoryAppConstants.BUSINESS_NOT_FOUND);
+            }
+            if (!userId.equals(targetOwner.get())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            }
+        }
 
         // Optimistic locking: check if last_update matches
         if (Objects.nonNull(request.lastUpdate()) && !request.lastUpdate().equals(existingCampaign.getLastUpdate())) {

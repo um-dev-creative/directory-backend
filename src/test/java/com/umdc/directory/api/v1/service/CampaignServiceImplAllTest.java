@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static com.umdc.directory.support.OwnerTokens.forUser;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -33,6 +34,9 @@ class CampaignServiceImplAllTest {
     private CampaignMapper campaignMapper;
     private CampaignStatusCounter statusCounter;
     private CampaignServiceImpl service;
+    private final UUID userId = UUID.randomUUID();
+    private final UUID ownBiz = UUID.randomUUID();
+    private final String token = forUser(userId);
 
     @BeforeEach
     void setup() {
@@ -43,7 +47,15 @@ class CampaignServiceImplAllTest {
         statusCounter = Mockito.mock(CampaignStatusCounter.class);
         // Default: aggregate counter returns zeros; individual tests may override.
         when(statusCounter.countByStatus(any(), any())).thenReturn(new long[]{0L, 0L, 0L});
+        when(businessRepository.findOwnerId(ownBiz)).thenReturn(Optional.of(userId));
         service = new CampaignServiceImpl(campaignRepository, categoryRepository, businessRepository, campaignMapper, statusCounter);
+    }
+
+    private CampaignEntity owned(CampaignEntity e) {
+        var b = new com.umdc.directory.jpa.entity.BusinessEntity();
+        b.setId(ownBiz);
+        e.setBusinessFk(b);
+        return e;
     }
 
     // -------- create(...) tests --------
@@ -51,7 +63,7 @@ class CampaignServiceImplAllTest {
     @Test
     void create_missingCategory_throwsBadRequest() {
         CampaignTO to = new CampaignTO(null, "n", "d", null, null, null, UUID.randomUUID(), null, null, null, true);
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.create(to));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.create(to, token));
         assertEquals(400, ex.getStatusCode().value());
     }
 
@@ -61,29 +73,28 @@ class CampaignServiceImplAllTest {
         UUID biz = UUID.randomUUID();
         CampaignTO to = new CampaignTO(null, "n", "d", null, null, cat, biz, null, null, null, null);
         when(categoryRepository.existsById(cat)).thenReturn(false);
-        when(businessRepository.existsById(biz)).thenReturn(true);
+        when(businessRepository.findOwnerId(biz)).thenReturn(Optional.of(userId));
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.create(to));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.create(to, token));
         assertEquals(400, ex.getStatusCode().value());
     }
 
     @Test
     void create_missingBusiness_throwsBadRequest() {
         CampaignTO to = new CampaignTO(null, "n", "d", null, null, null, UUID.randomUUID(), null, null, null, true);
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.create(to));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.create(to, token));
         assertEquals(400, ex.getStatusCode().value());
     }
 
     @Test
-    void create_businessNotFound_throwsBadRequest() {
+    void create_businessNotFound_returnsNotFound() {
         UUID cat = UUID.randomUUID();
         UUID biz = UUID.randomUUID();
         CampaignTO to = new CampaignTO(null, "n", "d", null, null, cat, biz, null, null, null, null);
         when(categoryRepository.existsById(cat)).thenReturn(true);
-        when(businessRepository.existsById(biz)).thenReturn(false);
+        when(businessRepository.findOwnerId(biz)).thenReturn(Optional.empty());
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.create(to));
-        assertEquals(400, ex.getStatusCode().value());
+        assertEquals(404, service.create(to, token).getStatusCode().value());
     }
 
     @Test
@@ -92,7 +103,7 @@ class CampaignServiceImplAllTest {
         UUID biz = UUID.randomUUID();
         CampaignTO to = new CampaignTO(null, "n", "d", null, null, cat, biz, null, null, null, null);
         when(categoryRepository.existsById(cat)).thenReturn(true);
-        when(businessRepository.existsById(biz)).thenReturn(true);
+        when(businessRepository.findOwnerId(biz)).thenReturn(Optional.of(userId));
 
         CampaignEntity entity = new CampaignEntity();
         entity.setActive(null);
@@ -101,7 +112,7 @@ class CampaignServiceImplAllTest {
         when(campaignRepository.save(entity)).thenReturn(savedEntity);
         when(campaignMapper.toTO(savedEntity)).thenReturn(new CampaignTO(UUID.randomUUID(), "n", "d", null, null, cat, biz, null, null, null, true));
 
-        ResponseEntity<CampaignTO> resp = service.create(to);
+        ResponseEntity<CampaignTO> resp = service.create(to, token);
         assertEquals(201, resp.getStatusCode().value());
 
         ArgumentCaptor<CampaignEntity> captor = ArgumentCaptor.forClass(CampaignEntity.class);
@@ -118,7 +129,7 @@ class CampaignServiceImplAllTest {
         UUID biz = UUID.randomUUID();
         CampaignTO to = new CampaignTO(null, "n", "d", null, null, cat, biz, null, null, null, false);
         when(categoryRepository.existsById(cat)).thenReturn(true);
-        when(businessRepository.existsById(biz)).thenReturn(true);
+        when(businessRepository.findOwnerId(biz)).thenReturn(Optional.of(userId));
 
         CampaignEntity entity = new CampaignEntity();
         entity.setActive(false); // Already set
@@ -127,7 +138,7 @@ class CampaignServiceImplAllTest {
         when(campaignRepository.save(entity)).thenReturn(savedEntity);
         when(campaignMapper.toTO(savedEntity)).thenReturn(new CampaignTO(UUID.randomUUID(), "n", "d", null, null, cat, biz, null, null, null, false));
 
-        ResponseEntity<CampaignTO> resp = service.create(to);
+        ResponseEntity<CampaignTO> resp = service.create(to, token);
         assertEquals(201, resp.getStatusCode().value());
 
         ArgumentCaptor<CampaignEntity> captor = ArgumentCaptor.forClass(CampaignEntity.class);
@@ -222,14 +233,14 @@ class CampaignServiceImplAllTest {
     @Test
     void update_nullId_throwsBadRequest() {
         CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, null, null, null, null, null, null, null, null);
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.update(null, req));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.update(null, req, token));
         assertEquals(400, ex.getStatusCode().value());
     }
 
     @Test
     void update_nullRequest_throwsBadRequest() {
         UUID id = UUID.randomUUID();
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.update(id, null));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.update(id, null, token));
         assertEquals(400, ex.getStatusCode().value());
     }
 
@@ -238,27 +249,27 @@ class CampaignServiceImplAllTest {
         UUID id = UUID.randomUUID();
         when(campaignRepository.findById(id)).thenReturn(Optional.empty());
         CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, null, null, null, null, null, null, null, null);
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.update(id, req));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.update(id, req, token));
         assertEquals(404, ex.getStatusCode().value());
     }
 
     @Test
     void update_conflictOnLastUpdate_throwsConflict() {
         UUID id = UUID.randomUUID();
-        CampaignEntity existing = new CampaignEntity();
+        CampaignEntity existing = owned(new CampaignEntity());
         existing.setLastUpdate(LocalDateTime.parse("2025-11-02T00:00:00"));
         when(campaignRepository.findById(id)).thenReturn(Optional.of(existing));
 
         CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, null, null,
                 null, null, null, null, null, LocalDateTime.parse("2025-11-01T00:00:00"));
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.update(id, req));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.update(id, req, token));
         assertEquals(409, ex.getStatusCode().value());
     }
 
     @Test
     void update_dateValidation_throwsBadRequest() {
         UUID id = UUID.randomUUID();
-        CampaignEntity existing = new CampaignEntity();
+        CampaignEntity existing = owned(new CampaignEntity());
         existing.setStartDate(LocalDateTime.parse("2025-11-01T00:00:00"));
         existing.setEndDate(LocalDateTime.parse("2025-11-05T00:00:00"));
         when(campaignRepository.findById(id)).thenReturn(Optional.of(existing));
@@ -266,14 +277,14 @@ class CampaignServiceImplAllTest {
         // Provide request that makes newStartDate > newEndDate
         CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, LocalDateTime.parse("2025-11-10T00:00:00"),
                 LocalDateTime.parse("2025-11-02T00:00:00"), null, null, null, null, null, null);
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.update(id, req));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.update(id, req, token));
         assertEquals(400, ex.getStatusCode().value());
     }
 
     @Test
     void update_relationCategoryNotFound_throwsNotFound() {
         UUID id = UUID.randomUUID();
-        CampaignEntity existing = new CampaignEntity();
+        CampaignEntity existing = owned(new CampaignEntity());
         existing.setLastUpdate(null);
         when(campaignRepository.findById(id)).thenReturn(Optional.of(existing));
 
@@ -282,30 +293,30 @@ class CampaignServiceImplAllTest {
 
         when(categoryRepository.existsById(missingCategory)).thenReturn(false);
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.update(id, req));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.update(id, req, token));
         assertEquals(404, ex.getStatusCode().value());
     }
 
     @Test
     void update_businessNotFound_throwsNotFound() {
         UUID id = UUID.randomUUID();
-        CampaignEntity existing = new CampaignEntity();
+        CampaignEntity existing = owned(new CampaignEntity());
         existing.setLastUpdate(null);
         when(campaignRepository.findById(id)).thenReturn(Optional.of(existing));
 
         UUID missingBusiness = UUID.randomUUID();
         CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, null, null, null, missingBusiness, null, null, null, null);
 
-        when(businessRepository.existsById(missingBusiness)).thenReturn(false);
+        when(businessRepository.findOwnerId(missingBusiness)).thenReturn(Optional.empty());
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.update(id, req));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.update(id, req, token));
         assertEquals(404, ex.getStatusCode().value());
     }
 
     @Test
     void update_success_updatesFieldsAndSaves() {
         UUID id = UUID.randomUUID();
-        CampaignEntity existing = new CampaignEntity();
+        CampaignEntity existing = owned(new CampaignEntity());
         existing.setLastUpdate(null);
         existing.setTitle("old");
         when(campaignRepository.findById(id)).thenReturn(Optional.of(existing));
@@ -315,7 +326,7 @@ class CampaignServiceImplAllTest {
         when(campaignMapper.toTO(any())).thenReturn(new CampaignTO(id, "newName", "newDesc", null, null,
                 null, null, null, null, null, true));
 
-        ResponseEntity<CampaignUpdateResponse> resp = service.update(id, req);
+        ResponseEntity<CampaignUpdateResponse> resp = service.update(id, req, token);
         assertEquals(202, resp.getStatusCode().value());
         ArgumentCaptor<CampaignEntity> captor = ArgumentCaptor.forClass(CampaignEntity.class);
         verify(campaignRepository).save(captor.capture());
@@ -328,7 +339,7 @@ class CampaignServiceImplAllTest {
     @Test
     void update_noFieldsChanged_doesNotUpdateTimestamp() {
         UUID id = UUID.randomUUID();
-        CampaignEntity existing = new CampaignEntity();
+        CampaignEntity existing = owned(new CampaignEntity());
         existing.setLastUpdate(LocalDateTime.parse("2025-11-01T00:00:00"));
         existing.setTitle("oldName");
         when(campaignRepository.findById(id)).thenReturn(Optional.of(existing));
@@ -339,7 +350,7 @@ class CampaignServiceImplAllTest {
         when(campaignMapper.toTO(any())).thenReturn(new CampaignTO(id, "oldName", null, null, null,
                 null, null, null, null, null, true));
 
-        ResponseEntity<CampaignUpdateResponse> resp = service.update(id, req);
+        ResponseEntity<CampaignUpdateResponse> resp = service.update(id, req, token);
         assertEquals(202, resp.getStatusCode().value());
 
         ArgumentCaptor<CampaignEntity> captor = ArgumentCaptor.forClass(CampaignEntity.class);
@@ -352,7 +363,7 @@ class CampaignServiceImplAllTest {
     @Test
     void update_onlyDatesChanged_updatesTimestamp() {
         UUID id = UUID.randomUUID();
-        CampaignEntity existing = new CampaignEntity();
+        CampaignEntity existing = owned(new CampaignEntity());
         existing.setLastUpdate(null);
         existing.setStartDate(null);
         existing.setEndDate(null);
@@ -363,7 +374,7 @@ class CampaignServiceImplAllTest {
         when(campaignRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(campaignMapper.toTO(any())).thenReturn(new CampaignTO(id, null, null, null, null, null, null, null, null, null, true));
 
-        ResponseEntity<CampaignUpdateResponse> resp = service.update(id, req);
+        ResponseEntity<CampaignUpdateResponse> resp = service.update(id, req, token);
         assertEquals(202, resp.getStatusCode().value());
 
         ArgumentCaptor<CampaignEntity> captor = ArgumentCaptor.forClass(CampaignEntity.class);
@@ -377,7 +388,7 @@ class CampaignServiceImplAllTest {
     @Test
     void update_categoryIdAndBusinessIdBothUpdated_succeeds() {
         UUID id = UUID.randomUUID();
-        CampaignEntity existing = new CampaignEntity();
+        CampaignEntity existing = owned(new CampaignEntity());
         existing.setLastUpdate(null);
         when(campaignRepository.findById(id)).thenReturn(Optional.of(existing));
 
@@ -386,11 +397,12 @@ class CampaignServiceImplAllTest {
         CampaignUpdateRequest req = new CampaignUpdateRequest(null, null, null, null, newCat, newBiz, null, null, null, null);
 
         when(categoryRepository.existsById(newCat)).thenReturn(true);
+        when(businessRepository.findOwnerId(newBiz)).thenReturn(Optional.of(userId));
         when(businessRepository.existsById(newBiz)).thenReturn(true);
         when(campaignRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(campaignMapper.toTO(any())).thenReturn(new CampaignTO(id, null, null, null, null, newCat, newBiz, null, null, null, true));
 
-        ResponseEntity<CampaignUpdateResponse> resp = service.update(id, req);
+        ResponseEntity<CampaignUpdateResponse> resp = service.update(id, req, token);
         assertEquals(202, resp.getStatusCode().value());
 
         ArgumentCaptor<CampaignEntity> captor = ArgumentCaptor.forClass(CampaignEntity.class);

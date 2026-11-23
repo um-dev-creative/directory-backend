@@ -53,6 +53,21 @@ This project adheres (loosely) to "Keep a Changelog" and follows semantic versio
 - Verified with a real Spring startup (bootstrap context off). Not verified with the bootstrap context enabled; there the worst case is `n/a`.
 - 664 tests pass; JaCoCo method coverage 93.25 %.
 
+## [Unreleased] - 2026-11-23 (F0-A2 product and campaign owner checks)
+
+### Security
+- `POST /api/v1/products`, `POST /api/v1/products/link`, `POST /api/v1/campaigns` and `PATCH /api/v1/campaigns/{id}` now require the `session-token` header and verify the owner of the affected business (RF-01, part 2).
+- Responses: `401` without a valid token, `404` when the business or campaign does not exist, `403` when the token user is not the owner. Public reads (`GET` campaigns, `GET /products/business/{id}`) are unchanged and need no token.
+- Campaign create with an unknown business now answers `404` instead of `400`.
+- Product create has no business in its payload, so it requires a token whose user owns at least one business (`403` otherwise).
+- Campaign PATCH moving a campaign to another business also requires owning the target business. Optimistic locking (`lastUpdate`, `409`) and `202 Accepted` are preserved.
+
+### Tests
+- Added owner matrix tests (owner, other user, no token, missing business or campaign) and a test token helper; existing tests adapted to the new signatures.
+
+### Documentation
+- Added user and technical guides: `docs/user-guide/f0-product-campaign-owner-checks.md` and `docs/technical/f0-product-campaign-owner-checks.md`.
+
 ## [Unreleased] - 2026-11-22 (dependency update)
 
 ### Changed
