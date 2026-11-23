@@ -14,9 +14,12 @@ public interface BusinessService {
 
     /// Creates a new business.
     ///
+    /// The owner is the user of the session token (401 without a valid token, 403 when the body userId differs).
+    ///
     /// @param businessCreateRequest the request object containing business details
+    /// @param token the session token of the caller
     /// @return a ResponseEntity containing the response object and HTTP status
-    default ResponseEntity<BusinessCreateResponse> create(@NotNull BusinessCreateRequest businessCreateRequest) {
+    default ResponseEntity<BusinessCreateResponse> create(@NotNull BusinessCreateRequest businessCreateRequest, String token) {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
@@ -48,8 +51,9 @@ public interface BusinessService {
     ///
     /// @param id the UUID of the business to update
     /// @param request the request object containing updated business details
+    /// @param token the session token of the caller, who must own the business (401, 404, 403)
     /// @return a ResponseEntity containing the update response with updatedDate
-    default ResponseEntity<BusinessUpdateResponse> update(@NotNull UUID id, @NotNull BusinessUpdateRequest request) {
+    default ResponseEntity<BusinessUpdateResponse> update(@NotNull UUID id, @NotNull BusinessUpdateRequest request, String token) {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 

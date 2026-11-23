@@ -9,6 +9,8 @@ import com.umdc.commons.services.cloudflare.to.ImageReferenceResponse;
 import com.umdc.commons.services.cloudflare.to.ImageUploadRequest;
 import com.umdc.commons.services.cloudflare.to.ImageUploadResponse;
 import com.umdc.directory.api.v1.service.BusinessProfileImageService;
+import com.umdc.directory.util.JwtUtil;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -38,17 +40,17 @@ public class BusinessProfileImageController implements ImageApi {
     /**
      * {@inheritDoc}
      *
-     * <p>When {@code objectKey} is {@code null} the service generates a key under the
-     * {@code businesses/} prefix.
+     * <p>Requires a valid session token (401 otherwise). The client-supplied {@code objectKey} is
+     * ignored: the service always generates the key under the {@code businesses/} prefix.
      */
     @Override
     public ResponseEntity<ImageUploadResponse> upload(
             String token, String objectKey, byte[] image, String contentType)
             throws ImageValidationException, ImageUploadException {
-        ImageUploadRequest request = objectKey != null
-                ? ImageUploadRequest.of(objectKey, image, contentType)
-                : ImageUploadRequest.of(image, contentType);
-        return imageService.upload(request);
+        if (JwtUtil.getUidFromToken(token) == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return imageService.upload(ImageUploadRequest.of(image, contentType));
     }
 
     /** {@inheritDoc} */
@@ -68,6 +70,7 @@ public class BusinessProfileImageController implements ImageApi {
      * @param businessId  UUID of the business to update
      * @param image       raw image bytes
      * @param contentType MIME type (defaults to {@code image/jpeg} when omitted)
+     * @return 201, 401 without a valid token, 403 when the caller does not own the business, 404 when missing
      */
     @PostMapping(value = "/{businessId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ImageUploadResponse> uploadForBusiness(
@@ -77,6 +80,6 @@ public class BusinessProfileImageController implements ImageApi {
             @RequestPart(required = false) String contentType)
             throws ImageValidationException, ImageUploadException {
         String resolvedContentType = contentType != null ? contentType : "image/jpeg";
-        return imageService.uploadForBusiness(businessId, image, resolvedContentType);
+        return imageService.uploadForBusiness(businessId, image, resolvedContentType, token);
     }
 }

@@ -57,12 +57,13 @@ class BusinessControllerIntegrationTest {
                 null
         );
 
-        when(businessService.update(eq(businessId), any(BusinessUpdateRequest.class)))
+        when(businessService.update(eq(businessId), any(BusinessUpdateRequest.class), any()))
                 .thenReturn(ResponseEntity.ok(new BusinessUpdateResponse(LocalDateTime.now())));
 
         mockMvc.perform(
                         patch("/api/v1/businesses/{id}", businessId)
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .header("session-token", "t")
                                 .content(objectMapper.writeValueAsString(request))
                 )
                 .andExpect(status().isOk());
@@ -86,12 +87,13 @@ class BusinessControllerIntegrationTest {
         HttpHeaders headers = new HttpHeaders();
         headers.add("message", "Contact type not found for id 00000000-0000-0000-0000-000000000011");
 
-        when(businessService.update(eq(businessId), any(BusinessUpdateRequest.class)))
+        when(businessService.update(eq(businessId), any(BusinessUpdateRequest.class), any()))
                 .thenReturn(new ResponseEntity<>(null, headers, HttpStatus.BAD_REQUEST));
 
         mockMvc.perform(
                         patch("/api/v1/businesses/{id}", businessId)
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .header("session-token", "t")
                                 .content(objectMapper.writeValueAsString(request))
                 )
                 .andExpect(status().isBadRequest())

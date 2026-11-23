@@ -73,9 +73,28 @@ public class BusinessServiceImpl implements BusinessService {
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<BusinessCreateResponse> create(BusinessCreateRequest businessCreateRequest) {
-        final var BAD_REQUEST = getBusinessCreateResponseResponseEntity(businessCreateRequest);
+    public ResponseEntity<BusinessCreateResponse> create(BusinessCreateRequest requestedBusiness, String token) {
+        var tokenUserId = JwtUtil.getUidFromToken(token);
+        if (Objects.isNull(tokenUserId)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .header(MESSAGE_HEADER, "Session token is required.")
+                    .build();
+        }
+        final var BAD_REQUEST = getBusinessCreateResponseResponseEntity(requestedBusiness);
         if (BAD_REQUEST != null) return BAD_REQUEST;
+
+        // The owner is always the user of the token; a different userId in the body is impersonation.
+        if (Objects.nonNull(requestedBusiness.userId()) && !tokenUserId.equals(requestedBusiness.userId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .header(MESSAGE_HEADER, "User ID does not match the session token.")
+                    .build();
+        }
+        final var businessCreateRequest = Objects.isNull(requestedBusiness.userId())
+                ? new BusinessCreateRequest(requestedBusiness.name(), requestedBusiness.description(),
+                requestedBusiness.categoryId(), tokenUserId, requestedBusiness.email(),
+                requestedBusiness.customerServiceEmail(), requestedBusiness.orderManagementEmail(),
+                requestedBusiness.website())
+                : requestedBusiness;
 
         // Check if business with the same name already exists
         var existingBusiness = businessRepository.findByName(businessCreateRequest.name());
@@ -161,7 +180,8 @@ public class BusinessServiceImpl implements BusinessService {
                     .header(MESSAGE_HEADER, "Category ID is invalid.")
                     .build();
         }
-        if (Objects.isNull(businessCreateRequest.userId()) || businessCreateRequest.userId().toString().isEmpty() ||
+        // A missing userId is allowed (the token user is used); the all-zero UUID is still invalid.
+        if (Objects.nonNull(businessCreateRequest.userId()) &&
                 businessCreateRequest.userId().toString().equals("00000000-0000-0000-0000-000000000000")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .header(MESSAGE_HEADER, "User ID is invalid.")
@@ -222,7 +242,13 @@ public class BusinessServiceImpl implements BusinessService {
      */
     @Override
     @Transactional
-    public ResponseEntity<BusinessUpdateResponse> update(@NotNull UUID id, @NotNull BusinessUpdateRequest request) {
+    public ResponseEntity<BusinessUpdateResponse> update(@NotNull UUID id, @NotNull BusinessUpdateRequest request, String token) {
+        var tokenUserId = JwtUtil.getUidFromToken(token);
+        if (Objects.isNull(tokenUserId)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .header(MESSAGE_HEADER, "Session token is required.")
+                    .build();
+        }
         if (Objects.isNull(id)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .header(MESSAGE_HEADER, "Business ID is required.")
@@ -243,6 +269,11 @@ public class BusinessServiceImpl implements BusinessService {
         }
 
         var existingBusiness = businessOpt.get();
+        if (Objects.isNull(existingBusiness.getUserFk()) || !tokenUserId.equals(existingBusiness.getUserFk().getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .header(MESSAGE_HEADER, "Only the owner can update the business.")
+                    .build();
+        }
         boolean updated = false;
 
         // Update basic fields

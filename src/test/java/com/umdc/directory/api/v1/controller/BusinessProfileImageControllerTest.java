@@ -6,6 +6,7 @@ import com.umdc.commons.services.cloudflare.exception.ImageValidationException;
 import com.umdc.commons.services.cloudflare.to.ImageReferenceResponse;
 import com.umdc.commons.services.cloudflare.to.ImageUploadResponse;
 import com.umdc.directory.api.v1.service.BusinessProfileImageService;
+import com.umdc.directory.support.TestTokens;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,7 +33,7 @@ class BusinessProfileImageControllerTest {
     private BusinessProfileImageController controller;
 
     private static final byte[] IMAGE_BYTES = new byte[]{1, 2, 3};
-    private static final String TOKEN = "test-token";
+    private static final String TOKEN = TestTokens.forUser(UUID.randomUUID());
 
     // -------------------------------------------------------------------------
     // getService()
@@ -49,16 +50,15 @@ class BusinessProfileImageControllerTest {
     // -------------------------------------------------------------------------
 
     @Test
-    @DisplayName("upload - with explicit objectKey delegates to service.upload")
-    void upload_withExplicitKey_delegatesToService() throws ImageValidationException, ImageUploadException {
-        String key = "businesses/custom.jpg";
-        ImageUploadResponse body = new ImageUploadResponse(key, "https://cdn/photo.jpg", "image/jpeg", IMAGE_BYTES.length);
-        when(imageService.upload(argThat(r -> key.equals(r.objectKey())))).thenReturn(ResponseEntity.status(HttpStatus.CREATED).body(body));
+    @DisplayName("upload - client objectKey is ignored: the request carries no key")
+    void upload_withExplicitKey_ignoresClientKey() throws ImageValidationException, ImageUploadException {
+        ImageUploadResponse body = new ImageUploadResponse("businesses/gen.jpg", "https://cdn/gen.jpg", "image/jpeg", IMAGE_BYTES.length);
+        when(imageService.upload(argThat(r -> r.objectKey() == null))).thenReturn(ResponseEntity.status(HttpStatus.CREATED).body(body));
 
-        ResponseEntity<ImageUploadResponse> response = controller.upload(TOKEN, key, IMAGE_BYTES, "image/jpeg");
+        ResponseEntity<ImageUploadResponse> response = controller.upload(TOKEN, "../../etc/other.jpg", IMAGE_BYTES, "image/jpeg");
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(key, response.getBody().objectKey());
+        assertEquals("businesses/gen.jpg", response.getBody().objectKey());
     }
 
     @Test
@@ -70,6 +70,14 @@ class BusinessProfileImageControllerTest {
         ResponseEntity<ImageUploadResponse> response = controller.upload(TOKEN, null, IMAGE_BYTES, "image/jpeg");
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("upload - invalid or missing token returns 401 and never reaches the service")
+    void upload_invalidToken_returns401() throws ImageValidationException, ImageUploadException {
+        assertEquals(HttpStatus.UNAUTHORIZED, controller.upload("not-a-jwt", null, IMAGE_BYTES, "image/jpeg").getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, controller.upload(null, null, IMAGE_BYTES, "image/jpeg").getStatusCode());
+        verifyNoInteractions(imageService);
     }
 
     // -------------------------------------------------------------------------
@@ -100,14 +108,14 @@ class BusinessProfileImageControllerTest {
         UUID businessId = UUID.randomUUID();
         ImageUploadResponse body = new ImageUploadResponse("businesses/" + businessId + "/x.png",
                 "https://cdn/photo.png", "image/png", IMAGE_BYTES.length);
-        when(imageService.uploadForBusiness(businessId, IMAGE_BYTES, "image/png"))
+        when(imageService.uploadForBusiness(businessId, IMAGE_BYTES, "image/png", TOKEN))
                 .thenReturn(ResponseEntity.status(HttpStatus.CREATED).body(body));
 
         ResponseEntity<ImageUploadResponse> response = controller.uploadForBusiness(TOKEN, businessId, IMAGE_BYTES, "image/png");
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals("image/png", response.getBody().contentType());
-        verify(imageService).uploadForBusiness(businessId, IMAGE_BYTES, "image/png");
+        verify(imageService).uploadForBusiness(businessId, IMAGE_BYTES, "image/png", TOKEN);
     }
 
     @Test
@@ -116,24 +124,37 @@ class BusinessProfileImageControllerTest {
         UUID businessId = UUID.randomUUID();
         ImageUploadResponse body = new ImageUploadResponse("businesses/" + businessId + "/x.jpg",
                 "https://cdn/photo.jpg", "image/jpeg", IMAGE_BYTES.length);
-        when(imageService.uploadForBusiness(businessId, IMAGE_BYTES, "image/jpeg"))
+        when(imageService.uploadForBusiness(businessId, IMAGE_BYTES, "image/jpeg", TOKEN))
                 .thenReturn(ResponseEntity.status(HttpStatus.CREATED).body(body));
 
         ResponseEntity<ImageUploadResponse> response = controller.uploadForBusiness(TOKEN, businessId, IMAGE_BYTES, null);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        verify(imageService).uploadForBusiness(businessId, IMAGE_BYTES, "image/jpeg");
+        verify(imageService).uploadForBusiness(businessId, IMAGE_BYTES, "image/jpeg", TOKEN);
     }
 
     @Test
     @DisplayName("uploadForBusiness - business not found propagates 404 from service")
     void uploadForBusiness_businessNotFound_returns404() throws ImageValidationException, ImageUploadException {
         UUID businessId = UUID.randomUUID();
-        when(imageService.uploadForBusiness(businessId, IMAGE_BYTES, "image/jpeg"))
+        when(imageService.uploadForBusiness(businessId, IMAGE_BYTES, "image/jpeg", TOKEN))
                 .thenReturn(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
 
         ResponseEntity<ImageUploadResponse> response = controller.uploadForBusiness(TOKEN, businessId, IMAGE_BYTES, null);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("uploadForBusiness - non-owner 403 and missing token 401 propagate from service")
+    void uploadForBusiness_propagatesForbiddenAndUnauthorized() throws ImageValidationException, ImageUploadException {
+        UUID businessId = UUID.randomUUID();
+        when(imageService.uploadForBusiness(businessId, IMAGE_BYTES, "image/jpeg", TOKEN))
+                .thenReturn(ResponseEntity.status(HttpStatus.FORBIDDEN).build());
+        when(imageService.uploadForBusiness(businessId, IMAGE_BYTES, "image/jpeg", null))
+                .thenReturn(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+
+        assertEquals(HttpStatus.FORBIDDEN, controller.uploadForBusiness(TOKEN, businessId, IMAGE_BYTES, null).getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, controller.uploadForBusiness(null, businessId, IMAGE_BYTES, null).getStatusCode());
     }
 }

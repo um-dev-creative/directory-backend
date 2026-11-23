@@ -23,9 +23,11 @@ public interface BusinessProfileImageService extends ImageService {
      * @param businessId  UUID of the business to associate the image with
      * @param image       raw image bytes
      * @param contentType MIME type of the image (e.g. {@code image/jpeg})
-     * @return 201 Created with {@link ImageUploadResponse}, or 404 if the business is not found
+     * @param token       session token of the caller, who must own the business
+     * @return 201 Created with {@link ImageUploadResponse}, 401 without a valid token, 404 if the business
+     *         is not found, or 403 if the caller is not the owner
      */
-    default ResponseEntity<ImageUploadResponse> uploadForBusiness(UUID businessId, byte[] image, String contentType)
+    default ResponseEntity<ImageUploadResponse> uploadForBusiness(UUID businessId, byte[] image, String contentType, String token)
             throws ImageValidationException, ImageUploadException {
         return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
     }

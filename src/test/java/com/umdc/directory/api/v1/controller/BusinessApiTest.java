@@ -40,7 +40,7 @@ class BusinessApiTest {
                 "http://example.com"
         );
 
-        ResponseEntity<BusinessCreateResponse> result = businessApi.post(request);
+        ResponseEntity<BusinessCreateResponse> result = businessApi.post(request, "token");
         assertEquals(HttpStatus.NOT_IMPLEMENTED, result.getStatusCode());
     }
 
@@ -49,7 +49,7 @@ class BusinessApiTest {
     void createNewBusinessInvalidRequest() {
         BusinessCreateRequest request = null;
 
-        ResponseEntity<BusinessCreateResponse> result = businessApi.post(request);
+        ResponseEntity<BusinessCreateResponse> result = businessApi.post(request, "token");
         assertEquals(HttpStatus.NOT_IMPLEMENTED, result.getStatusCode());
     }
 

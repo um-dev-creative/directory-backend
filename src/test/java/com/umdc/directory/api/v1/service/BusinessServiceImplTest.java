@@ -35,6 +35,17 @@ import static org.mockito.Mockito.*;
 
 @DisplayName("BusinessServiceImpl - unit tests for business flows")
 class BusinessServiceImplTest {
+    private static final UUID OWNER_ID = UUID.randomUUID();
+    private static final String OWNER_TOKEN = com.umdc.directory.support.TestTokens.forUser(OWNER_ID);
+
+    /** Marks the entity as owned by the user of {@link #OWNER_TOKEN}. */
+    private static BusinessEntity owned(BusinessEntity entity) {
+        UserEntity owner = new UserEntity();
+        owner.setId(OWNER_ID);
+        entity.setUserFk(owner);
+        return entity;
+    }
+
 
     @Mock
     private UserService userService;
@@ -129,7 +140,7 @@ class BusinessServiceImplTest {
                 new BusinessCreateResponse(entity.getId(), entity.getName(), entity.getCreatedDate(), entity.getLastUpdate())
         );
 
-        ResponseEntity<BusinessCreateResponse> response = businessService.create(req);
+        ResponseEntity<BusinessCreateResponse> response = businessService.create(req, com.umdc.directory.support.TestTokens.forUser(req.userId()));
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -139,7 +150,7 @@ class BusinessServiceImplTest {
     @Test
     @DisplayName("create - null request -> BAD_REQUEST")
     void createBusiness_nullRequest_badRequest() {
-        ResponseEntity<BusinessCreateResponse> response = businessService.create(null);
+        ResponseEntity<BusinessCreateResponse> response = businessService.create(null, com.umdc.directory.support.TestTokens.forUser(UUID.randomUUID()));
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
@@ -158,7 +169,7 @@ class BusinessServiceImplTest {
 
         when(businessRepository.findByName(req.name())).thenReturn(Optional.of(new BusinessEntity()));
 
-        ResponseEntity<BusinessCreateResponse> response = businessService.create(req);
+        ResponseEntity<BusinessCreateResponse> response = businessService.create(req, com.umdc.directory.support.TestTokens.forUser(req.userId()));
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
     }
 
@@ -178,7 +189,7 @@ class BusinessServiceImplTest {
         when(businessRepository.findByName(req.name())).thenReturn(Optional.empty());
         when(backboneClient.findUserById(req.userId())).thenReturn(null);
 
-        ResponseEntity<BusinessCreateResponse> response = businessService.create(req);
+        ResponseEntity<BusinessCreateResponse> response = businessService.create(req, com.umdc.directory.support.TestTokens.forUser(req.userId()));
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
@@ -196,7 +207,7 @@ class BusinessServiceImplTest {
                 null,
                 null);
 
-        ResponseEntity<BusinessCreateResponse> response = businessService.create(req);
+        ResponseEntity<BusinessCreateResponse> response = businessService.create(req, com.umdc.directory.support.TestTokens.forUser(req.userId()));
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
@@ -215,7 +226,7 @@ class BusinessServiceImplTest {
                 null,
                 "not-a-url");
 
-        ResponseEntity<BusinessCreateResponse> response = businessService.create(req);
+        ResponseEntity<BusinessCreateResponse> response = businessService.create(req, com.umdc.directory.support.TestTokens.forUser(req.userId()));
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
@@ -231,7 +242,7 @@ class BusinessServiceImplTest {
         BusinessTO to = new BusinessTO(id, "Name", "Desc", UUID.randomUUID(), UUID.randomUUID(),
                 "email", null, null, null, LocalDateTime.now(), LocalDateTime.now(), false, UUID.randomUUID(), null);
 
-        when(businessRepository.findBusinessWithDigitalContactsById(id)).thenReturn(Optional.of(entity));
+        when(businessRepository.findBusinessWithDigitalContactsById(id)).thenReturn(Optional.of(owned(entity)));
         when(businessMapper.toBusinessTO(entity)).thenReturn(to);
 
         ResponseEntity<BusinessTO> response = businessService.findById(id);
@@ -338,7 +349,7 @@ class BusinessServiceImplTest {
         existingBusiness.setId(businessId);
 
         // Stub business lookup
-        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(existingBusiness));
+        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(owned(existingBusiness)));
         // No duplicate name
         when(businessRepository.findByName(request.name())).thenReturn(Optional.empty());
         // Stub user lookup using request.id() (here businessId is reused as userId in service logic)
@@ -362,7 +373,7 @@ class BusinessServiceImplTest {
         // Save returns updated entity
         when(businessRepository.save(any(BusinessEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request);
+        ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request, OWNER_TOKEN);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
@@ -386,7 +397,7 @@ class BusinessServiceImplTest {
 
         when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.empty());
 
-        ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request);
+        ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request, OWNER_TOKEN);
 
         assertNotNull(response);
         assertEquals(HttpStatus.NOT_FOUND.value(), response.getStatusCode().value());
@@ -395,7 +406,7 @@ class BusinessServiceImplTest {
     @Test
     @DisplayName("update - validation failure returns BAD_REQUEST")
     void testUpdateBusinessValidationFailure() {
-        ResponseEntity<BusinessUpdateResponse> response = businessService.update(UUID.randomUUID(), null);
+        ResponseEntity<BusinessUpdateResponse> response = businessService.update(UUID.randomUUID(), null, OWNER_TOKEN);
 
         assertNotNull(response);
         assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode().value());
@@ -418,9 +429,9 @@ class BusinessServiceImplTest {
 
         BusinessEntity existingBusiness = new BusinessEntity();
         existingBusiness.setId(businessId);
-        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(existingBusiness));
+        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(owned(existingBusiness)));
 
-        ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request);
+        ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request, OWNER_TOKEN);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
@@ -445,10 +456,10 @@ class BusinessServiceImplTest {
         BusinessEntity other = new BusinessEntity();
         other.setId(UUID.randomUUID());
 
-        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(existingBusiness));
+        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(owned(existingBusiness)));
         when(businessRepository.findByName(request.name())).thenReturn(Optional.of(other));
 
-        ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request);
+        ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request, OWNER_TOKEN);
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
     }
 
@@ -470,10 +481,10 @@ class BusinessServiceImplTest {
         BusinessEntity existingBusiness = new BusinessEntity();
         existingBusiness.setId(businessId);
 
-        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(existingBusiness));
+        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(owned(existingBusiness)));
         when(categoryRepository.existsById(categoryId)).thenReturn(false);
 
-        ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request);
+        ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request, OWNER_TOKEN);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
@@ -495,10 +506,10 @@ class BusinessServiceImplTest {
         BusinessEntity existingBusiness = new BusinessEntity();
         existingBusiness.setId(businessId);
 
-        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(existingBusiness));
+        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(owned(existingBusiness)));
         when(backboneClient.findUserById(userId)).thenThrow(new RuntimeException("backend error"));
 
-        ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request);
+        ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request, OWNER_TOKEN);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
@@ -520,10 +531,10 @@ class BusinessServiceImplTest {
         existingBusiness.setId(businessId);
         existingBusiness.setDigitalContacts(null);
 
-        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(existingBusiness));
+        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(owned(existingBusiness)));
         when(businessRepository.save(any(BusinessEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request);
+        ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request, OWNER_TOKEN);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         // verify that save on digital contact repository was called for create
         verify(digitalContactRepository, times(1)).save(any());
@@ -554,10 +565,10 @@ class BusinessServiceImplTest {
         contacts.add(dc);
         existingBusiness.setDigitalContacts(contacts);
 
-        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(existingBusiness));
+        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(owned(existingBusiness)));
         when(businessRepository.save(any(BusinessEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request);
+        ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request, OWNER_TOKEN);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         // verify that save on digital contact repository was called for update
         verify(digitalContactRepository, times(1)).save(any());
@@ -591,10 +602,10 @@ class BusinessServiceImplTest {
         contacts.add(dc);
         existingBusiness.setDigitalContacts(contacts);
 
-        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(existingBusiness));
+        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(owned(existingBusiness)));
         when(businessRepository.save(any(BusinessEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request);
+        ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request, OWNER_TOKEN);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         // verify that save on digital contact repository was NOT called because content is same
         verify(digitalContactRepository, times(0)).save(any());
@@ -769,10 +780,10 @@ class BusinessServiceImplTest {
                 new ContactType(UUID.randomUUID(), ContactTypeKey.SCE.toString(), "customer_service_email", true),
                 new ContactType(UUID.randomUUID(), ContactTypeKey.MEC.toString(), "order_management_email", true)
         ));
-        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(existingBusiness));
+        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(owned(existingBusiness)));
         when(businessRepository.save(any(BusinessEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request);
+        ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request, OWNER_TOKEN);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(backboneClient).findAllContactType();
@@ -798,12 +809,12 @@ class BusinessServiceImplTest {
         BusinessEntity existingBusiness = new BusinessEntity();
         existingBusiness.setId(businessId);
 
-        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(existingBusiness));
+        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(owned(existingBusiness)));
         when(backboneClient.findAllContactType()).thenReturn(List.of(
                 new ContactType(UUID.randomUUID(), ContactTypeKey.WBH.toString(), "website", true)
         ));
 
-        ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request);
+        ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request, OWNER_TOKEN);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("Contact type not found for key EML", response.getHeaders().getFirst("message"));
