@@ -160,6 +160,17 @@ This project adheres (loosely) to "Keep a Changelog" and follows semantic versio
 
 ### Notes
 - Flyway is **not** configured in this project (no dependency, no properties), so the scripts are applied manually; no `V1` exists. No Java, test or runtime configuration changes.
+## [Unreleased] - 2026-11-23 (F1-B location opening hours)
+
+### Added
+- Opening hours per location (RF-09): `GET` and `PUT /api/v1/businesses/{businessId}/locations/{locationId}/hours` (read is public; replacing the schedule is owner only, with 400/401/403/404 and the reason in the `message-error` header) and `GET .../hours/status?at=` returning `open_now`, `closes_at` or `opens_at`, and `timezone`.
+- Pure `OpeningHoursEvaluator` (`isOpenNow`, `nextChange`) evaluated in the business time zone (default `America/Toronto`), with daylight saving and midnight handling.
+- Migration script `V6__create_location_opening_hours.sql` (not applied by this change; Flyway stays off).
+- Guides: `docs/user-guide/f1-opening-hours.md`, `docs/technical/f1-opening-hours.md`.
+
+### Notes
+- No existing location, search or configuration file was changed. Adding `open_now` to the search results is a follow-up (see the technical guide).
+
 ## [Unreleased] - 2026-11-21 (project documentation and agent tooling)
 
 ### Added
