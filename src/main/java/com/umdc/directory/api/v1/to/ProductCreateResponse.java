@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.umdc.commons.util.DateUtil;
 import jakarta.validation.constraints.NotNull;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -17,8 +18,18 @@ public record ProductCreateResponse(
         LocalDateTime createdDate,
         @NotNull @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_MIL)
         LocalDateTime lastUpdate,
-        UUID categoryId
+        UUID categoryId,
+        BigDecimal price,
+        String currency,
+        String imageRef,
+        Boolean active
 ) {
+
+    /// Legacy constructor without price, image and status.
+    public ProductCreateResponse(UUID id, String name, String description, LocalDateTime createdDate,
+                                 LocalDateTime lastUpdate, UUID categoryId) {
+        this(id, name, description, createdDate, lastUpdate, categoryId, null, null, null, null);
+    }
 
     @Override
     public String toString() {
@@ -29,6 +40,10 @@ public record ProductCreateResponse(
                 ", createdDate=" + createdDate +
                 ", lastUpdate=" + lastUpdate +
                 ", categoryId=" + categoryId +
+                ", price=" + price +
+                ", currency='" + currency + '\'' +
+                ", imageRef='" + imageRef + '\'' +
+                ", active=" + active +
                 '}';
     }
 }

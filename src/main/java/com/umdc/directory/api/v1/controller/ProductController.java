@@ -6,6 +6,7 @@ import com.umdc.directory.api.v1.to.LinkBusinessProductResponse;
 import com.umdc.directory.api.v1.to.ProductCreateRequest;
 import com.umdc.directory.api.v1.to.ProductCreateResponse;
 import com.umdc.directory.api.v1.to.ProductListResponse;
+import com.umdc.directory.api.v1.to.ProductUpdateRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -39,7 +40,23 @@ public class ProductController implements ProductApi {
     }
 
     @Override
-    public ResponseEntity<ProductListResponse> findByBusinessId(UUID businessId, Integer page, Integer perPage, Boolean active) {
-        return productService.findByBusinessId(businessId, page, perPage, active);
+    public ResponseEntity<ProductListResponse> findByBusinessId(UUID businessId, Integer page, Integer perPage, Boolean active,
+                                                                Boolean includeInactive, String sessionToken) {
+        return productService.findByBusinessId(businessId, page, perPage, active, includeInactive, sessionToken);
+    }
+
+    @Override
+    public ResponseEntity<ProductCreateResponse> patchProduct(UUID productId, ProductUpdateRequest request, String sessionToken) {
+        return productService.update(productId, request, sessionToken, false);
+    }
+
+    @Override
+    public ResponseEntity<ProductCreateResponse> putProduct(UUID productId, ProductUpdateRequest request, String sessionToken) {
+        return productService.update(productId, request, sessionToken, true);
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteProduct(UUID productId, String sessionToken) {
+        return productService.deactivate(productId, sessionToken);
     }
 }

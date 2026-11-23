@@ -75,6 +75,18 @@ public final class DirectoryAppConstants {
     public static final String FAVORITE_TYPE_PRODUCTS = "products";
     public static final String FAVORITE_TYPE_OFFERS = "offers";
 
+    // Products (price, image, deactivation)
+    public static final int PRODUCT_PRICE_MAX_DECIMALS = 2;
+    public static final int PRODUCT_CURRENCY_LENGTH = 3;
+    public static final int PRODUCT_IMAGE_REF_MAX = 512;
+    public static final String PRODUCT_NOT_FOUND = "Product not found";
+    public static final String PRODUCT_ONLY_OWNER = "Only the owner of the product can change it";
+    public static final String PRODUCT_INVALID_PRICE = "price must be >= 0 with at most " + PRODUCT_PRICE_MAX_DECIMALS + " decimals";
+    public static final String PRODUCT_INVALID_CURRENCY = "currency must be an ISO 4217 code of " + PRODUCT_CURRENCY_LENGTH + " letters";
+    public static final String PRODUCT_PRICE_CURRENCY_TOGETHER = "price and currency must be sent together";
+    public static final String PRODUCT_INVALID_IMAGE_REF = "imageRef must have at most " + PRODUCT_IMAGE_REF_MAX + " characters";
+    public static final String PRODUCT_REQUIRED_FIELDS = "name, description and categoryId are required";
+
     private DirectoryAppConstants() {
         throw new IllegalStateException("Utility class");
     }

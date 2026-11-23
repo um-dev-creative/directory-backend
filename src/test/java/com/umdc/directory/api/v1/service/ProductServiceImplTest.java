@@ -159,7 +159,7 @@ class ProductServiceImplTest {
     }
 
     @Test
-    @DisplayName("findByBusinessId - active null uses findByBusiness and returns mapped items")
+    @DisplayName("findByBusinessId - public list queries only active links of active products")
     void findByBusinessId_activeNull() {
         UUID businessId = UUID.randomUUID();
         when(businessRepository.existsById(businessId)).thenReturn(true);
@@ -170,7 +170,7 @@ class ProductServiceImplTest {
         bp.setProduct(p);
         Page<BusinessProductEntity> page = new org.springframework.data.domain.PageImpl<>(List.of(bp));
 
-        when(businessProductRepository.findByBusiness(any(BusinessEntity.class), any(Pageable.class))).thenReturn(page);
+        when(businessProductRepository.findByBusinessAndActiveAndProductActive(any(BusinessEntity.class), eq(true), eq(true), any(Pageable.class))).thenReturn(page);
         when(productMapper.toProductListItemTO(any(ProductEntity.class))).thenReturn(new ProductListItemTO(p.getId(), "name", "desc", null, null, null, null));
 
         ResponseEntity<ProductListResponse> resp = productService.findByBusinessId(businessId, 1, 10, null);
@@ -179,7 +179,7 @@ class ProductServiceImplTest {
     }
 
     @Test
-    @DisplayName("findByBusinessId - active specified uses findByBusinessAndActive and filters out null products")
+    @DisplayName("findByBusinessId - the active filter is ignored in public mode and null products are filtered out")
     void findByBusinessId_activeSpecified() {
         UUID businessId = UUID.randomUUID();
         when(businessRepository.existsById(businessId)).thenReturn(true);
@@ -195,10 +195,10 @@ class ProductServiceImplTest {
 
         Page<BusinessProductEntity> page = new org.springframework.data.domain.PageImpl<>(List.of(bp1, bp2));
 
-        when(businessProductRepository.findByBusinessAndActive(any(BusinessEntity.class), eq(true), any(Pageable.class))).thenReturn(page);
+        when(businessProductRepository.findByBusinessAndActiveAndProductActive(any(BusinessEntity.class), eq(true), eq(true), any(Pageable.class))).thenReturn(page);
         when(productMapper.toProductListItemTO(any(ProductEntity.class))).thenReturn(new ProductListItemTO(p1.getId(), "name", "desc", null, null, null, null));
 
-        ResponseEntity<ProductListResponse> resp = productService.findByBusinessId(businessId, 1, 10, true);
+        ResponseEntity<ProductListResponse> resp = productService.findByBusinessId(businessId, 1, 10, false);
         assertEquals(HttpStatus.OK, resp.getStatusCode());
         assertEquals(1, resp.getBody().data().size());
     }
