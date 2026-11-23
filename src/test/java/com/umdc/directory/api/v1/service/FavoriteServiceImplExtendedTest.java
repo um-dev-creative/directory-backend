@@ -90,14 +90,14 @@ class FavoriteServiceImplExtendedTest {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
             when(businessRepository.findById(itemId)).thenReturn(Optional.of(business));
             when(userFavoriteRepository.findByUserIdAndBusinessId(userId, itemId)).thenReturn(Optional.empty());
-            when(userFavoriteRepository.save(any(UserFavoriteEntity.class))).thenReturn(savedFavorite);
+            when(userFavoriteRepository.saveAndFlush(any(UserFavoriteEntity.class))).thenReturn(savedFavorite);
             when(favoriteMapper.toResponse(savedFavorite)).thenReturn(expected);
 
             ResponseEntity<FavoriteResponse> result = service.createFavorite("token", request);
 
             assertEquals(HttpStatus.CREATED, result.getStatusCode());
             assertEquals(expected, result.getBody());
-            verify(userFavoriteRepository).save(any(UserFavoriteEntity.class));
+            verify(userFavoriteRepository).saveAndFlush(any(UserFavoriteEntity.class));
         }
     }
 
@@ -115,7 +115,7 @@ class FavoriteServiceImplExtendedTest {
             ResponseEntity<FavoriteResponse> result = service.createFavorite("token", request);
 
             assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
-            verify(userFavoriteRepository, never()).save(any());
+            verify(userFavoriteRepository, never()).saveAndFlush(any());
         }
     }
 
@@ -136,7 +136,7 @@ class FavoriteServiceImplExtendedTest {
             ResponseEntity<FavoriteResponse> result = service.createFavorite("token", request);
 
             assertEquals(HttpStatus.CONFLICT, result.getStatusCode());
-            verify(userFavoriteRepository, never()).save(any());
+            verify(userFavoriteRepository, never()).saveAndFlush(any());
         }
     }
 
@@ -154,7 +154,7 @@ class FavoriteServiceImplExtendedTest {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
             when(productRepository.findById(itemId)).thenReturn(Optional.of(product));
             when(userFavoriteRepository.findByUserIdAndProductId(userId, itemId)).thenReturn(Optional.empty());
-            when(userFavoriteRepository.save(any(UserFavoriteEntity.class))).thenReturn(savedFavorite);
+            when(userFavoriteRepository.saveAndFlush(any(UserFavoriteEntity.class))).thenReturn(savedFavorite);
             when(favoriteMapper.toResponse(savedFavorite)).thenReturn(expected);
 
             ResponseEntity<FavoriteResponse> result = service.createFavorite("token", request);
@@ -195,7 +195,7 @@ class FavoriteServiceImplExtendedTest {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
             when(campaignRepository.findById(itemId)).thenReturn(Optional.of(campaign));
             when(userFavoriteRepository.findByUserIdAndCampaignId(userId, itemId)).thenReturn(Optional.empty());
-            when(userFavoriteRepository.save(any(UserFavoriteEntity.class))).thenReturn(savedFavorite);
+            when(userFavoriteRepository.saveAndFlush(any(UserFavoriteEntity.class))).thenReturn(savedFavorite);
             when(favoriteMapper.toResponse(savedFavorite)).thenReturn(expected);
 
             ResponseEntity<FavoriteResponse> result = service.createFavorite("token", request);
@@ -223,16 +223,16 @@ class FavoriteServiceImplExtendedTest {
     }
 
     @Test
-    @DisplayName("getFavorites - sort parameter returns NOT_IMPLEMENTED")
-    void getFavorites_sortNotImplemented() {
+    @DisplayName("getFavorites - invalid sort returns BAD_REQUEST")
+    void getFavorites_invalidSortBadRequest() {
         UUID userId = UUID.randomUUID();
 
         try (MockedStatic<JwtUtil> mockedStatic = mockStatic(JwtUtil.class)) {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
 
-            ResponseEntity<FavoritesResponse> result = service.getFavorites("token", null, 0, 10, "name");
+            ResponseEntity<FavoritesResponse> result = service.getFavorites("token", null, 0, 10, "bogus,asc");
 
-            assertEquals(HttpStatus.NOT_IMPLEMENTED, result.getStatusCode());
+            assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
             verifyNoInteractions(userFavoriteRepository);
         }
     }
@@ -270,7 +270,7 @@ class FavoriteServiceImplExtendedTest {
 
         try (MockedStatic<JwtUtil> mockedStatic = mockStatic(JwtUtil.class)) {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
-            when(userFavoriteRepository.findByUserId(userId)).thenReturn(List.of(fav1, fav2, fav3));
+            when(userFavoriteRepository.findPageByUser(org.mockito.ArgumentMatchers.eq(userId), org.mockito.ArgumentMatchers.anyInt(), any(org.springframework.data.domain.Pageable.class))).thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(fav1, fav2, fav3)));
             when(businessMapper.toBusinessTO(business)).thenReturn(businessTO);
             when(productMapper.toProductCreateResponse(product)).thenReturn(productTO);
             when(campaignMapper.toOfferTO(campaign)).thenReturn(offerTO);
@@ -302,7 +302,7 @@ class FavoriteServiceImplExtendedTest {
 
         try (MockedStatic<JwtUtil> mockedStatic = mockStatic(JwtUtil.class)) {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
-            when(userFavoriteRepository.findByUserId(userId)).thenReturn(List.of(fav1, fav2));
+            when(userFavoriteRepository.findPageByUser(org.mockito.ArgumentMatchers.eq(userId), org.mockito.ArgumentMatchers.anyInt(), any(org.springframework.data.domain.Pageable.class))).thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(fav1, fav2)));
             when(businessMapper.toBusinessTO(business1)).thenReturn(businessTO1);
             when(businessMapper.toBusinessTO(business2)).thenReturn(businessTO2);
 
@@ -328,7 +328,7 @@ class FavoriteServiceImplExtendedTest {
 
         try (MockedStatic<JwtUtil> mockedStatic = mockStatic(JwtUtil.class)) {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
-            when(userFavoriteRepository.findByUserId(userId)).thenReturn(List.of(fav));
+            when(userFavoriteRepository.findPageByUser(org.mockito.ArgumentMatchers.eq(userId), org.mockito.ArgumentMatchers.anyInt(), any(org.springframework.data.domain.Pageable.class))).thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(fav)));
             when(productMapper.toProductCreateResponse(product)).thenReturn(productTO);
 
             ResponseEntity<FavoritesResponse> result = service.getFavorites("token", "products", 0, 10, null);
@@ -353,7 +353,7 @@ class FavoriteServiceImplExtendedTest {
 
         try (MockedStatic<JwtUtil> mockedStatic = mockStatic(JwtUtil.class)) {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
-            when(userFavoriteRepository.findByUserId(userId)).thenReturn(List.of(fav));
+            when(userFavoriteRepository.findPageByUser(org.mockito.ArgumentMatchers.eq(userId), org.mockito.ArgumentMatchers.anyInt(), any(org.springframework.data.domain.Pageable.class))).thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(fav)));
             when(campaignMapper.toOfferTO(campaign)).thenReturn(offerTO);
 
             ResponseEntity<FavoritesResponse> result = service.getFavorites("token", "offers", 0, 10, null);
@@ -372,77 +372,10 @@ class FavoriteServiceImplExtendedTest {
 
         try (MockedStatic<JwtUtil> mockedStatic = mockStatic(JwtUtil.class)) {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
-            when(userFavoriteRepository.findByUserId(userId)).thenReturn(List.of());
 
             ResponseEntity<FavoritesResponse> result = service.getFavorites("token", "invalid", 0, 10, null);
 
             assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
-        }
-    }
-
-    @Test
-    @DisplayName("getFavorites - pagination with page 0 size 2")
-    void getFavorites_pagination() {
-        UUID userId = UUID.randomUUID();
-        BusinessEntity b1 = new BusinessEntity();
-        BusinessEntity b2 = new BusinessEntity();
-        BusinessEntity b3 = new BusinessEntity();
-
-        UserFavoriteEntity fav1 = new UserFavoriteEntity(new UserEntity());
-        fav1.setBusiness(b1);
-        UserFavoriteEntity fav2 = new UserFavoriteEntity(new UserEntity());
-        fav2.setBusiness(b2);
-        UserFavoriteEntity fav3 = new UserFavoriteEntity(new UserEntity());
-        fav3.setBusiness(b3);
-
-        BusinessTO bt1 = mock(BusinessTO.class);
-        BusinessTO bt2 = mock(BusinessTO.class);
-        BusinessTO bt3 = mock(BusinessTO.class);
-
-        try (MockedStatic<JwtUtil> mockedStatic = mockStatic(JwtUtil.class)) {
-            mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
-            when(userFavoriteRepository.findByUserId(userId)).thenReturn(List.of(fav1, fav2, fav3));
-            when(businessMapper.toBusinessTO(b1)).thenReturn(bt1);
-            when(businessMapper.toBusinessTO(b2)).thenReturn(bt2);
-            when(businessMapper.toBusinessTO(b3)).thenReturn(bt3);
-
-            ResponseEntity<FavoritesResponse> result = service.getFavorites("token", "stores", 0, 2, null);
-
-            assertEquals(HttpStatus.OK, result.getStatusCode());
-            assertEquals(2, result.getBody().stores().size());
-        }
-    }
-
-    @Test
-    @DisplayName("getFavorites - pagination page 1 size 2")
-    void getFavorites_paginationPage1() {
-        UUID userId = UUID.randomUUID();
-        BusinessEntity b1 = new BusinessEntity();
-        BusinessEntity b2 = new BusinessEntity();
-        BusinessEntity b3 = new BusinessEntity();
-
-        UserFavoriteEntity fav1 = new UserFavoriteEntity(new UserEntity());
-        fav1.setBusiness(b1);
-        UserFavoriteEntity fav2 = new UserFavoriteEntity(new UserEntity());
-        fav2.setBusiness(b2);
-        UserFavoriteEntity fav3 = new UserFavoriteEntity(new UserEntity());
-        fav3.setBusiness(b3);
-
-        BusinessTO bt1 = mock(BusinessTO.class);
-        BusinessTO bt2 = mock(BusinessTO.class);
-        BusinessTO bt3 = mock(BusinessTO.class);
-
-        try (MockedStatic<JwtUtil> mockedStatic = mockStatic(JwtUtil.class)) {
-            mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
-            when(userFavoriteRepository.findByUserId(userId)).thenReturn(List.of(fav1, fav2, fav3));
-            when(businessMapper.toBusinessTO(b1)).thenReturn(bt1);
-            when(businessMapper.toBusinessTO(b2)).thenReturn(bt2);
-            when(businessMapper.toBusinessTO(b3)).thenReturn(bt3);
-
-            ResponseEntity<FavoritesResponse> result = service.getFavorites("token", "stores", 1, 2, null);
-
-            assertEquals(HttpStatus.OK, result.getStatusCode());
-            assertEquals(1, result.getBody().stores().size());
         }
     }
 
@@ -453,7 +386,7 @@ class FavoriteServiceImplExtendedTest {
 
         try (MockedStatic<JwtUtil> mockedStatic = mockStatic(JwtUtil.class)) {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
-            when(userFavoriteRepository.findByUserId(userId)).thenReturn(List.of());
+            when(userFavoriteRepository.findPageByUser(org.mockito.ArgumentMatchers.eq(userId), org.mockito.ArgumentMatchers.anyInt(), any(org.springframework.data.domain.Pageable.class))).thenReturn(new org.springframework.data.domain.PageImpl<>(List.of()));
 
             ResponseEntity<FavoritesResponse> result = service.getFavorites("token", null, 0, 10, null);
 
@@ -461,44 +394,6 @@ class FavoriteServiceImplExtendedTest {
             assertTrue(result.getBody().stores().isEmpty());
             assertTrue(result.getBody().products().isEmpty());
             assertTrue(result.getBody().offers().isEmpty());
-        }
-    }
-
-    @Test
-    @DisplayName("getFavorites - mixed types with combined pagination")
-    void getFavorites_mixedTypesCombinedPagination() {
-        UUID userId = UUID.randomUUID();
-        BusinessEntity b1 = new BusinessEntity();
-        ProductEntity p1 = new ProductEntity();
-        CampaignEntity c1 = new CampaignEntity();
-
-        UserFavoriteEntity fav1 = new UserFavoriteEntity(new UserEntity());
-        fav1.setBusiness(b1);
-        UserFavoriteEntity fav2 = new UserFavoriteEntity(new UserEntity());
-        fav2.setProduct(p1);
-        UserFavoriteEntity fav3 = new UserFavoriteEntity(new UserEntity());
-        fav3.setCampaign(c1);
-
-        BusinessTO bt1 = mock(BusinessTO.class);
-        ProductCreateResponse pt1 = mock(ProductCreateResponse.class);
-        OfferTO ot1 = mock(OfferTO.class);
-
-        try (MockedStatic<JwtUtil> mockedStatic = mockStatic(JwtUtil.class)) {
-            mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
-            when(userFavoriteRepository.findByUserId(userId)).thenReturn(List.of(fav1, fav2, fav3));
-            when(businessMapper.toBusinessTO(b1)).thenReturn(bt1);
-            when(productMapper.toProductCreateResponse(p1)).thenReturn(pt1);
-            when(campaignMapper.toOfferTO(c1)).thenReturn(ot1);
-
-            // Get only first 2 items
-            ResponseEntity<FavoritesResponse> result = service.getFavorites("token", null, 0, 2, null);
-
-            assertEquals(HttpStatus.OK, result.getStatusCode());
-            // Should return first 2 items (store and product)
-            int totalItems = result.getBody().stores().size() +
-                            result.getBody().products().size() +
-                            result.getBody().offers().size();
-            assertEquals(2, totalItems);
         }
     }
 
@@ -516,12 +411,12 @@ class FavoriteServiceImplExtendedTest {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
             when(businessRepository.findById(itemId)).thenReturn(Optional.of(business));
             when(userFavoriteRepository.findByUserIdAndBusinessId(userId, itemId)).thenReturn(Optional.empty());
-            when(userFavoriteRepository.save(any(UserFavoriteEntity.class))).thenReturn(new UserFavoriteEntity(new UserEntity()));
+            when(userFavoriteRepository.saveAndFlush(any(UserFavoriteEntity.class))).thenReturn(new UserFavoriteEntity(new UserEntity()));
             when(favoriteMapper.toResponse(any())).thenReturn(mock(FavoriteResponse.class));
 
             service.createFavorite("token", request);
 
-            verify(userFavoriteRepository).save(captor.capture());
+            verify(userFavoriteRepository).saveAndFlush(captor.capture());
             UserFavoriteEntity saved = captor.getValue();
             assertNotNull(saved.getCreatedAt());
             assertNotNull(saved.getUpdatedAt());

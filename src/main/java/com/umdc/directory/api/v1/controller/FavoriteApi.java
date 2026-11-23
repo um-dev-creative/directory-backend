@@ -121,7 +121,7 @@ public interface FavoriteApi {
 
     /**
      * Get the authenticated user's favorites grouped by type. Supports optional filtering by type
-     * and pagination (page, size) and optional sort string (e.g. "name,asc").
+     * and pagination (page, size) and optional sort string: "created_at" or "name" with optional ",asc" / ",desc".
      *
      * @param sessionToken session token header
      * @param type optional filter: "stores" | "products" | "offers"
@@ -130,11 +130,12 @@ public interface FavoriteApi {
      * @param sort optional sort string
      * @return grouped favorites response
      */
-    @Operation(summary = "Get user favorites", description = "Returns the authenticated user's favorites grouped by type (stores, products, offers). Supports pagination and optional filtering by type.")
+    @Operation(summary = "Get user favorites", description = "Returns the authenticated user's favorites grouped by type (stores, products, offers). Supports 0-based pagination (page, size, max 100), optional filtering by type and sort=created_at|name[,asc|desc] (default created_at,desc).")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Favorites retrieved",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = FavoritesResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid type, sort or size", content = @Content),
             @ApiResponse(responseCode = "401", description = UNAUTHORIZED_DESC, content = @Content)
     })
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
