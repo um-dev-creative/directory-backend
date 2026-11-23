@@ -2,19 +2,30 @@ openapi: 3.0.0
 info:
   title: Directory Site Backend
   version: 1.0.0
-  description: ''
+  description: 'Directory backend API. All routes live under `/api/v1`.
+
+
+    - **Authentication:** the `session-token` header. Reads documented as public do not need it.
+
+    - **Rate limiting:** every `/api/v1/**` request is rate limited per client IP and per user. When the limit is exceeded the answer is `429`
+    with the `Retry-After` header (seconds) and `X-RateLimit-Limit`.
+
+    - **Errors:** when an endpoint explains a `400`/`5xx`, the reason is in the `message-error` response header.
+
+    - **Documentation endpoints:** Swagger UI and `/v3/api-docs` are only open when `umdc.docs.enabled=true` (dev and test); otherwise they answer
+    403. This file is the maintained contract.'
 servers:
-  - url: '{{directoryUrl}}'
+- url: '{{directoryUrl}}'
 paths:
   /api/v1/auth/session-token:
     post:
       summary: Generate Session-Token
       parameters:
-        - name: session-token-bkd
-          in: header
-          schema:
-            type: string
-          example: '{{backboneSessionToken}}'
+      - name: session-token-bkd
+        in: header
+        schema:
+          type: string
+        example: '{{backboneSessionToken}}'
       responses:
         '403':
           description: Generate Token
@@ -22,11 +33,8 @@ paths:
             WWW-Authenticate:
               schema:
                 type: string
-              example: >-
-                Bearer error="insufficient_scope", error_description="The
-                request requires higher privileges than provided by the access
-                token.",
-                error_uri="https://tools.ietf.org/html/rfc6750#section-3.1"
+              example: Bearer error="insufficient_scope", error_description="The request requires higher privileges than provided by the access
+                token.", error_uri="https://tools.ietf.org/html/rfc6750#section-3.1"
             X-Content-Type-Options:
               schema:
                 type: string
@@ -71,9 +79,11 @@ paths:
               schema:
                 type: string
               example: keep-alive
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       tags:
-        - v1
-        - auth
+      - v1
+      - auth
       requestBody:
         content:
           application/json:
@@ -91,12 +101,11 @@ paths:
     post:
       summary: Generate Token Manual
       parameters:
-        - name: session-token-bkd
-          in: header
-          schema:
-            type: string
-          example: >-
-            eyJhbGciOiJIUzI1NiJ9.eyJ1aWQiOiIxMjZjNDNkYi1hYzBiLTQ2MTAtYjMzMy0wMzgwNWQ5MDhjNTIiLCJmaXJzdG5hbWUiOiJCbHVlIiwicm9sZXMiOiJbMjgxZTc3ZGEtOGMwNi00MGQ5LWIyZWUtNmYxY2UyMzgyN2Q1XSIsImFsaWFzIjoiYmpheXMtNzA3NzMiLCJ0eXBlIjoic2Vzc2lvbi10b2tlbiIsImlhdCI6MTc0ODI5NzU5MCwianRpIjoiZmM2NTMyNzgtMmI4OS00ODNkLTk3YTYtMTE0N2Y1MDhkZDBkIiwibGFzdG5hbWUiOiJKYXlzIiwic3ViIjoiZWY3ZGExYTEtMzQyZC00NTQ2LTgwNjUtNjYzOGE1OTIyZTZjIiwiZXhwIjoxNzQ4Mjk3NTk3fQ.kJMgAt7ZYzrJqE0RmDoS2nqJuQKxa-leGN9sXNByP3U
+      - name: session-token-bkd
+        in: header
+        schema:
+          type: string
+        example: eyJhbGciOiJIUzI1NiJ9.eyJ1aWQiOiIxMjZjNDNkYi1hYzBiLTQ2MTAtYjMzMy0wMzgwNWQ5MDhjNTIiLCJmaXJzdG5hbWUiOiJCbHVlIiwicm9sZXMiOiJbMjgxZTc3ZGEtOGMwNi00MGQ5LWIyZWUtNmYxY2UyMzgyN2Q1XSIsImFsaWFzIjoiYmpheXMtNzA3NzMiLCJ0eXBlIjoic2Vzc2lvbi10b2tlbiIsImlhdCI6MTc0ODI5NzU5MCwianRpIjoiZmM2NTMyNzgtMmI4OS00ODNkLTk3YTYtMTE0N2Y1MDhkZDBkIiwibGFzdG5hbWUiOiJKYXlzIiwic3ViIjoiZWY3ZGExYTEtMzQyZC00NTQ2LTgwNjUtNjYzOGE1OTIyZTZjIiwiZXhwIjoxNzQ4Mjk3NTk3fQ.kJMgAt7ZYzrJqE0RmDoS2nqJuQKxa-leGN9sXNByP3U
       responses:
         '403':
           description: Generate Token
@@ -104,11 +113,8 @@ paths:
             WWW-Authenticate:
               schema:
                 type: string
-              example: >-
-                Bearer error="insufficient_scope", error_description="The
-                request requires higher privileges than provided by the access
-                token.",
-                error_uri="https://tools.ietf.org/html/rfc6750#section-3.1"
+              example: Bearer error="insufficient_scope", error_description="The request requires higher privileges than provided by the access
+                token.", error_uri="https://tools.ietf.org/html/rfc6750#section-3.1"
             X-Content-Type-Options:
               schema:
                 type: string
@@ -153,11 +159,13 @@ paths:
               schema:
                 type: string
               example: keep-alive
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       tags:
-        - v1
-        - auth
+      - v1
+      - auth
       security:
-        - BearerAuth: []
+      - BearerAuth: []
       requestBody:
         content:
           application/json:
@@ -175,46 +183,42 @@ paths:
     post:
       summary: Create Business
       parameters:
-        - name: session-token
-          in: header
-          schema:
-            type: string
-          example: '{{directorySessionTokenName}}'
-        - name: session-token-bkd
-          in: header
-          schema:
-            type: string
-          example: '{{backboneSessionToken}}'
-      responses: {}
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: Required. Without a valid token the answer is 401.
+      - name: session-token-bkd
+        in: header
+        schema:
+          type: string
+        example: '{{backboneSessionToken}}'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessCreateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The `userId` of the body is not the user of the token
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       tags:
-        - v1
-        - businesses
+      - v1
+      - businesses
       requestBody:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                description:
-                  type: string
-                categoryId:
-                  type: string
-                userId:
-                  type: string
-                email:
-                  type: string
-                  format: email
-                customerServiceEmail:
-                  type: string
-                  format: email
-                orderManagementEmail:
-                  type: string
-                  format: email
-                website:
-                  type: string
-                  format: uri
+              $ref: '#/components/schemas/BusinessCreateRequest'
             example:
               name: AADgC23sAq Business
               description: This is an example business description.
@@ -224,102 +228,110 @@ paths:
               customerServiceEmail: support@example.com
               orderManagementEmail: orders@example.com
               website: https://www.example.com
+        required: true
+      description: 'Creates a business owned by the user of the session token. The owner always comes from the token: a `userId` in the body that
+        is not the token user is rejected with 403.'
   /api/v1/businesses/{businessId}:
     get:
       summary: Get Business by Id
       parameters:
-        - name: session-token
-          in: header
-          schema:
-            type: string
-          example: '{{directorySessionTokenName}}'
-      responses: {}
-      tags:
-        - v1
-        - businesses
-    parameters:
-      - name: businessId
-        in: path
-        required: true
+      - name: session-token
+        in: header
         schema:
           type: string
-        example: 3c50b50b-d117-44f8-b350-b441518e11c9
+        example: '{{directorySessionTokenName}}'
+        required: false
+        description: Public read; the token is not needed by this endpoint.
+      responses:
+        '200':
+          description: Business found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Business'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      tags:
+      - v1
+      - businesses
+    parameters:
+    - name: businessId
+      in: path
+      required: true
+      schema: &id001
+        type: string
+        format: uuid
+      example: 3c50b50b-d117-44f8-b350-b441518e11c9
     delete:
       summary: Delete Business by business Id and User Id
       parameters:
-        - name: session-token
-          in: header
-          schema:
-            type: string
-          example: '{{directorySessionTokenName}}'
-      responses: {}
-      tags:
-        - v1
-        - businesses
-  /api/v1/businesses/user/{userId}:
-    get:
-      summary: Get Business collection by User Id
-      parameters:
-        - name: session-token
-          in: header
-          required: false
-          deprecated: false
-          schema: {}
-          example: '{{directorySessionTokenName}}'
-      responses: {}
-      tags:
-        - v1
-        - businesses
-    parameters:
-      - name: userId
-        in: path
+      - name: session-token
+        in: header
         required: true
         schema:
           type: string
-        example: 3171803c-bb08-4eb0-8821-b6ebe5948f48
-  /api/v1/businesses/1a24da99-78d0-4221-96fa-64aa79a47bd1:
+      responses:
+        '200':
+          description: Business deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The user is not the owner of the business
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      tags:
+      - v1
+      - businesses
     patch:
       summary: Update Business
       parameters:
-        - name: session-token
-          in: header
-          required: false
-          deprecated: false
-          schema: {}
-          example: '{{directorySessionTokenName}}'
-        - name: session-token-bkd
-          in: header
-          required: false
-          deprecated: false
-          schema: {}
-          example: '{{backboneSessionToken}}'
-      responses: {}
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: Required. Without a valid token the answer is 401.
+      - name: session-token-bkd
+        in: header
+        required: false
+        deprecated: false
+        schema: {}
+        example: '{{backboneSessionToken}}'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessUpdateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The user is not the owner of the business
+        '404':
+          description: Business, category or user not found
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       tags:
-        - v1
-        - businesses
+      - v1
+      - businesses
       requestBody:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                description:
-                  type: string
-                categoryId:
-                  type: string
-                email:
-                  type: string
-                  format: email
-                customerServiceEmail:
-                  type: string
-                  format: email
-                orderManagementEmail:
-                  type: string
-                  format: email
-                website:
-                  type: string
+              $ref: '#/components/schemas/BusinessUpdateRequest'
             example:
               name: El negocio 1
               description: descripcion del negocio
@@ -328,26 +340,81 @@ paths:
               customerServiceEmail: attention@dmain.com
               orderManagementEmail: manager@dmain.com
               website: www.midominio.com
+        required: true
+      description: Partial update (only the fields sent change). Only the owner of the business may update it; a referenced category or user that
+        does not exist is 404.
+  /api/v1/businesses/user/{userId}:
+    get:
+      summary: Get Business collection by User Id
+      parameters:
+      - name: session-token
+        in: header
+        required: false
+        schema:
+          type: string
+        description: Public read; the token is not needed by this endpoint.
+      responses:
+        '200':
+          description: Businesses of the user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Business'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      tags:
+      - v1
+      - businesses
+    parameters:
+    - name: userId
+      in: path
+      required: true
+      schema: *id001
+      example: 3171803c-bb08-4eb0-8821-b6ebe5948f48
   /api/v1/campaigns:
     post:
       summary: Create Campaign
       parameters:
-        - name: session-token
-          in: header
-          required: false
-          deprecated: false
-          schema: {}
-          example: '{{directorySessionTokenName}}'
-        - name: session-token-bkd
-          in: header
-          required: false
-          deprecated: false
-          schema: {}
-          example: '{{backboneSessionToken}}'
-      responses: {}
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: Required. Without a valid token the answer is 401.
+      - name: session-token-bkd
+        in: header
+        required: false
+        deprecated: false
+        schema: {}
+        example: '{{backboneSessionToken}}'
+      responses:
+        '201':
+          description: Campaign created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller does not own the business of the campaign
+        '404':
+          description: Business or category not found (a business that does not exist was 400 before)
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       tags:
-        - v1
-        - campaings
+      - v1
+      - campaings
       requestBody:
         content:
           application/json:
@@ -360,7 +427,7 @@ paths:
                   type: string
                 startDate:
                   type: string
-                  format: style
+                  format: date-time
                 endDate:
                   type: string
                 categoryId:
@@ -386,130 +453,117 @@ paths:
               terms: Sin definir
               status: ACTIVE
               active: true
+        required: true
+      description: Creates a campaign. The caller must own the business of the campaign.
     get:
       summary: List Campaign
       parameters:
-        - name: active
-          in: query
-          required: false
-          deprecated: false
-          schema: {}
-          example: 'true'
-        - name: per_page
-          in: query
-          required: false
-          deprecated: false
-          schema: {}
-          example: '10'
-        - name: session-token
-          in: header
-          required: false
-          deprecated: false
-          schema: {}
-          example: '{{directorySessionTokenName}}'
-        - name: session-token-bkd
-          in: header
-          required: false
-          deprecated: false
-          schema: {}
-          example: '{{backboneSessionToken}}'
-      responses: {}
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: per_page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+      - name: sort
+        in: query
+        schema:
+          type: string
+          default: -created_date
+      - name: active
+        in: query
+        schema:
+          type: boolean
+      - name: title
+        in: query
+        schema:
+          type: string
+      - name: category_fk
+        in: query
+        schema: *id001
+      - name: business_fk
+        in: query
+        schema: *id001
+      - name: start_from
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: start_to
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: end_from
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: end_to
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: session-token
+        in: header
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Page of campaigns
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignListResponse'
+        '400':
+          description: Invalid pagination, sort or filter
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       tags:
-        - v1
-        - campaings
-  /api/v1/campaigns/64d0648d-a3ff-4fa6-83e1-649cea48bc09:
-    patch:
-      summary: Update Campaign
-      parameters:
-        - name: session-token
-          in: header
-          required: false
-          deprecated: false
-          schema: {}
-          example: '{{directorySessionTokenName}}'
-        - name: session-token-bkd
-          in: header
-          required: false
-          deprecated: false
-          schema: {}
-          example: '{{backboneSessionToken}}'
-      responses: {}
-      tags:
-        - v1
-        - campaings
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                title:
-                  type: string
-                description:
-                  type: string
-                businessId:
-                  type: string
-                categoryId:
-                  type: string
-                startDate:
-                  type: string
-                  format: style
-                endDate:
-                  type: string
-                discount:
-                  type: integer
-                active:
-                  type: boolean
-                terms:
-                  type: string
-            example:
-              title: Octava oferta
-              description: Descripcion
-              businessId: 1a24da99-78d0-4221-96fa-64aa79a47bd1
-              categoryId: b1468341-1f30-463f-b22d-7d4a882fa870
-              startDate: '2025-11-25T00:00:00'
-              endDate: '2025-12-31T23:59:34'
-              discount: 55
-              active: true
-              terms: nuevos terminos y condiciones
-  /api/v1/campaigns/75980cb0-3515-48e4-95a6-4862daebfb3c:
-    get:
-      summary: Find Campaign
-      parameters:
-        - name: session-token
-          in: header
-          schema:
-            type: string
-          example: '{{directorySessionTokenName}}'
-        - name: session-token-bkd
-          in: header
-          schema:
-            type: string
-          example: '{{backboneSessionToken}}'
-      responses: {}
-      tags:
-        - v1
-        - campaings
+      - v1
+      - campaings
+      description: 'Paginated search. page is 1-based (default 1), per_page default 20, max 100. Filters: title, category_fk, business_fk, active,
+        start_from/start_to, end_from/end_to; legacy aliases q, category_id, business_id, start_date_*, end_date_* still work. sort: title, start_date,
+        end_date, created_date, prefix `-` for descending (default `-created_date`).'
   /api/v1/categories:
     post:
       summary: Create Category
       parameters:
-        - name: session-token
-          in: header
-          required: false
-          deprecated: false
-          schema: {}
-          example: '{{directorySessionTokenName}}'
-        - name: session-token-bkd
-          in: header
-          required: false
-          deprecated: false
-          schema: {}
-          example: '{{backboneSessionToken}}'
-      responses: {}
+      - name: session-token
+        in: header
+        required: false
+        deprecated: false
+        schema: {}
+        example: '{{directorySessionTokenName}}'
+      - name: session-token-bkd
+        in: header
+        required: false
+        deprecated: false
+        schema: {}
+        example: '{{backboneSessionToken}}'
+      responses:
+        '201':
+          description: Category created
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Parent category not found
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       tags:
-        - v1
-        - categories
+      - v1
+      - categories
       requestBody:
         content:
           application/json:
@@ -524,7 +578,7 @@ paths:
                   type: string
                 lastUpdate:
                   type: string
-                  format: style
+                  format: date-time
                 createdDate:
                   type: string
                 active:
@@ -539,367 +593,476 @@ paths:
     get:
       summary: Get Categories
       parameters:
-        - name: session-token
-          in: header
-          schema:
-            type: string
-          example: '{{directorySessionTokenName}}'
-        - name: session-token-bkd
-          in: header
-          schema:
-            type: string
-          example: '{{backboneSessionToken}}'
-      responses: {}
+      - name: session-token
+        in: header
+        schema:
+          type: string
+        example: '{{directorySessionTokenName}}'
+      - name: session-token-bkd
+        in: header
+        schema:
+          type: string
+        example: '{{backboneSessionToken}}'
+      responses:
+        '200':
+          description: All categories
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       tags:
-        - v1
-        - categories
+      - v1
+      - categories
   /api/v1/categories/{categoryId}:
     get:
       summary: Find Category by ID
       parameters:
-        - name: session-token
-          in: header
-          schema:
-            type: string
-          example: '{{directorySessionTokenName}}'
-      responses: {}
-      tags:
-        - v1
-        - categories
-    parameters:
-      - name: categoryId
-        in: path
-        required: true
+      - name: session-token
+        in: header
         schema:
           type: string
-        example: 1d175fee-bc94-42d8-9362-79aa0475fe28
+        example: '{{directorySessionTokenName}}'
+      responses:
+        '200':
+          description: Category found
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      tags:
+      - v1
+      - categories
+    parameters:
+    - name: categoryId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: 1d175fee-bc94-42d8-9362-79aa0475fe28
   /api/v1/categories/parent/{parentId}:
     get:
       summary: Find Category by parent ID
       parameters:
-        - name: session-token
-          in: header
-          required: false
-          deprecated: false
-          schema: {}
-          example: '{{directorySessionTokenName}}'
-        - name: session-token-bkd
-          in: header
-          required: false
-          deprecated: false
-          schema: {}
-          example: '{{backboneSessionToken}}'
-      responses: {}
+      - name: session-token
+        in: header
+        required: false
+        deprecated: false
+        schema: {}
+        example: '{{directorySessionTokenName}}'
+      - name: session-token-bkd
+        in: header
+        required: false
+        deprecated: false
+        schema: {}
+        example: '{{backboneSessionToken}}'
+      responses:
+        '200':
+          description: Child categories
+        '400':
+          description: Invalid parent id
+        '404':
+          description: Parent category not found
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       tags:
-        - v1
-        - categories
+      - v1
+      - categories
     parameters:
-      - name: parentId
-        in: path
-        required: true
-        schema:
-          type: string
-        example: 0492cf87-dee0-4710-a450-341bd112dea2
+    - name: parentId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: 0492cf87-dee0-4710-a450-341bd112dea2
   /api/v1/digital-contact:
     get:
       summary: Get Digital Contact
       parameters:
-        - name: page
-          in: query
-          required: false
-          deprecated: false
-          schema: {}
-          example: '0'
-        - name: size
-          in: query
-          required: false
-          deprecated: false
-          schema: {}
-          example: '10'
-        - name: session-token
-          in: header
-          schema:
-            type: string
-          example: '{{directorySessionTokenName}}'
-      responses: {}
+      - name: page
+        in: query
+        required: false
+        deprecated: false
+        schema: {}
+        example: '0'
+      - name: size
+        in: query
+        required: false
+        deprecated: false
+        schema: {}
+        example: '10'
+      - name: session-token
+        in: header
+        schema:
+          type: string
+        example: '{{directorySessionTokenName}}'
+      responses:
+        '200':
+          description: Page of digital contacts
+        '400':
+          description: Invalid pagination parameters
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       tags:
-        - v1
-        - digital-contact
+      - v1
+      - digital-contact
   /api/v1/digital-contact/business/{businessId}:
     get:
       summary: Get Digital Contact By Business ID
       parameters:
-        - name: session-token
-          in: header
-          schema:
-            type: string
-          example: '{{directorySessionTokenName}}'
-      responses: {}
-      tags:
-        - v1
-        - digital-contact
-    parameters:
-      - name: businessId
-        in: path
-        required: true
+      - name: session-token
+        in: header
         schema:
           type: string
-        example: 1a24da99-78d0-4221-96fa-64aa79a47bd1
+        example: '{{directorySessionTokenName}}'
+      responses:
+        '200':
+          description: Digital contacts of the business
+        '400':
+          description: Invalid business id
+        '404':
+          description: No digital contacts found for the business
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      tags:
+      - v1
+      - digital-contact
+    parameters:
+    - name: businessId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: 1a24da99-78d0-4221-96fa-64aa79a47bd1
   /api/v1/digital-contact/{digitalContactId}:
     get:
       summary: Get Digital Contact By ID
       parameters:
-        - name: session-token
-          in: header
-          schema:
-            type: string
-          example: '{{directorySessionTokenName}}'
-      responses: {}
-      tags:
-        - v1
-        - digital-contact
-    parameters:
-      - name: digitalContactId
-        in: path
-        required: true
+      - name: session-token
+        in: header
         schema:
           type: string
-        example: fe5e185c-5525-4155-b361-ce6960525b16
+        example: '{{directorySessionTokenName}}'
+      responses:
+        '200':
+          description: Digital contact found
+        '400':
+          description: Invalid id
+        '404':
+          description: Digital contact not found
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      tags:
+      - v1
+      - digital-contact
+    parameters:
+    - name: digitalContactId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: fe5e185c-5525-4155-b361-ce6960525b16
   /api/v1/favorites:
     post:
       summary: Create Favorite
       parameters:
-        - name: session-token
-          in: header
-          schema:
-            type: string
-          example: '{{directorySessionTokenName}}'
-        - name: session-token-bkd
-          in: header
-          schema:
-            type: string
-          example: '{{backboneSessionToken}}'
-      responses: {}
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: session-token-bkd
+        in: header
+        schema:
+          type: string
+        example: '{{backboneSessionToken}}'
+      responses:
+        '201':
+          description: Favorite created or reactivated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoriteResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Referenced item not found
+        '409':
+          description: The user already has an active favorite for that item
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       tags:
-        - v1
-        - favorites
+      - v1
+      - favorites
       requestBody:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                type:
-                  type: string
-                itemId:
-                  type: string
+              $ref: '#/components/schemas/FavoriteCreateRequest'
             example:
               type: PRODUCT
               itemId: d6919c8c-dc11-4280-a09a-6c3af3fdc443
+        required: true
+      description: Adds a favorite for the token user. Re-adding a deleted (inactive) favorite reactivates it and answers 201; adding an active
+        duplicate answers 409.
     get:
-      summary: Find Favorites by User ID, Type and itemId
+      summary: List the favorites of the user
       parameters:
-        - name: session-token
-          in: header
-          schema:
-            type: string
-          example: '{{directorySessionTokenName}}'
-      responses: {}
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: type
+        in: query
+        schema:
+          type: string
+          enum:
+          - stores
+          - products
+          - offers
+        description: Optional filter; any other value is 400
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+        description: 0-based page; negative values are treated as 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 10
+        description: 1 to 100; below 1 is 400, above 100 is capped to 100
+      - name: sort
+        in: query
+        schema:
+          type: string
+          default: created_at,desc
+        description: created_at | createdAt | name, optionally ,asc or ,desc; any other value is 400
+      responses:
+        '200':
+          description: Favorites grouped by type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoritesResponse'
+        '400':
+          description: Invalid type, sort or size
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       tags:
-        - v1
-        - favorites
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-    delete:
-      summary: Delete Favorite
-      parameters:
-        - name: session-token
-          in: header
-          schema:
-            type: string
-          example: '{{directorySessionTokenName}}'
-      responses: {}
-      tags:
-        - v1
-        - favorites
-  /api/v1/favorites/016870b0-b5eb-42aa-ad6d-6ae2a0145cd9:
-    patch:
-      summary: Update Favorite
-      parameters:
-        - name: session-token
-          in: header
-          required: false
-          deprecated: false
-          schema: {}
-          example: '{{directorySessionTokenName}}'
-        - name: session-token-bkd
-          in: header
-          required: false
-          deprecated: false
-          schema: {}
-          example: '{{backboneSessionToken}}'
-      responses: {}
-      tags:
-        - v1
-        - favorites
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                id:
-                  type: string
-                active:
-                  type: boolean
-            example:
-              id: 016870b0-b5eb-42aa-ad6d-6ae2a0145cd9
-              active: false
+      - v1
+      - favorites
+      description: Active favorites of the token user grouped by type (stores, products, offers). Page is 0-based. `sort` accepts `created_at`
+        | `createdAt` | `name`, each optionally with `,asc` or `,desc`; default `created_at,desc`.
   /api/v1/products:
     post:
       summary: Create Product
       parameters:
-        - name: session-token
-          in: header
-          required: false
-          deprecated: false
-          schema: {}
-          example: '{{directorySessionTokenName}}'
-        - name: session-token-bkd
-          in: header
-          required: false
-          deprecated: false
-          schema: {}
-          example: '{{backboneSessionToken}}'
-      responses: {}
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: Required. Without a valid token the answer is 401.
+      - name: session-token-bkd
+        in: header
+        required: false
+        deprecated: false
+        schema: {}
+        example: '{{backboneSessionToken}}'
+      responses:
+        '201':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductCreateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The user does not own any business
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       tags:
-        - v1
-        - products
+      - v1
+      - products
       requestBody:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                description:
-                  type: string
-                categoryId:
-                  nullable: true
+              $ref: '#/components/schemas/ProductCreateRequest'
             example:
               name: Example Product AAZ
               description: This is an example product description.
               categoryId: null
+        required: true
+      description: Creates a product. The caller must own at least one business.
   /api/v1/products/link:
     post:
       summary: Link Product and Business
       parameters:
-        - name: session-token
-          in: header
-          schema:
-            type: string
-          example: '{{directorySessionTokenName}}'
-        - name: session-token-bkd
-          in: header
-          schema:
-            type: string
-          example: '{{backboneSessionToken}}'
-      responses: {}
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: Required. Without a valid token the answer is 401.
+      - name: session-token-bkd
+        in: header
+        schema:
+          type: string
+        example: '{{backboneSessionToken}}'
+      responses:
+        '200':
+          description: Linked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkBusinessProductResponse'
+        '400':
+          description: Invalid body (for example a null businessId)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The user does not own the business
+        '404':
+          description: Business not found
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       tags:
-        - v1
-        - products
+      - v1
+      - products
       requestBody:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                businessId:
-                  type: string
-                productId:
-                  type: string
+              $ref: '#/components/schemas/LinkBusinessProductRequest'
             example:
               businessId: a596b01f-9229-4698-9335-5cc4d0e0dea1
               productId: 6c60cb1f-66c1-48cf-b936-310e2abc4907
+        required: true
+      description: Links a product to a business of the caller. A null `businessId` is 400.
   /api/v1/profile/image:
     post:
       summary: Save Profile Image
       parameters:
-        - name: session-token
-          in: header
-          schema:
-            type: string
-          example: '{{directorySessionTokenName}}'
-      responses: {}
+      - name: session-token
+        in: header
+        schema:
+          type: string
+        example: '{{directorySessionTokenName}}'
+      responses:
+        '200':
+          description: Profile image saved
+        '400':
+          description: Invalid input data
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       tags:
-        - v1
-        - profile-image
+      - v1
+      - profile-image
   /api/v1/timezones:
     get:
       summary: get timezone
       parameters:
-        - name: q
-          in: query
-          required: false
-          deprecated: false
-          schema: {}
-          example: CST
-        - name: page
-          in: query
-          required: false
-          deprecated: false
-          schema: {}
-          example: '0'
-        - name: size
-          in: query
-          required: false
-          deprecated: false
-          schema: {}
-          example: '5'
-        - name: session-token
-          in: header
-          schema:
-            type: string
-          example: '{{directorySessionTokenName}}'
-      responses: {}
+      - name: q
+        in: query
+        required: false
+        deprecated: false
+        schema: {}
+        example: CST
+      - name: page
+        in: query
+        required: false
+        deprecated: false
+        schema: {}
+        example: '0'
+      - name: size
+        in: query
+        required: false
+        deprecated: false
+        schema: {}
+        example: '5'
+      - name: session-token
+        in: header
+        schema:
+          type: string
+        example: '{{directorySessionTokenName}}'
+      responses:
+        '200':
+          description: Page of timezones
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       tags:
-        - v1
-        - timezone
+      - v1
+      - timezone
   /api/v1/timezones/all:
     get:
       summary: get timezone all
       parameters:
-        - name: session-token
-          in: header
-          schema:
-            type: string
-          example: '{{directorySessionTokenName}}'
-      responses: {}
+      - name: session-token
+        in: header
+        schema:
+          type: string
+        example: '{{directorySessionTokenName}}'
+      responses:
+        '200':
+          description: All timezones
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       tags:
-        - v1
-        - timezone
+      - v1
+      - timezone
   /api/v1/users:
     post:
       summary: Create User
       parameters:
-        - name: session-token
-          in: header
-          schema:
-            type: string
-          example: '{{directorySessionTokenName}}'
-        - name: session-token-bkd
-          in: header
-          schema:
-            type: string
-          example: '{{backboneSessionToken}}'
-      responses: {}
+      - name: session-token
+        in: header
+        schema:
+          type: string
+        example: '{{directorySessionTokenName}}'
+      - name: session-token-bkd
+        in: header
+        schema:
+          type: string
+        example: '{{backboneSessionToken}}'
+      responses:
+        '201':
+          description: User created
+        '400':
+          description: Invalid request
+        '409':
+          description: Alias or email already exists
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       tags:
-        - v1
-        - users
+      - v1
+      - users
       requestBody:
         content:
           application/json:
@@ -944,11 +1107,11 @@ paths:
     get:
       summary: Find User by ID
       parameters:
-        - name: session-token
-          in: header
-          schema:
-            type: string
-          example: '{{directorySessionTokenName}}'
+      - name: session-token
+        in: header
+        schema:
+          type: string
+        example: '{{directorySessionTokenName}}'
       responses:
         '200':
           description: Find User by ID
@@ -1029,7 +1192,7 @@ paths:
                     format: date
                   createdAt:
                     type: string
-                    format: style
+                    format: date-time
                   updatedAt:
                     type: string
                   notificationEmail:
@@ -1064,34 +1227,48 @@ paths:
                 status: true
                 roleId: 9a232260-a2e3-4990-b062-b6966efb25f8
                 applicationId: c9291036-fd71-4f2b-9986-2c5d4e5a0f8b
+        '400':
+          description: Invalid request
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       tags:
-        - v1
-        - users
+      - v1
+      - users
     parameters:
-      - name: userId
-        in: path
-        required: true
-        schema:
-          type: string
-        example: 50a856bd-8706-4de2-b4bb-e44b932191d7
+    - name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: 50a856bd-8706-4de2-b4bb-e44b932191d7
     put:
       summary: DS-partial-update
       parameters:
-        - name: userId
-          in: query
-          required: false
-          deprecated: false
-          schema: {}
-          example: 4d411d6a-31ee-4a6d-8660-2d563bfd0d76
-        - name: session-token
-          in: header
-          schema:
-            type: string
-          example: '{{directorySessionTokenName}}'
-      responses: {}
+      - name: userId
+        in: query
+        required: false
+        deprecated: false
+        schema: {}
+        example: 4d411d6a-31ee-4a6d-8660-2d563bfd0d76
+      - name: session-token
+        in: header
+        schema:
+          type: string
+        example: '{{directorySessionTokenName}}'
+      responses:
+        '202':
+          description: User updated
+        '400':
+          description: Invalid request
+        '404':
+          description: User not found
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       tags:
-        - v1
-        - users
+      - v1
+      - users
       requestBody:
         content:
           application/json:
@@ -1131,43 +1308,61 @@ paths:
               phoneId: 290f1f94-d739-4c6d-900a-9e255608325e
               phoneNumber: '+1234567890'
               roleIds:
-                - 281e77da-8c06-40d9-b2ee-6f1ce23827d5
+              - 281e77da-8c06-40d9-b2ee-6f1ce23827d5
               active: 'true'
     delete:
       summary: Delete User by Application
       parameters:
-        - name: session-token
-          in: header
-          schema:
-            type: string
-          example: '{{directorySessionTokenName}}'
-        - name: session-token-bkd
-          in: header
-          schema:
-            type: string
-          example: '{{backboneSessionToken}}'
-      responses: {}
+      - name: session-token
+        in: header
+        schema:
+          type: string
+        example: '{{directorySessionTokenName}}'
+      - name: session-token-bkd
+        in: header
+        schema:
+          type: string
+        example: '{{backboneSessionToken}}'
+      responses:
+        '204':
+          description: User deleted
+        '403':
+          description: Access denied
+        '404':
+          description: User not found
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       tags:
-        - v1
-        - users
+      - v1
+      - users
   /api/v1/user-register:
     post:
       summary: user-register
       parameters:
-        - name: session-token
-          in: header
-          schema:
-            type: string
-          example: '{{directorySessionTokenName}}'
-        - name: session-token-bkd
-          in: header
-          schema:
-            type: string
-          example: '{{backboneSessionToken}}'
-      responses: {}
+      - name: session-token
+        in: header
+        schema:
+          type: string
+        example: '{{directorySessionTokenName}}'
+      - name: session-token-bkd
+        in: header
+        schema:
+          type: string
+        example: '{{backboneSessionToken}}'
+      responses:
+        '200':
+          description: Verification code confirmed
+        '400':
+          description: Invalid request
+        '404':
+          description: User not found or invalid verification code
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       tags:
-        - v1
-        - user-register
+      - v1
+      - user-register
       requestBody:
         content:
           application/json:
@@ -1184,26 +1379,54 @@ paths:
   /api/v1/businesses/{businessId}/views:
     post:
       summary: Count a view of a business
-      description: Adds one view to today's (UTC) counter. Nothing about the viewer is stored (no user, IP or user agent); a view by the owner of the business is not counted.
+      description: Adds one view to today's (UTC) counter. Nothing about the viewer is stored (no user, IP or user agent); a view by the owner
+        of the business is not counted.
       parameters:
-        - { name: businessId, in: path, required: true, schema: { type: string, format: uuid } }
-        - { name: session-token, in: header, required: true, schema: { type: string } }
+      - name: businessId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
       responses:
         '204':
           description: Counted (or ignored because the viewer is the owner)
         '404':
           description: Business not found
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
   /api/v1/businesses/{businessId}/stats:
     get:
       summary: Views summary of a business (owner only)
       description: Window of 1 to 365 days ending today (UTC), default 30.
       parameters:
-        - { name: businessId, in: path, required: true, schema: { type: string, format: uuid } }
-        - { name: days, in: query, schema: { type: integer, minimum: 1, maximum: 365, default: 30 } }
-        - { name: session-token, in: header, required: true, schema: { type: string } }
+      - name: businessId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: days
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 365
+          default: 30
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
       responses:
         '200':
-          description: '{ businessId, from, to, totalViews, viewsToday, viewsLast7Days, daily: [ { date: yyyy-MM-dd, views } ] } - one entry per day, zeros included, oldest first'
+          description: '{ businessId, from, to, totalViews, viewsToday, viewsLast7Days, daily: [ { date: yyyy-MM-dd, views } ] } - one entry per
+            day, zeros included, oldest first'
         '400':
           description: days out of range
         '401':
@@ -1212,37 +1435,95 @@ paths:
           description: The caller is not the owner of the business
         '404':
           description: Business not found
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
   /api/v1/businesses/search:
     get:
       summary: Search businesses by city, category and text
-      description: Paginated (page is 1-based, per_page 1..100, default 10). Filters are combined with AND; results are ordered by name. category_id includes its sub-categories; city is ignored when city_id is sent.
+      description: Paginated (page is 1-based, per_page 1..100, default 10). Filters are combined with AND; results are ordered by name. category_id
+        includes its sub-categories; city is ignored when city_id is sent.
       parameters:
-        - { name: city_id, in: query, schema: { type: string, format: uuid } }
-        - { name: city, in: query, schema: { type: string } }
-        - { name: category_id, in: query, schema: { type: string, format: uuid } }
-        - { name: q, in: query, schema: { type: string } }
-        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
-        - { name: per_page, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 10 } }
-        - { name: session-token, in: header, required: true, schema: { type: string } }
+      - name: city_id
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: city
+        in: query
+        schema:
+          type: string
+      - name: category_id
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: q
+        in: query
+        schema:
+          type: string
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: per_page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 10
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
       responses:
         '200':
-          description: 'Page of businesses with their locations: { total_count, page, per_page, total_pages, data: [ { id, name, description, categoryId, categoryName, verified, profileImageRef, locations: [Location] } ] }'
+          description: 'Page of businesses with their locations: { total_count, page, per_page, total_pages, data: [ { id, name, description,
+            categoryId, categoryName, verified, profileImageRef, locations: [Location] } ] }'
         '400':
           description: Invalid page or per_page (reason in the message-error header)
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
   /api/v1/cities:
     get:
       summary: List the cities of the catalogue
       parameters:
-        - { name: country, in: query, description: 'ISO 3166-1 alpha-2, e.g. CA', schema: { type: string } }
-        - { name: q, in: query, description: Text found in the city name, schema: { type: string } }
-        - { name: session-token, in: header, required: true, schema: { type: string } }
+      - name: country
+        in: query
+        description: ISO 3166-1 alpha-2, e.g. CA
+        schema:
+          type: string
+      - name: q
+        in: query
+        description: Text found in the city name
+        schema:
+          type: string
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
       responses:
         '200':
           description: '[ { id, name, province, country } ] ordered by name'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
   /api/v1/businesses/{businessId}/locations:
     parameters:
-      - { name: businessId, in: path, required: true, schema: { type: string, format: uuid } }
-      - { name: session-token, in: header, required: true, schema: { type: string } }
+    - name: businessId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - name: session-token
+      in: header
+      required: true
+      schema:
+        type: string
     get:
       summary: List the locations of a business (main first)
       responses:
@@ -1250,6 +1531,8 @@ paths:
           description: '[Location]'
         '404':
           description: Business not found
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
     post:
       summary: Create a location (owner only)
       description: The first location is always the main one; main=true on a later one replaces the previous main.
@@ -1259,19 +1542,41 @@ paths:
           application/json:
             schema:
               type: object
-              required: [cityId, addressLine]
+              required:
+              - cityId
+              - addressLine
               properties:
-                cityId: { type: string, format: uuid }
-                name: { type: string, maxLength: 120 }
-                addressLine: { type: string, maxLength: 200 }
-                postalCode: { type: string, maxLength: 10 }
-                phone: { type: string, maxLength: 30 }
-                latitude: { type: number, minimum: -90, maximum: 90, description: Sent together with longitude }
-                longitude: { type: number, minimum: -180, maximum: 180, description: Sent together with latitude }
-                main: { type: boolean }
+                cityId:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                  maxLength: 120
+                addressLine:
+                  type: string
+                  maxLength: 200
+                postalCode:
+                  type: string
+                  maxLength: 10
+                phone:
+                  type: string
+                  maxLength: 30
+                latitude:
+                  type: number
+                  minimum: -90
+                  maximum: 90
+                  description: Sent together with longitude
+                longitude:
+                  type: number
+                  minimum: -180
+                  maximum: 180
+                  description: Sent together with latitude
+                main:
+                  type: boolean
       responses:
         '201':
-          description: 'Location: { id, businessId, city: { id, name, province, country }, name, addressLine, postalCode, phone, latitude, longitude, main, createdAt, lastUpdate }'
+          description: 'Location: { id, businessId, city: { id, name, province, country }, name, addressLine, postalCode, phone, latitude, longitude,
+            main, createdAt, lastUpdate }'
         '400':
           description: Invalid body or unknown city (reason in the message-error header)
         '401':
@@ -1280,11 +1585,27 @@ paths:
           description: The caller is not the owner of the business
         '404':
           description: Business not found
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
   /api/v1/businesses/{businessId}/locations/{locationId}:
     parameters:
-      - { name: businessId, in: path, required: true, schema: { type: string, format: uuid } }
-      - { name: locationId, in: path, required: true, schema: { type: string, format: uuid } }
-      - { name: session-token, in: header, required: true, schema: { type: string } }
+    - name: businessId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - name: locationId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - name: session-token
+      in: header
+      required: true
+      schema:
+        type: string
     patch:
       summary: Update a location (owner only)
       description: Only the fields that are sent change. main=true makes it the main location; main=false on the main one is rejected (400).
@@ -1295,14 +1616,27 @@ paths:
             schema:
               type: object
               properties:
-                cityId: { type: string, format: uuid }
-                name: { type: string, maxLength: 120 }
-                addressLine: { type: string, maxLength: 200 }
-                postalCode: { type: string, maxLength: 10 }
-                phone: { type: string, maxLength: 30 }
-                latitude: { type: number }
-                longitude: { type: number }
-                main: { type: boolean }
+                cityId:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                  maxLength: 120
+                addressLine:
+                  type: string
+                  maxLength: 200
+                postalCode:
+                  type: string
+                  maxLength: 10
+                phone:
+                  type: string
+                  maxLength: 30
+                latitude:
+                  type: number
+                longitude:
+                  type: number
+                main:
+                  type: boolean
       responses:
         '200':
           description: The updated Location
@@ -1314,6 +1648,8 @@ paths:
           description: The caller is not the owner of the business
         '404':
           description: Business or location not found
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
     delete:
       summary: Delete a location (owner only)
       description: If it was the main one, the oldest remaining location becomes the main one.
@@ -1326,10 +1662,1046 @@ paths:
           description: The caller is not the owner of the business
         '404':
           description: Business or location not found
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/campaigns/{campaignId}:
+    parameters:
+    - name: campaignId
+      in: path
+      required: true
+      schema: *id001
+      example: 64d0648d-a3ff-4fa6-83e1-649cea48bc09
+    get:
+      summary: Find Campaign
+      parameters:
+      - name: session-token
+        in: header
+        schema:
+          type: string
+        example: '{{directorySessionTokenName}}'
+        required: false
+      responses:
+        '200':
+          description: Campaign found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+        '400':
+          description: Invalid UUID
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      tags:
+      - v1
+      - campaings
+    patch:
+      summary: Update Campaign
+      parameters:
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: Required. Without a valid token the answer is 401.
+      - name: session-token-bkd
+        in: header
+        required: false
+        deprecated: false
+        schema: {}
+        example: '{{backboneSessionToken}}'
+      responses:
+        '202':
+          description: Update accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignUpdateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller does not own the business (or one of the two businesses when moving it)
+        '404':
+          description: Campaign, category or business not found
+        '409':
+          description: The campaign was modified by another request
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      tags:
+      - v1
+      - campaings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                businessId:
+                  type: string
+                categoryId:
+                  type: string
+                startDate:
+                  type: string
+                  format: date-time
+                endDate:
+                  type: string
+                discount:
+                  type: integer
+                active:
+                  type: boolean
+                terms:
+                  type: string
+            example:
+              title: Octava oferta
+              description: Descripcion
+              businessId: 1a24da99-78d0-4221-96fa-64aa79a47bd1
+              categoryId: b1468341-1f30-463f-b22d-7d4a882fa870
+              startDate: '2025-11-25T00:00:00'
+              endDate: '2025-12-31T23:59:34'
+              discount: 55
+              active: true
+              terms: nuevos terminos y condiciones
+        required: true
+      description: Partial update with an optimistic-lock style `lastUpdate` check. Only the owner of the campaign business may update it; moving
+        the campaign to another business requires owning both. Returns 202 with the new `lastUpdate`; a stale `lastUpdate` is 409.
+  /api/v1/favorites/{favoriteId}:
+    parameters:
+    - name: favoriteId
+      in: path
+      required: true
+      schema: *id001
+      example: 016870b0-b5eb-42aa-ad6d-6ae2a0145cd9
+    patch:
+      summary: Update Favorite
+      parameters:
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: session-token-bkd
+        in: header
+        required: false
+        deprecated: false
+        schema: {}
+        example: '{{backboneSessionToken}}'
+      responses:
+        '200':
+          description: Favorite updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoriteResponse'
+        '400':
+          description: Invalid request or path/body id mismatch
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The favorite belongs to another user
+        '404':
+          description: Favorite or target not found
+        '409':
+          description: The user already has an active favorite for that target
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      tags:
+      - v1
+      - favorites
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FavoriteUpdateRequest'
+            example:
+              id: 016870b0-b5eb-42aa-ad6d-6ae2a0145cd9
+              active: false
+        required: true
+      description: Changes `active` (soft delete) of the favorite. The target in the body `id` is resolved with the repository of the favorite
+        type (store, campaign or product). Reactivating when the user already has another active favorite for the same target is 409.
+    delete:
+      summary: Delete Favorite
+      parameters:
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Favorite deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Not the owner
+        '404':
+          description: Favorite not found
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      tags:
+      - v1
+      - favorites
+      description: Soft-deletes a favorite of the token user.
+  /api/v1/businesses/images:
+    post:
+      summary: Upload a business image
+      description: 'Stores the image in object storage. The `objectKey` of the client is ignored: the server always generates the key under the
+        `businesses/` prefix.'
+      tags:
+      - v1
+      - businesses
+      parameters:
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: Required. Without a valid token the answer is 401.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ImageUploadForm'
+      responses:
+        '201':
+          description: Image stored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImageUploadResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          description: Invalid image (type or size)
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/businesses/images/{businessId}:
+    parameters:
+    - name: businessId
+      in: path
+      required: true
+      schema: *id001
+    post:
+      summary: Upload the profile image of a business (owner only)
+      description: Stores the image and saves its public URL in the business profile image reference. Any client-supplied `objectKey` is ignored.
+      tags:
+      - v1
+      - businesses
+      parameters:
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: Required. Without a valid token the answer is 401.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ImageUploadForm'
+      responses:
+        '201':
+          description: Image stored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImageUploadResponse'
+        '400':
+          description: Invalid image (type or size)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller does not own the business
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/products/business/{businessId}:
+    parameters:
+    - name: businessId
+      in: path
+      required: true
+      schema: *id001
+    get:
+      summary: List products for a business
+      description: Paginated (page is 1-based, per_page default 10, max 100).
+      tags:
+      - v1
+      - products
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: per_page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 10
+      - name: active
+        in: query
+        schema:
+          type: boolean
+        description: Filter by active status
+      - name: session-token
+        in: header
+        required: false
+        schema:
+          type: string
+        description: Public read; the token is not needed by this endpoint.
+      responses:
+        '200':
+          description: Products found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+        '400':
+          description: Invalid request parameters
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/businesses/nearby:
+    get:
+      summary: Locations near a point
+      description: Public. Locations within `radius_m` metres of (lat, lng), one row per location with `distance_m`. Sorted by distance (ties
+        by id) or by name. An invalid parameter is 400 with the reason in the `message-error` header.
+      tags:
+      - v1
+      - businesses
+      parameters:
+      - name: lat
+        in: query
+        required: true
+        schema:
+          type: number
+          minimum: -90
+          maximum: 90
+      - name: lng
+        in: query
+        required: true
+        schema:
+          type: number
+          minimum: -180
+          maximum: 180
+      - name: radius_m
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50000
+          default: 5000
+      - name: category_id
+        in: query
+        schema: &id002
+          type: string
+          format: uuid
+        description: Category id; its sub-categories are included
+      - name: city_id
+        in: query
+        schema: *id002
+      - name: q
+        in: query
+        schema:
+          type: string
+          maxLength: 100
+        description: Text found in the name or the description
+      - name: sort
+        in: query
+        schema:
+          type: string
+          enum:
+          - distance
+          - name
+          default: distance
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: per_page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 10
+      security: []
+      responses:
+        '200':
+          description: A page of locations with their distance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessNearbyResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/businesses/map:
+    get:
+      summary: Businesses of a map area
+      description: 'Public. GeoJSON FeatureCollection. At zoom 14 and above: one Point per location. Below 14: grid clusters (Point features with
+        properties `cluster=true` and `count`). `truncated` is true when more results than `limit` exist. An invalid, inverted or too large bbox
+        (more than 90 degrees per axis) or any other invalid parameter is 400 with the reason in `message-error`.'
+      tags:
+      - v1
+      - businesses
+      parameters:
+      - name: bbox
+        in: query
+        required: true
+        schema:
+          type: string
+        description: minLng,minLat,maxLng,maxLat
+        example: -79.6,43.5,-79.1,43.9
+      - name: zoom
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 22
+          default: 14
+      - name: category_id
+        in: query
+        schema: &id003
+          type: string
+          format: uuid
+        description: Category id; its sub-categories are included
+      - name: city_id
+        in: query
+        schema: *id003
+      - name: q
+        in: query
+        schema:
+          type: string
+          maxLength: 100
+        description: Text found in the name or the description
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 500
+          default: 200
+      security: []
+      responses:
+        '200':
+          description: GeoJSON FeatureCollection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessMapResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/businesses/{businessId}/locations/{locationId}/hours:
+    parameters: &id004
+    - name: businessId
+      in: path
+      required: true
+      schema: *id001
+    - name: locationId
+      in: path
+      required: true
+      schema: *id001
+    get:
+      summary: Opening hours of a location
+      description: Public. Slots in week order, in local time of the business zone. `slots` is empty when none were set.
+      tags:
+      - v1
+      - opening-hours
+      security: []
+      responses:
+        '200':
+          description: The hours
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpeningHours'
+        '404':
+          description: Business or location not found
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    put:
+      summary: Replace the opening hours of a location (owner only)
+      description: 'Replaces the whole schedule: up to 4 non-overlapping slots per day, `HH:mm`, a closed day is one slot with `closed=true`.
+        Checks, in order: token (401), business (404), owner (403), location (404), body (400, reason in `message-error`).'
+      tags:
+      - v1
+      - opening-hours
+      parameters:
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: Required. Without a valid token the answer is 401.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpeningHours'
+      responses:
+        '200':
+          description: The stored hours
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpeningHours'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller is not the owner of the business
+        '404':
+          description: Business or location not found
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/businesses/{businessId}/locations/{locationId}/hours/status:
+    parameters: *id004
+    get:
+      summary: Open-now status of a location
+      description: Public. `open_now` plus the next closing (when open) or next opening (when closed), in the business zone.
+      tags:
+      - v1
+      - opening-hours
+      security: []
+      parameters:
+      - name: at
+        in: query
+        schema:
+          type: string
+          format: date-time
+        description: ISO-8601 instant to evaluate; now when omitted
+      responses:
+        '200':
+          description: The status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpeningStatus'
+        '400':
+          description: '`at` is not an ISO-8601 instant'
+        '404':
+          description: Business or location not found
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/geocode:
+    post:
+      summary: Geocode an address
+      description: Authenticated. Returns up to 5 coordinate candidates; nothing is stored. The reason of a failure is in the `message-error`
+        header.
+      tags:
+      - v1
+      - geocoding
+      parameters:
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: Required; must carry a user id. Without it the answer is 401.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GeocodeRequest'
+      responses:
+        '200':
+          description: The candidates (possibly empty)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeocodeResponse'
+        '400':
+          description: Invalid body (address missing or fields too long, country not ISO alpha-2)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '502':
+          description: The geocoding provider failed
+        '503':
+          description: Geocoding is not enabled
+        '504':
+          description: The geocoding provider timed out
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
 components:
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
+  headers:
+    MessageError:
+      description: Reason of the failure when the endpoint explains it
+      schema: &id005
+        type: string
+  responses:
+    BadRequest:
+      description: Invalid request. When the endpoint explains it, the reason is in the `message-error` header.
+      headers:
+        message-error:
+          $ref: '#/components/headers/MessageError'
+    Unauthorized:
+      description: Missing or invalid `session-token`
+    Forbidden:
+      description: The caller is not allowed (for example not the owner)
+    NotFound:
+      description: Resource not found
+    InternalError:
+      description: Internal server error
+    TooManyRequests:
+      description: 'Rate limit exceeded (global rate limiting on /api/v1/**: one bucket per client IP and one per user). Wait `Retry-After` seconds.'
+      headers:
+        Retry-After:
+          description: Seconds until one request is allowed again (at least 1)
+          schema:
+            type: integer
+            minimum: 1
+        X-RateLimit-Limit:
+          description: Requests per minute allowed for the bucket that rejected the request
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: too_many_requests
+              retryAfterSeconds:
+                type: integer
+  schemas:
+    BusinessCreateRequest:
+      type: object
+      properties:
+        name: *id005
+        description: *id005
+        categoryId: *id001
+        userId:
+          type: string
+          format: uuid
+          description: 'Ignored as owner: the owner is the token user; a different value is 403'
+        email:
+          type: string
+          format: email
+        customerServiceEmail:
+          type: string
+          format: email
+        orderManagementEmail:
+          type: string
+          format: email
+        website: *id005
+      required:
+      - name
+      - description
+      - categoryId
+      - userId
+      - email
+    BusinessCreateResponse:
+      type: object
+      properties:
+        id: *id001
+        businessName: *id005
+        createdDate: &id006
+          type: string
+          format: date-time
+        updatedDate: *id006
+    BusinessUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 1500
+        categoryId: *id001
+        email:
+          type: string
+          format: email
+        customerServiceEmail:
+          type: string
+          format: email
+        orderManagementEmail:
+          type: string
+          format: email
+        website: *id005
+    BusinessUpdateResponse:
+      type: object
+      properties:
+        updatedDate: *id006
+    Business:
+      type: object
+      description: Business as returned by the read endpoints (BusinessTO)
+      additionalProperties: true
+    Campaign:
+      type: object
+      description: Campaign (CampaignTO)
+      additionalProperties: true
+    CampaignUpdateResponse:
+      type: object
+      properties:
+        id: *id001
+        lastUpdate: *id006
+    CampaignListResponse:
+      type: object
+      properties:
+        total_count:
+          type: integer
+          format: int64
+        page:
+          type: integer
+        per_page:
+          type: integer
+        total_pages:
+          type: integer
+        actives:
+          type: integer
+          format: int64
+        inactives:
+          type: integer
+          format: int64
+        expired:
+          type: integer
+          format: int64
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    ProductCreateRequest:
+      type: object
+      properties:
+        name: *id005
+        description: *id005
+        categoryId: *id001
+      required:
+      - name
+      - description
+      - categoryId
+    ProductCreateResponse:
+      type: object
+      properties:
+        id: *id001
+        name: *id005
+        description: *id005
+        createdDate: *id006
+        lastUpdate: *id006
+        categoryId: *id001
+    LinkBusinessProductRequest:
+      type: object
+      properties:
+        businessId: *id001
+        productId: *id001
+      required:
+      - businessId
+    LinkBusinessProductResponse:
+      type: object
+      properties:
+        businessId: *id001
+        productId: *id001
+        createdAt: *id006
+        lastUpdate: *id006
+        active: &id007
+          type: boolean
+    ProductListResponse:
+      type: object
+      properties:
+        total_count:
+          type: integer
+          format: int64
+        page:
+          type: integer
+        per_page:
+          type: integer
+        total_pages:
+          type: integer
+        data:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    ImageUploadForm:
+      type: object
+      properties:
+        image:
+          type: string
+          format: binary
+        contentType:
+          type: string
+          default: image/jpeg
+          description: MIME type of the image
+        objectKey:
+          type: string
+          description: Ignored by the server (deprecated)
+          deprecated: true
+      required:
+      - image
+    ImageUploadResponse:
+      type: object
+      description: Stored image reference (key and public URL)
+      additionalProperties: true
+    FavoriteCreateRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - STORE
+          - PRODUCT
+          - OFFER
+        itemId: *id001
+      required:
+      - type
+      - itemId
+    FavoriteUpdateRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Target item id
+        active: *id007
+      required:
+      - id
+    FavoriteResponse:
+      type: object
+      properties:
+        id: *id001
+        type: *id005
+        itemId: *id001
+        userId: *id001
+        createdDate: *id006
+        updatedDate: *id006
+        active: *id007
+    FavoritesResponse:
+      type: object
+      properties:
+        stores:
+          type: array
+          items:
+            $ref: '#/components/schemas/Business'
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductCreateResponse'
+        offers:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    BusinessNearbyItem:
+      type: object
+      properties:
+        location_id: *id001
+        business_id: *id001
+        name: *id005
+        description: *id005
+        category_id: *id001
+        category_name: *id005
+        verified: *id007
+        profile_image_ref: *id005
+        city_id: *id001
+        city_name: *id005
+        location_name: *id005
+        address_line: *id005
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        main: *id007
+        distance_m:
+          type: integer
+          format: int64
+          description: Distance in metres from the searched point
+    BusinessNearbyResponse:
+      type: object
+      properties:
+        total_count:
+          type: integer
+          format: int64
+        page:
+          type: integer
+        per_page:
+          type: integer
+        total_pages:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/BusinessNearbyItem'
+    GeoPoint:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - Point
+        coordinates:
+          type: array
+          items:
+            type: number
+          minItems: 2
+          maxItems: 2
+          description: '[longitude, latitude], 5 decimals'
+    MapFeature:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - Feature
+        geometry:
+          $ref: '#/components/schemas/GeoPoint'
+        properties:
+          type: object
+          additionalProperties: true
+          description: 'Location: business_id, location_id, name, category_id, verified, main. Cluster (zoom below 14): cluster=true, count.'
+    BusinessMapResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - FeatureCollection
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/MapFeature'
+        truncated:
+          type: boolean
+          description: true when the limit was reached and more results exist
+        clustered:
+          type: boolean
+          description: true when the features are clusters
+        zoom:
+          type: integer
+    OpeningSlot:
+      type: object
+      properties:
+        day_of_week:
+          type: integer
+          minimum: 1
+          maximum: 7
+          description: ISO day, 1 = Monday ... 7 = Sunday
+        opens_at:
+          type: string
+          nullable: true
+          pattern: ^([01]\d|2[0-3]):[0-5]\d$
+          example: 09:00
+        closes_at:
+          type: string
+          nullable: true
+          pattern: ^([01]\d|2[0-3]):[0-5]\d$
+          example: '17:30'
+          description: '`23:59` means until the end of the day'
+        closed:
+          type: boolean
+          description: true for a closed day; then opens_at and closes_at must be null
+      required:
+      - day_of_week
+    OpeningHours:
+      type: object
+      properties:
+        slots:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpeningSlot'
+        timezone:
+          type: string
+          readOnly: true
+          description: IANA zone of the hours (response only)
+          example: America/Toronto
+    OpeningStatus:
+      type: object
+      properties:
+        open_now: *id007
+        closes_at:
+          type: string
+          format: date-time
+          description: Next closing, only when open
+        opens_at:
+          type: string
+          format: date-time
+          description: Next opening, only when closed and one is foreseeable
+        timezone: *id005
+      required:
+      - open_now
+    GeocodeRequest:
+      type: object
+      properties:
+        address:
+          type: string
+          maxLength: 200
+        city:
+          type: string
+          maxLength: 200
+        country:
+          type: string
+          maxLength: 200
+          pattern: ^[A-Za-z]{2}$
+          default: ca
+          description: ISO 3166-1 alpha-2
+      required:
+      - address
+    GeocodeResponse:
+      type: object
+      properties:
+        candidates:
+          type: array
+          maxItems: 5
+          items:
+            type: object
+            properties:
+              label: *id005
+              latitude:
+                type: number
+                format: double
+              longitude:
+                type: number
+                format: double
+              confidence:
+                type: number
+                format: double
+                description: Optional
 security:
-  - BearerAuth: []
+- BearerAuth: []
+tags:
+- name: v1
+- name: businesses
+- name: opening-hours
+- name: geocoding
