@@ -14,9 +14,39 @@ This project adheres (loosely) to "Keep a Changelog" and follows semantic versio
 
 ### Notes
 - **Native runtime is not verified.** The image builds and the executable starts, but with placeholder configuration it stops at `No spring.config.import property` (Config Server) and, with Config Server/Vault disabled, at `no ServletWebServerFactory bean` (AOT conditions are fixed at build time with `config/native-aot.env`). It has not been run against real Config Server, Vault, PostgreSQL and Redis. The JVM image is the supported one until that is checked.
-- `pom.xml`: profile `native` pins `httpclient` 4.5.14 (Eureka brings 4.5.3, which breaks the AWS SDK GraalVM metadata); it applies only with `-Pnative`.
 - `Dockerfile.native` uses `native-image-community:25-ol9`: the `:25` tag aborts with `Fatal glibc error: CPU does not support x86-64-v3` on hosts without that instruction set (amd64 emulation, older CPUs).
 - The native image needs about 8 GB of memory for Docker and a long build; the JVM image is unchanged.
+
+## [Unreleased] - 2026-11-22 (startup banner versions)
+
+### Added
+- The startup banner (`banner.txt`, same lettering as `backbone-rest`) now also prints `Spring Cloud <version> | UMDC libraries <version>` after the Spring Boot version. The versions come from `src/main/resources/build-versions.properties`, filtered by Maven (`@spring-cloud.version@`, `@com.umdc.commons.version@`; only that file is filtered) and imported by `spring.config.import` in `bootstrap.yml`. A missing value prints `n/a` and never stops the startup.
+- `BannerVersionsTest` (3): the filtered file has real versions, the banner and `bootstrap.yml` reference it, and the banner renders with no unresolved placeholder.
+- Guides: `docs/user-guide/startup-banner.md`, `docs/technical/startup-banner.md`.
+
+### Notes
+- Verified with a real Spring startup (bootstrap context off). Not verified with the bootstrap context enabled; there the worst case is `n/a`.
+- 664 tests pass; JaCoCo method coverage 93.25 %.
+
+## [Unreleased] - 2026-11-22 (dependency update)
+
+### Changed
+- **Spring Boot 4.0.6 -> 4.1.2** and Spring Cloud 2025.1.1 -> 2025.1.4, aligned with `backbone-rest` (and `mercury` / `zerobound-rest` where backbone does not define the property).
+- UMDC libraries: `commons` 0.0.1 -> 0.0.4, `commons-services` 0.0.1 -> 0.0.3, `security-oauth` 0.0.1 -> 0.0.3.
+- Libraries: springdoc 2.6.0 -> 3.1.0 (maven plugin 1.4 -> 1.5), jjwt 0.12.3 -> 0.13.0, PostgreSQL driver 42.7.7 -> 42.7.14, Gson 2.14.0, SnakeYAML 2.6, org.json 20260814, commons-lang3 3.21.0, plexus-utils 4.1.0, ASM 9.10.1, OpenRewrite plugin 6.46.1 / recipes 6.37.1, JUnit 6.1.3, Mockito 5.24.0.
+- Build plugins: compiler 3.15.0, javadoc 3.12.0, JaCoCo 0.8.15, surefire 3.5.6.
+
+### Security
+- Overrides of the Boot BOM, as in `backbone-rest`: hibernate-validator 9.1.6.Final, Jackson 2.21.8 and 3.1.8, logback 1.6.6 and Apache `httpclient` 4.5.14 (GHSA-7r82-7xv7-xcpj, transitive via `eureka-client`). Tomcat already resolves to 11.0.27 with Boot 4.1.2.
+
+### Documentation
+- Guides: `docs/user-guide/dependency-update.md`, `docs/technical/dependency-update.md`.
+- Fixed stale version tables in `docs/PROJECT_DOCUMENTATION.md`, `docs/TECHNICAL_DOCUMENTATION.md` and `docs/COMPLETE_PROJECT_DOCUMENTATION_FOR_BA.md` (they said Java 21, Spring Boot 3.5.8, Cloud 2025.0.1, jjwt 0.12.3 and springdoc 2.6.0).
+
+### Notes
+- No API, database or configuration change. 661 tests pass; JaCoCo method coverage 93.25 % (760 of 815).
+- Not run against Vault, Config Server, Kafka or a real PostgreSQL: smoke-test in a real environment before releasing.
+- Supersedes Dependabot PR #105 (plexus-utils), now at 4.1.0.
 
 ## [Unreleased] - 2026-11-21 (business view statistics)
 

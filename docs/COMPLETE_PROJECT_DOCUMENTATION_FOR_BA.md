@@ -213,9 +213,9 @@ The Directory Backend serves as the backbone for a business directory platform w
 
 | Category | Technology | Version | Purpose |
 |----------|-----------|---------|---------|
-| **Language** | Java | 21 | Programming language |
-| **Framework** | Spring Boot | 3.5.8 | Application framework |
-| **Cloud** | Spring Cloud | 2025.0.1 | Microservice patterns |
+| **Language** | Java | 25 | Programming language |
+| **Framework** | Spring Boot | 4.1.2 | Application framework |
+| **Cloud** | Spring Cloud | 2025.1.4 | Microservice patterns |
 | **Build** | Maven | 3.8.0+ | Dependency & build management |
 
 ### Data & Persistence
@@ -250,7 +250,7 @@ The Directory Backend serves as the backbone for a business directory platform w
 | Technology | Version | Purpose |
 |-----------|---------|---------|
 | **Mapping** | MapStruct | 1.6.3 | DTO ↔ Entity conversion |
-| **JWT** | jjwt | 0.12.3 | Token-based authentication |
+| **JWT** | jjwt | 0.13.0 | Token-based authentication |
 | **JSON Parsing** | Google Gson | 2.13.2 | Alternative JSON library |
 | **Utilities** | Apache Commons Lang3 | 3.18.0 | Common utility functions |
 
@@ -260,7 +260,7 @@ The Directory Backend serves as the backbone for a business directory platform w
 |-----------|---------|---------|
 | **Messaging** | Apache Kafka | (Spring Kafka) | Async event streaming |
 | **Secrets** | HashiCorp Vault | (detected) | Secrets management |
-| **Config** | Spring Cloud Config | 2025.0.1 | Centralized configuration |
+| **Config** | Spring Cloud Config | 2025.1.4 | Centralized configuration |
 | **Container** | Docker | amazoncorretto:21-alpine3.23 | Containerization |
 
 ### CI/CD Pipeline
