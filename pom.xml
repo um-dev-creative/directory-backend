@@ -132,6 +132,15 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
+        <!-- Flyway: disabled by default (spring.flyway.enabled=false); versions managed by the Spring Boot BOM -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
@@ -465,8 +474,9 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven.surefire.version}</version>
                 <configuration>
-                    <!-- Use the argLine set by JaCoCo's prepare-agent; do not append manual mockito javaagent. -->
-                    <argLine>${jacoco.argLine}</argLine>
+                    <!-- Late replacement (@{...}): ${...} is interpolated (empty) before JaCoCo's prepare-agent sets the property.
+                         Do not append a manual mockito javaagent. -->
+                    <argLine>@{jacoco.argLine}</argLine>
                 </configuration>
                 <dependencies>
                     <dependency>
@@ -510,6 +520,16 @@
                 <version>${maven.plugin.jacoco.version}</version>
                 <executions>
                     <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                        <configuration>
+                            <!-- writes the agent JVM arg to the property Surefire's argLine reads, so every build records target/jacoco.exec -->
+                            <propertyName>jacoco.argLine</propertyName>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>report</id>
                         <goals>
                             <goal>report</goal>
@@ -540,6 +560,11 @@
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
                                             <minimum>0.80</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>METHOD</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.85</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
@@ -651,42 +676,6 @@
     </distributionManagement>
 
     <profiles>
-        <profile>
-            <id>coverage</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.jacoco</groupId>
-                        <artifactId>jacoco-maven-plugin</artifactId>
-                        <version>${maven.plugin.jacoco.version}</version>
-                        <executions>
-                            <execution>
-                                <id>prepare-agent</id>
-                                <goals>
-                                    <goal>prepare-agent</goal>
-                                </goals>
-                                <configuration>
-                                    <!-- ensure the agent JVM arg is written to the same property used by Surefire -->
-                                    <propertyName>jacoco.argLine</propertyName>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>report</id>
-                                <goals>
-                                    <goal>report</goal>
-                                </goals>
-                                <configuration>
-                                    <formats>
-                                        <format>XML</format>
-                                    </formats>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
         <!--
             benchmark profile: compiles and runs JMH microbenchmarks.
             Activate with: mvn test-compile exec:java -P benchmark

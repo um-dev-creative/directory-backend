@@ -1,4 +1,6 @@
 spring:
+  flyway:
+    enabled: false
   jpa:
     hibernate:
       ddl-auto: create-drop
@@ -32,6 +34,11 @@ server:
     enabled: false
 
 umdc:
+  # test profile: documentation open, rate limiting and Flyway off (their own tests enable what they need)
+  docs:
+    enabled: true
+  ratelimit:
+    enabled: false
   logging:
     trace:
       enabled: false

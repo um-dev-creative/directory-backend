@@ -63,6 +63,21 @@ This project adheres (loosely) to "Keep a Changelog" and follows semantic versio
 - **Action needed:** apply `V5` before deploying (and `V2`-`V4` if pending); Flyway is not configured. Not run on a real PostgreSQL here.
 - Without personal data the counter cannot tell unique visitors apart: it counts page views, and a visitor who reloads is counted again. The BFF rate limit is the only brake.
 
+## [Unreleased] - 2026-11-23 (F0-C platform: docs lock, rate limiting, Flyway, coverage)
+
+### Added
+- **Rate limiting** of `/api/v1/**`: in-memory token buckets per client IP and per user id (`uid`/`sub` of the `session-token`), `429` with `Retry-After` and `X-RateLimit-Limit`; `/actuator/health` is never limited. Pluggable `RateLimitStore` interface for a Redis store later. Properties `umdc.ratelimit.enabled` (default true; false in the test profile), `ip-per-minute` (120), `user-per-minute` (300), `trust-forwarded-header` (false).
+- **Flyway** (`spring-boot-starter-flyway`, `flyway-database-postgresql`), disabled by default (`spring.flyway.enabled=false`, env `SPRING_FLYWAY_ENABLED`), with `baseline-on-migrate=true`, `baseline-version=5`, `locations=classpath:db/migration`. Numbering rule documented: never edit existing scripts; `V6` (location hours) and `V7` (saved_search / favorite_list) are reserved for Phase 1.
+- Tests: `InMemoryRateLimitStoreTest`, `RateLimitFilterTest`, `RateLimitConfigTest`, `SessionTokenSecurityConfigDocsClosedTest`, `PlatformDefaultsTest`.
+- Guides: `docs/user-guide/f0-platform.md`, `docs/technical/f0-platform.md`.
+
+### Changed
+- **Swagger UI and api-docs are closed by default**: `SessionTokenSecurityConfig` only permits them when `umdc.docs.enabled=true` (default false; true under the `dev` profile and in tests); springdoc is switched off with the same property.
+- **Coverage is measured for real**: JaCoCo `prepare-agent` runs in the default build and Surefire uses `@{jacoco.argLine}` (late replacement), so `mvn clean verify` writes `jacoco.exec` and `jacoco-check` no longer skips. The `coverage` profile was removed. `jacoco-check` now also requires METHOD coverage >= 85 % (measured 93.4 %).
+
+### Notes
+- In-memory buckets are per instance; with several replicas the effective quota multiplies until a Redis store exists.
+
 ## [Unreleased] - 2026-11-21 (locations and search by city)
 
 ### Added

@@ -19,6 +19,16 @@ umdc:
     trace:
       enabled: ${LOGGING_TRACE_ENABLED}
   database-cert: db-root-cert
+  # Swagger UI and api-docs: closed unless UMDC_DOCS_ENABLED=true or the profile is dev (see the last document of this file)
+  docs:
+    enabled: ${UMDC_DOCS_ENABLED:false}
+  # Rate limiting of the API (in-memory token buckets; one bucket per client IP and one per user id)
+  ratelimit:
+    enabled: ${UMDC_RATELIMIT_ENABLED:true}
+    ip-per-minute: ${UMDC_RATELIMIT_IP_PER_MINUTE:120}
+    user-per-minute: ${UMDC_RATELIMIT_USER_PER_MINUTE:300}
+    # true only behind a trusted reverse proxy that sets X-Forwarded-For
+    trust-forwarded-header: ${UMDC_RATELIMIT_TRUST_FORWARDED:false}
   security:
     jwt:
       secret: ${APP_TOKEN_SECRET}
@@ -100,6 +110,13 @@ spring:
       - org.springframework.boot.security.oauth2.server.resource.autoconfigure.web.OAuth2ResourceServerWebSecurityAutoConfiguration
   mustache:
     check-template-location: false
+  # Flyway is OFF by default: V2-V5 were applied by hand in every environment. Enable with SPRING_FLYWAY_ENABLED=true
+  # (docs/technical/f0-platform.md). baseline-version=5 marks the existing schema as already at V5; V6 onwards run.
+  flyway:
+    enabled: ${SPRING_FLYWAY_ENABLED:false}
+    baseline-on-migrate: true
+    baseline-version: "5"
+    locations: classpath:db/migration
   test:
     context:
       failure:
@@ -211,3 +228,19 @@ eureka:
       trust-store: ${SSL_TRUSTSTORE_URL:classpath:${SSL_TRUSTSTORE_LOCATION}}
       trust-store-password: ${SSL_TRUSTSTORE_PASSWORD}
       trust-store-type: ${SSL_TRUSTSTORE_TYPE}
+
+# springdoc follows umdc.docs.enabled: with the documentation closed the endpoints are not even registered
+springdoc:
+  api-docs:
+    enabled: ${umdc.docs.enabled}
+  swagger-ui:
+    enabled: ${umdc.docs.enabled}
+---
+# dev profile: documentation open by default
+spring:
+  config:
+    activate:
+      on-profile: dev
+umdc:
+  docs:
+    enabled: ${UMDC_DOCS_ENABLED:true}
