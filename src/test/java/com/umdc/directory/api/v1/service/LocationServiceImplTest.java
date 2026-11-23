@@ -266,15 +266,15 @@ class LocationServiceImplTest {
         location.setName("Old");
         location.setPhone("111");
         when(locationRepository.findByIdAndBusinessId(location.getId(), businessId)).thenReturn(Optional.of(location));
-        var request = new LocationUpdateRequest(null, "New", null, "  ", "", BigDecimal.valueOf(1), BigDecimal.valueOf(2), null);
+        var request = new LocationUpdateRequest(null, "New", null, "  ", "", BigDecimal.valueOf(45), BigDecimal.valueOf(-75), null);
         var response = service.update(businessId, location.getId(), request, ownerToken);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("New", location.getName());
         assertEquals("1 Main St", location.getAddressLine());
         assertEquals(null, location.getPostalCode());
         assertEquals(null, location.getPhone());
-        assertEquals(BigDecimal.valueOf(1), location.getLatitude());
-        assertEquals(BigDecimal.valueOf(2), location.getLongitude());
+        assertEquals(BigDecimal.valueOf(45), location.getLatitude());
+        assertEquals(BigDecimal.valueOf(-75), location.getLongitude());
     }
 
     @Test

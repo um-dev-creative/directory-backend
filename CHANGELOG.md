@@ -171,6 +171,18 @@ This project adheres (loosely) to "Keep a Changelog" and follows semantic versio
 ### Changed
 - `BUILD_VALIDATION_REPORT.md` moved to `docs/BUILD_VALIDATION_REPORT.md`; `README.md` and the agent/skill/tool files refreshed.
 - Documentation only: no source, test or configuration file changes.
+## [Unreleased] - 2026-11-23 (F1-C server-side geocoding and pin validation)
+
+### Added
+- `POST /api/v1/geocode` (authenticated with `session-token`): body `{address, city?, country?}` (address required, max 200), answer `{candidates:[{label, latitude, longitude, confidence?}]}` with at most 5 in-range candidates. `401` without a valid token, `400` on invalid input, `502`/`504` on provider error/timeout, `503` while geocoding is disabled; the reason is in `message-error`.
+- `GeocodingClient` port with a Feign implementation for a Maptiler-style provider. Disabled by default (`umdc.geocoding.enabled=false`); `umdc.geocoding.base-url`, `api-key` (environment variable or Vault only), `connect-timeout-ms`, `read-timeout-ms`, `max-candidates`. Results are never cached or stored, the address is never logged, and the API key never appears in logs or responses.
+- `umdc.location.bounds.enforced` (default `true`).
+- Tests with a mocked provider (no network): service, Feign client, controller, validator.
+- Guides: `docs/user-guide/f1-geocoding.md`, `docs/technical/f1-geocoding.md`.
+
+### Changed
+- `LocationValidator` rejects the point (0, 0) and, while `umdc.location.bounds.enforced` is true, coordinates outside the Canada box (latitude 41.6 to 83.2, longitude -141.1 to -52.5), with `400`. `LocationServiceImplTest` used (1, 2) as an example pin and now uses (45, -75).
+
 ## [Unreleased] - 2026-11-21 (TLS bundle and session-token security, as in smartkin-backend / mercury / zerobound-rest)
 
 ### Changed
