@@ -96,7 +96,7 @@ paths:
                   type: string
             example:
               alias: amata290839
-              password: zPagoHGkBI+L+URuIehVGQ==
+              password: <password>
   /api/v1/auth/token:
     post:
       summary: Generate Token Manual
@@ -178,7 +178,7 @@ paths:
                   type: string
             example:
               alias: bjays-70773
-              password: zPagoHGkBI+L+URuIehVGQ==
+              password: <password>
   /api/v1/businesses:
     post:
       summary: Create Business
@@ -440,6 +440,12 @@ paths:
                   type: string
                 status:
                   type: string
+                  description: Ignored, except `DRAFT`. The status is computed from the dates and the `active` flag.
+                type:
+                  type: string
+                  enum: [PROMOTION, EVENT, ANNOUNCEMENT]
+                  default: PROMOTION
+                  description: Case-insensitive on input. An unknown value is 400.
                 active:
                   type: boolean
             example:
@@ -451,7 +457,7 @@ paths:
               businessId: c2fc43b7-dd6e-42e0-bd1b-9c9e95545190
               discount: 0.26
               terms: Sin definir
-              status: ACTIVE
+              type: PROMOTION
               active: true
         required: true
       description: Creates a campaign. The caller must own the business of the campaign.
@@ -510,11 +516,25 @@ paths:
         schema:
           type: string
           format: date-time
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum: [DRAFT, SCHEDULED, ACTIVE, PAUSED, EXPIRED]
+        description: Computed lifecycle status. An unknown value is 400.
+      - name: type
+        in: query
+        schema:
+          type: string
+          enum: [PROMOTION, EVENT, ANNOUNCEMENT]
+        description: Campaign type. An unknown value is 400.
       - name: session-token
         in: header
         required: false
         schema:
           type: string
+        description: Optional. Without a valid token only public campaigns are listed (not draft, not expired, active); with the token of the owner
+          of a business, that business's own campaigns are included too.
       responses:
         '200':
           description: Page of campaigns
@@ -523,7 +543,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/CampaignListResponse'
         '400':
-          description: Invalid pagination, sort or filter
+          description: Invalid pagination, sort, filter, `status` or `type`
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
         '500':
           $ref: '#/components/responses/InternalError'
         '429':
@@ -894,7 +917,9 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
-          description: The user does not own any business
+          description: The user does not own any business, or does not own `businessId`
+        '404':
+          description: '`businessId` was sent and the business does not exist'
         '500':
           $ref: '#/components/responses/InternalError'
         '429':
@@ -911,8 +936,12 @@ paths:
               name: Example Product AAZ
               description: This is an example product description.
               categoryId: null
+              price: 12.5
+              currency: USD
+              imageRef: products/example.jpg
         required: true
-      description: Creates a product. The caller must own at least one business.
+      description: 'Creates an active product. Without `businessId` the caller must own at least one business and the product is not linked (use
+        `POST /products/link`). With `businessId` the caller must own that business and the product is linked in the same request.'
   /api/v1/products/link:
     post:
       summary: Link Product and Business
@@ -1680,6 +1709,7 @@ paths:
           type: string
         example: '{{directorySessionTokenName}}'
         required: false
+        description: Optional. A draft or hidden campaign is only visible to the owner of its business.
       responses:
         '200':
           description: Campaign found
@@ -1690,7 +1720,7 @@ paths:
         '400':
           description: Invalid UUID
         '404':
-          $ref: '#/components/responses/NotFound'
+          description: Campaign not found, or hidden from the caller
         '429':
           $ref: '#/components/responses/TooManyRequests'
       tags:
@@ -1727,7 +1757,7 @@ paths:
         '404':
           description: Campaign, category or business not found
         '409':
-          description: The campaign was modified by another request
+          description: The campaign was modified by another request (stale `lastUpdate`) or the change is an illegal status transition
         '500':
           $ref: '#/components/responses/InternalError'
         '429':
@@ -1760,6 +1790,9 @@ paths:
                   type: boolean
                 terms:
                   type: string
+                type:
+                  type: string
+                  enum: [PROMOTION, EVENT, ANNOUNCEMENT]
             example:
               title: Octava oferta
               description: Descripcion
@@ -1938,7 +1971,8 @@ paths:
       schema: *id001
     get:
       summary: List products for a business
-      description: Paginated (page is 1-based, per_page default 10, max 100).
+      description: Paginated (page is 1-based, per_page default 10, max 100). The public list only returns active products linked and active.
+        With `include_inactive=true` the owner sees all of them.
       tags:
       - v1
       - products
@@ -1960,13 +1994,19 @@ paths:
         in: query
         schema:
           type: boolean
-        description: Filter by active status
+        description: Filter by product status. Only honoured with `include_inactive=true` by the owner; the public list ignores it.
+      - name: include_inactive
+        in: query
+        schema:
+          type: boolean
+          default: false
+        description: Owner only. Includes deactivated products. Requires `session-token`; without it the answer is 401, for a non-owner 403.
       - name: session-token
         in: header
         required: false
         schema:
           type: string
-        description: Public read; the token is not needed by this endpoint.
+        description: Optional for the public list (active products only). Required with `include_inactive=true`.
       responses:
         '200':
           description: Products found
@@ -1976,6 +2016,13 @@ paths:
                 $ref: '#/components/schemas/ProductListResponse'
         '400':
           description: Invalid request parameters
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -2256,6 +2303,567 @@ paths:
           description: The geocoding provider timed out
         '429':
           $ref: '#/components/responses/TooManyRequests'
+  /api/v1/campaigns/{campaignId}/deactivate:
+    post:
+      summary: Deactivate a campaign
+      description: Owner only. Sets the campaign to `PAUSED` (`active=false`). Allowed from `SCHEDULED` or `ACTIVE`. No request body.
+      tags:
+      - v1
+      - campaings
+      parameters:
+      - name: campaignId
+        in: path
+        required: true
+        schema: *id001
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: "Required. Without a valid token the answer is 401."
+      responses:
+        '200':
+          description: Campaign with `status` PAUSED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: "The caller does not own the business of the campaign"
+        '404':
+          description: "Campaign not found"
+        '409':
+          description: "Illegal status transition (`Campaign status transition not allowed: A -> B`); nothing is changed"
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/campaigns/{campaignId}/reactivate:
+    post:
+      summary: Reactivate a campaign
+      description: Owner only. Only a `PAUSED` campaign can be reactivated; it becomes `ACTIVE`, or `SCHEDULED` when its start date has not been reached. An `EXPIRED` campaign cannot be reactivated. No request body.
+      tags:
+      - v1
+      - campaings
+      parameters:
+      - name: campaignId
+        in: path
+        required: true
+        schema: *id001
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: "Required. Without a valid token the answer is 401."
+      responses:
+        '200':
+          description: Campaign with `status` ACTIVE or SCHEDULED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: "The caller does not own the business of the campaign"
+        '404':
+          description: "Campaign not found"
+        '409':
+          description: "Illegal status transition (`Campaign status transition not allowed: A -> B`); nothing is changed"
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/campaigns/{campaignId}/publish:
+    post:
+      summary: Publish a draft campaign
+      description: Owner only. Only a `DRAFT` campaign whose end date has not passed can be published; it becomes `SCHEDULED` or `ACTIVE`. No request body.
+      tags:
+      - v1
+      - campaings
+      parameters:
+      - name: campaignId
+        in: path
+        required: true
+        schema: *id001
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: "Required. Without a valid token the answer is 401."
+      responses:
+        '200':
+          description: Campaign published
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: "The caller does not own the business of the campaign"
+        '404':
+          description: "Campaign not found"
+        '409':
+          description: "Illegal status transition (`Campaign status transition not allowed: A -> B`); nothing is changed"
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/products/{productId}:
+    parameters:
+    - name: productId
+      in: path
+      required: true
+      schema: *id001
+    patch:
+      summary: Update a product (partial)
+      description: Owner only (the creator, or an owner of a business that carries the product). Only the fields sent change; the merged result is
+        validated. `price` and `currency` go together. `active=true` reactivates a product.
+      tags:
+      - v1
+      - products
+      parameters:
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: "Required. Without a valid token the answer is 401."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductUpdateRequest'
+            example:
+              price: 9.9
+              currency: USD
+      responses:
+        '200':
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductCreateResponse'
+        '400':
+          description: "Invalid field (blank or too long name/description, bad price or currency, unknown category, imageRef over 512 characters)"
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: "The caller is not the owner of the product"
+        '404':
+          description: "Product not found"
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    put:
+      summary: Replace a product
+      description: Owner only. `name`, `description` and `categoryId` are required; `price`, `currency` and `imageRef` are replaced (absent means cleared).
+      tags:
+      - v1
+      - products
+      parameters:
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: "Required. Without a valid token the answer is 401."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductUpdateRequest'
+      responses:
+        '200':
+          description: Product replaced
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductCreateResponse'
+        '400':
+          description: "Missing or invalid field"
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: "The caller is not the owner of the product"
+        '404':
+          description: "Product not found"
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    delete:
+      summary: Deactivate a product (soft delete)
+      description: Owner only. Sets `active=false`; the row and its business links are kept. Idempotent. Reactivate with `PATCH` with `active=true`.
+      tags:
+      - v1
+      - products
+      parameters:
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: "Required. Without a valid token the answer is 401."
+      responses:
+        '204':
+          description: Product deactivated
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: "The caller is not the owner of the product"
+        '404':
+          description: "Product not found"
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/users/me/saved-searches:
+    post:
+      summary: Save a search
+      description: 'Stores the search parameters of the caller. At most 20 per user; the name is unique per user ignoring case. Validation order: 401,
+        400 body, 400 name, 400 params, 409.'
+      tags:
+      - v1
+      - saved-searches
+      parameters:
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: "Required. Without a valid token the answer is 401 (`message-error: Unauthorized`)."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavedSearchCreateRequest'
+            example:
+              name: Cafes near home
+              params:
+                lat: 19.43
+                lng: -99.13
+                radius_m: 1500
+                sort: distance
+      responses:
+        '201':
+          description: Saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedSearch'
+        '400':
+          description: "Missing body, invalid name (blank or over 80 characters) or invalid parameters"
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: "Duplicate name or the limit of 20 saved searches was reached"
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    get:
+      summary: List saved searches
+      description: The saved searches of the caller, newest first.
+      tags:
+      - v1
+      - saved-searches
+      parameters:
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: "Required. Without a valid token the answer is 401 (`message-error: Unauthorized`)."
+      responses:
+        '200':
+          description: Saved searches
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedSearchList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/users/me/saved-searches/{id}:
+    patch:
+      summary: Rename a saved search
+      description: A saved search of another user answers 404, never 403.
+      tags:
+      - v1
+      - saved-searches
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema: *id001
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: "Required. Without a valid token the answer is 401 (`message-error: Unauthorized`)."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 80
+              required:
+              - name
+      responses:
+        '200':
+          description: Renamed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedSearch'
+        '400':
+          description: "Invalid name"
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: "Not found (or not the caller's)"
+        '409':
+          description: "Another saved search of the caller has that name"
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    delete:
+      summary: Delete a saved search
+      description: Physical delete.
+      tags:
+      - v1
+      - saved-searches
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema: *id001
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: "Required. Without a valid token the answer is 401 (`message-error: Unauthorized`)."
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: "Not found (or not the caller's)"
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/users/me/saved-searches/{id}/replay:
+    get:
+      summary: Replay a saved search
+      description: Returns the endpoint and the query parameters to call to repeat the search, and stamps `last_used_at`.
+      tags:
+      - v1
+      - saved-searches
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema: *id001
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: "Required. Without a valid token the answer is 401 (`message-error: Unauthorized`)."
+      responses:
+        '200':
+          description: Endpoint and parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchReplay'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: "Not found (or not the caller's)"
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/users/me/last-search:
+    get:
+      summary: Get the last search
+      tags:
+      - v1
+      - saved-searches
+      parameters:
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: "Required. Without a valid token the answer is 401 (`message-error: Unauthorized`)."
+      responses:
+        '200':
+          description: Last search of the caller
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LastSearch'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: "No last search (`message-error: No last search`)"
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    put:
+      summary: Store the last search
+      description: Upsert; one last search per user. The client sends it after running a search.
+      tags:
+      - v1
+      - saved-searches
+      parameters:
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: "Required. Without a valid token the answer is 401 (`message-error: Unauthorized`)."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchParams'
+      responses:
+        '200':
+          description: Stored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LastSearch'
+        '400':
+          description: "Invalid or empty parameters"
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/businesses/{businessId}/events:
+    post:
+      summary: Count a click event of a business
+      description: 'Adds one to the aggregated daily counter (UTC) of the business, campaign and type. Nothing about the user is stored. An event by
+        the owner is not counted. Extra rate limit: 20 per minute per client and business (`umdc.ratelimit.events-per-minute`).'
+      tags:
+      - v1
+      - business-events
+      parameters:
+      - name: businessId
+        in: path
+        required: true
+        schema: *id001
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BusinessEventRequest'
+            example:
+              type: CALL
+      responses:
+        '204':
+          description: Counted (or ignored because the caller is the owner)
+        '400':
+          description: "Missing body or invalid type"
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: "Business not found, or the campaign does not belong to the business"
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/businesses/{businessId}/events/summary:
+    get:
+      summary: Click events summary (owner only)
+      description: Totals by type, by campaign and by day (zeros included) for a window of at most 365 days. `to` defaults to today (UTC) and `from`
+        to `to` minus 29 days.
+      tags:
+      - v1
+      - business-events
+      parameters:
+      - name: businessId
+        in: path
+        required: true
+        schema: *id001
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessEventSummary'
+        '400':
+          description: "`from` after `to` or a window over 365 days"
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: "The caller is not the owner of the business"
+        '404':
+          description: "Business not found"
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
 components:
   securitySchemes:
     BearerAuth:
@@ -2407,6 +3015,19 @@ components:
         name: *id005
         description: *id005
         categoryId: *id001
+        price:
+          type: number
+          description: '>= 0, at most 2 decimals. Goes with `currency`.'
+        currency:
+          type: string
+          description: ISO 4217 code, 3 letters (stored upper case). Goes with `price`.
+        imageRef:
+          type: string
+          maxLength: 512
+        businessId:
+          type: string
+          format: uuid
+          description: Optional. When present the caller must own it and the product is linked to it in the same request.
       required:
       - name
       - description
@@ -2420,6 +3041,33 @@ components:
         createdDate: *id006
         lastUpdate: *id006
         categoryId: *id001
+        price:
+          type: number
+          nullable: true
+        currency:
+          type: string
+          nullable: true
+        imageRef:
+          type: string
+          nullable: true
+        active:
+          type: boolean
+    ProductUpdateRequest:
+      type: object
+      description: All fields optional on PATCH; on PUT `name`, `description` and `categoryId` are required.
+      properties:
+        name: *id005
+        description: *id005
+        categoryId: *id001
+        price:
+          type: number
+        currency:
+          type: string
+        imageRef:
+          type: string
+          maxLength: 512
+        active:
+          type: boolean
     LinkBusinessProductRequest:
       type: object
       properties:
@@ -2698,6 +3346,151 @@ components:
                 type: number
                 format: double
                 description: Optional
+    SearchParams:
+      type: object
+      description: At least one filter is required. `lat` and `lng` go together and exclude `bbox`; `radius_m` and `sort` need a point.
+      properties:
+        q: *id005
+        category_id: *id001
+        city_id: *id001
+        city: *id005
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+        radius_m:
+          type: integer
+        bbox:
+          type: string
+          description: minLng,minLat,maxLng,maxLat
+        sort:
+          type: string
+          enum: [distance, name]
+    SavedSearchCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 80
+        params:
+          $ref: '#/components/schemas/SearchParams'
+      required:
+      - name
+      - params
+    SavedSearch:
+      type: object
+      properties:
+        id: *id001
+        name: *id005
+        params:
+          $ref: '#/components/schemas/SearchParams'
+        created_at: *id006
+        updated_at: *id006
+        last_used_at:
+          type: string
+          format: date-time
+          nullable: true
+    SavedSearchList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SavedSearch'
+        max:
+          type: integer
+          example: 20
+    SearchReplay:
+      type: object
+      properties:
+        endpoint:
+          type: string
+          enum: [/api/v1/businesses/search, /api/v1/businesses/nearby, /api/v1/businesses/map]
+        params:
+          type: object
+          additionalProperties:
+            type: string
+    LastSearch:
+      type: object
+      properties:
+        params:
+          $ref: '#/components/schemas/SearchParams'
+        updated_at: *id006
+    BusinessEventRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [ROUTE, CALL, WEB, SAVE]
+          description: Case-insensitive.
+        campaign_id:
+          type: string
+          format: uuid
+          description: Optional; must belong to the business.
+      required:
+      - type
+    EventCounts:
+      type: object
+      description: Counts by type
+      properties:
+        CALL:
+          type: integer
+          format: int64
+        ROUTE:
+          type: integer
+          format: int64
+        SAVE:
+          type: integer
+          format: int64
+        WEB:
+          type: integer
+          format: int64
+    BusinessEventSummary:
+      type: object
+      properties:
+        businessId: *id001
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        total:
+          type: integer
+          format: int64
+        totalsByType:
+          $ref: '#/components/schemas/EventCounts'
+        campaigns:
+          type: array
+          description: Only campaigns with events; `campaign_id` is null for events without campaign
+          items:
+            type: object
+            properties:
+              campaign_id:
+                type: string
+                format: uuid
+                nullable: true
+              total:
+                type: integer
+                format: int64
+              byType:
+                $ref: '#/components/schemas/EventCounts'
+        daily:
+          type: array
+          description: One entry per day, zeros included, oldest first
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              total:
+                type: integer
+                format: int64
+              byType:
+                $ref: '#/components/schemas/EventCounts'
 security:
 - BearerAuth: []
 tags:
@@ -2705,3 +3498,5 @@ tags:
 - name: businesses
 - name: opening-hours
 - name: geocoding
+- name: saved-searches
+- name: business-events

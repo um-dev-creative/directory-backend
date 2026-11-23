@@ -1,3 +1,15 @@
+## [Unreleased] - 2026-11-23 (API contract: Phase 2)
+
+### Changed
+- `src/main/resources/api/index.yaml` documents Phase 2: products `PATCH`/`PUT`/`DELETE /products/{productId}`, `include_inactive` and the new `price`, `currency`, `imageRef`, `businessId` fields of `POST /products`; campaigns `deactivate`, `reactivate`, `publish`, the `type` field, the `status` and `type` filters and the optional `session-token`; `/users/me/saved-searches` (CRUD and replay) and `/users/me/last-search`; business click events `POST /businesses/{businessId}/events` and `GET .../events/summary`. Schemas, status codes, the `message-error` header and the `session-token` requirement follow the Phase 0 and Phase 1 entries.
+- The example password in `/auth/session-token` and `/auth/token` is replaced by the placeholder `<password>`.
+
+### Added
+- Guides: `docs/user-guide/api-contract-f2.md`, `docs/technical/api-contract-f2.md` (Mermaid diagrams).
+
+### Notes
+- Documentation only: no code, schema or configuration change.
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
