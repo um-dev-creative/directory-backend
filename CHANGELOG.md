@@ -17,6 +17,17 @@ This project adheres (loosely) to "Keep a Changelog" and follows semantic versio
 ### Notes
 - Documentation only: no code, schema or configuration change. The Phase 1 endpoints exist in the contract before they exist in `development`.
 - `PUT /favorites/{id}` is a `PATCH` in the code and the contract follows the code.
+## [Unreleased] - 2026-11-23 (analysis documents moved out of the repository)
+
+### Removed
+- `docs/technical/mvp-product-analysis.md` and `docs/user-guide/mvp-product-analysis.md`. Analysis, planning and runbook documents are not versioned in the repository: only the CHANGELOG and the user and technical guides of each feature are. The content is kept outside the repository.
+
+### Changed
+- `docs/technical/f0-platform.md` and `docs/technical/f0-product-campaign-owner-checks.md` no longer link to the removed analysis.
+
+### Notes
+- Documentation only: no code, API, schema or configuration change.
+- The earlier CHANGELOG entry "MVP product and architecture analysis" is kept as history; the guides it names were removed here.
 
 ## [Unreleased] - 2026-11-23 (MVP product and architecture analysis)
 
