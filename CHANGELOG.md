@@ -151,6 +151,22 @@ This project adheres (loosely) to "Keep a Changelog" and follows semantic versio
 
 ---
 
+## [Unreleased] - 2026-11-23 (F1-A geo search: nearby and map)
+
+### Added
+- `GET /api/v1/businesses/nearby` (public): locations within `radius_m` (default 5000, max 50000) of `lat`/`lng`, with `category_id` (sub-categories included), `city_id`, `q` (`%`, `_` escaped), `sort=distance|name`, `page`/`per_page` (1-based, max 100). One row per location with `distance_m`; ordered by distance with a stable tie-break by location id. Same envelope as the business search.
+- `GET /api/v1/businesses/map` (public): GeoJSON `FeatureCollection` for `bbox=minLng,minLat,maxLng,maxLat` (inverted bbox or more than 90 degrees per axis is rejected), `zoom` 0-22, `category_id`, `city_id`, `q`, `limit` (default 200, max 500). Zoom 14 and above returns Point features; below 14 returns grid clusters (`cluster=true`, `count`). `truncated` is true when the limit was reached. Coordinates have 5 decimals.
+- `LocationGeoRepository`: Haversine distance in portable SQL (PostgreSQL and H2 in PostgreSQL mode, no PostGIS) with a bounding-box pre-filter; only locations with coordinates.
+- `V8__location_geo_index.sql`: partial index `idx_location_geo` on `(latitude, longitude)`. Not applied to any database yet.
+- Invalid parameters answer `400` with the reason in the `message-error` header. Exact coordinates are never logged.
+- Guides: `docs/user-guide/f1-geo-search.md`, `docs/technical/f1-geo-search.md`.
+
+### Tests
+- `LocationGeoRepositoryTest` (`@DataJpaTest` on H2: radius, order, tie-break, filters, pagination, bbox, clusters), `GeoSearchValidatorTest`, `BusinessGeoServiceImplTest`, `BusinessGeoRoutesTest` (the literal routes win over `/businesses/{id}`), `GeoToTest`.
+
+### Notes
+- `src/main/resources/api/index.yaml` is not updated in this change; the contract is in the technical guide.
+
 ## [Unreleased] - 2026-11-21 (database migration scripts)
 
 ### Added
