@@ -29,7 +29,7 @@ class SessionTokenSecurityConfigTest {
     static class TestApp {
         @Bean
         SecurityFilterChain chain(HttpSecurity http) {
-            return new SessionTokenSecurityConfig("/api/v1").sessionTokenSecurityFilterChain(http);
+            return new SessionTokenSecurityConfig("/api/v1", true).sessionTokenSecurityFilterChain(http);
         }
 
         @Bean
