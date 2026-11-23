@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 This project adheres (loosely) to "Keep a Changelog" and follows semantic versioning where practical.
 
+## [Unreleased] - 2026-11-22 (dependency update)
+
+### Changed
+- **Spring Boot 4.0.6 -> 4.1.2** and Spring Cloud 2025.1.1 -> 2025.1.4, aligned with `backbone-rest` (and `mercury` / `zerobound-rest` where backbone does not define the property).
+- UMDC libraries: `commons` 0.0.1 -> 0.0.4, `commons-services` 0.0.1 -> 0.0.3, `security-oauth` 0.0.1 -> 0.0.3.
+- Libraries: springdoc 2.6.0 -> 3.1.0 (maven plugin 1.4 -> 1.5), jjwt 0.12.3 -> 0.13.0, PostgreSQL driver 42.7.7 -> 42.7.14, Gson 2.14.0, SnakeYAML 2.6, org.json 20260814, commons-lang3 3.21.0, plexus-utils 4.1.0, ASM 9.10.1, OpenRewrite plugin 6.46.1 / recipes 6.37.1, JUnit 6.1.3, Mockito 5.24.0.
+- Build plugins: compiler 3.15.0, javadoc 3.12.0, JaCoCo 0.8.15, surefire 3.5.6.
+
+### Security
+- Overrides of the Boot BOM, as in `backbone-rest`: hibernate-validator 9.1.6.Final, Jackson 2.21.8 and 3.1.8, logback 1.6.6 and Apache `httpclient` 4.5.14 (GHSA-7r82-7xv7-xcpj, transitive via `eureka-client`). Tomcat already resolves to 11.0.27 with Boot 4.1.2.
+
+### Documentation
+- Guides: `docs/user-guide/dependency-update.md`, `docs/technical/dependency-update.md`.
+- Fixed stale version tables in `docs/PROJECT_DOCUMENTATION.md`, `docs/TECHNICAL_DOCUMENTATION.md` and `docs/COMPLETE_PROJECT_DOCUMENTATION_FOR_BA.md` (they said Java 21, Spring Boot 3.5.8, Cloud 2025.0.1, jjwt 0.12.3 and springdoc 2.6.0).
+
+### Notes
+- No API, database or configuration change. 661 tests pass; JaCoCo method coverage 93.25 % (760 of 815).
+- Not run against Vault, Config Server, Kafka or a real PostgreSQL: smoke-test in a real environment before releasing.
+- Supersedes Dependabot PR #105 (plexus-utils), now at 4.1.0.
+
 ## [Unreleased] - 2026-11-21 (business view statistics)
 
 ### Added

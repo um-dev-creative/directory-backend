@@ -112,9 +112,9 @@ HTTP Response (201/200/202/204/4xx/5xx)
 ### Core Framework
 | Component | Version | Purpose |
 |-----------|---------|---------|
-| **Java** | 21 | Programming language |
-| **Spring Boot** | 3.5.8 | Application framework |
-| **Spring Cloud** | 2025.0.1 | Cloud-native patterns, config server |
+| **Java** | 25 | Programming language |
+| **Spring Boot** | 4.1.2 | Application framework |
+| **Spring Cloud** | 2025.1.4 | Cloud-native patterns, config server |
 | **Maven** | 3.8.0+ | Build & dependency management |
 
 ### Data & Persistence
@@ -144,7 +144,7 @@ HTTP Response (201/200/202/204/4xx/5xx)
 | Component | Version | Purpose |
 |-----------|---------|---------|
 | **MapStruct** | 1.6.3 | DTO ↔ Entity mapping |
-| **JWT (jjwt)** | 0.12.3 | JSON Web Token handling |
+| **JWT (jjwt)** | 0.13.0 | JSON Web Token handling |
 | **Google Gson** | 2.13.2 | JSON parsing |
 | **Apache Commons Lang3** | 3.18.0 | Utility functions |
 
@@ -615,7 +615,7 @@ mvn -B -V -e clean verify
 ### Local Development Setup
 
 **Prerequisites:**
-1. Java 21 (JDK)
+1. Java 25 (JDK)
 2. Maven 3.8+
 3. Docker (optional, for PostgreSQL/Kafka/Vault)
 4. PostgreSQL 15+ or Docker container
