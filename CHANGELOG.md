@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 This project adheres (loosely) to "Keep a Changelog" and follows semantic versioning where practical.
 
+## [Unreleased] - 2026-11-23 (API contract: Phase 0 and Phase 1)
+
+### Changed
+- `src/main/resources/api/index.yaml` now documents Phase 0: required `session-token` and `401/403/404` answers on business create/update, business images (client `objectKey` ignored), product create/link and campaign create/update; favourites `sort`, `type`, `size` (max 100, 0-based page) and the `409`/`201` duplicate and reactivation rules; global rate limiting (`429` with `Retry-After` and `X-RateLimit-Limit`, as a reusable response added to every operation); Swagger/api-docs open only with `umdc.docs.enabled`.
+- Phase 1 (from the open PRs #126, #127, #128, not merged yet): `GET /businesses/nearby`, `GET /businesses/map` (GeoJSON), opening hours `GET/PUT .../hours` and `GET .../hours/status`, and `POST /geocode`.
+- Contract defects fixed without changing any real route: fixed-UUID paths became `{businessId}`, `{campaignId}`, `{favoriteId}`; empty `responses` filled with the real codes; `GET /favorites` lost its bogus request body and now lists its query parameters; `GET /products/business/{businessId}` added; reusable schemas and responses added under `components`.
+- The favourite delete route is documented as `DELETE /favorites/{favoriteId}` (it was listed without the id, a route that does not exist).
+
+### Added
+- Guides: `docs/user-guide/api-contract-f0-f1.md`, `docs/technical/api-contract-f0-f1.md` (Mermaid diagrams).
+
+### Notes
+- Documentation only: no code, schema or configuration change. The Phase 1 endpoints exist in the contract before they exist in `development`.
+- `PUT /favorites/{id}` is a `PATCH` in the code and the contract follows the code.
+
 ## [Unreleased] - 2026-11-23 (MVP product and architecture analysis)
 
 ### Added
