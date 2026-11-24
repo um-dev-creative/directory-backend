@@ -26,7 +26,8 @@ public interface ProductMapper {
     /// @param productTO The ProductTO object to convert.
     /// @return The converted ProductEntity object.
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "active", ignore = true)
+    @Mapping(target = "active", constant = "true")
+    @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "name", source = "name")
     @Mapping(target = "description", source = "description")
     @Mapping(target = "createdDate", expression = "java(java.time.LocalDateTime.now())")
@@ -44,6 +45,10 @@ public interface ProductMapper {
     @Mapping(target = "createdDate", source = "createdDate")
     @Mapping(target = "lastUpdate", source = "lastUpdate")
     @Mapping(target = "categoryId", source = "categoryFk.id")
+    @Mapping(target = "price", source = "price")
+    @Mapping(target = "currency", source = "currency")
+    @Mapping(target = "imageRef", source = "imageRef")
+    @Mapping(target = "active", source = "active")
     ProductCreateResponse toProductCreateResponse(ProductEntity productEntity);
 
     /// Converts a BusinessEntity object to a BusinessCreateResponse object.

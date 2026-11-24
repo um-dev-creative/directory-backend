@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 This project adheres (loosely) to "Keep a Changelog" and follows semantic versioning where practical.
 
+## [Unreleased] - 2026-11-23 (F2-A products: edit, deactivate, price, image)
+
+### Added
+- RF-02: `PATCH` and `PUT /api/v1/products/{productId}` (owner only) to edit a product, and `DELETE /api/v1/products/{productId}` as a soft delete (`active = false`, `204`, idempotent). `PATCH {"active": true}` reactivates.
+- Optional price (`price` >= 0 with at most 2 decimals, `currency` ISO 4217, sent together) and `imageRef` (max 512) on products, validated by `ProductValidator`; returned in the create, update and list responses.
+- `GET /products/business/{businessId}?include_inactive=true` with `session-token`: the owner lists inactive products too (`401` without session, `403` if not the owner).
+- Migration `V9__product_price_status_image.sql` (idempotent): `price`, `currency`, `image_ref`, `created_by` and a price check on `product`; legacy products created inactive by mistake are activated once.
+- Guides: `docs/user-guide/f2-products.md`, `docs/technical/f2-products.md` (Mermaid diagrams).
+
+### Changed
+- The public product list now returns only active products (link and product both active); the `active` filter only applies in owner mode.
+- `POST /products` accepts an optional `businessId`: it checks ownership of that business and links the product as active in the same call (chosen semantics for the F0 pending point); without it the behaviour is unchanged. New products are created active (they were created inactive before).
+- Existing request/response records keep their old constructors.
+
+### Notes
+- `src/main/resources/api/index.yaml` is not updated here; the endpoint list is in the technical guide.
+
 ## [Unreleased] - 2026-11-23 (API contract: Phase 0 and Phase 1)
 
 ### Changed

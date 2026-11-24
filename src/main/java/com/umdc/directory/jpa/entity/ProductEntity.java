@@ -7,6 +7,7 @@ import org.hibernate.annotations.ColumnDefault;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -83,6 +84,24 @@ public class ProductEntity implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "category_fk", nullable = false)
     private CategoryEntity categoryFk;
+
+    /** Price amount (two decimals max); null when the product has no price. */
+    @Column(name = "price", precision = 12, scale = 2)
+    private BigDecimal price;
+
+    /** ISO 4217 currency code of the price (three upper-case letters); null when there is no price. */
+    @Size(max = 3)
+    @Column(name = "currency", length = 3)
+    private String currency;
+
+    /** Reference (R2 public URL or object key) of the product image; null when there is none. */
+    @Size(max = 512)
+    @Column(name = "image_ref", length = 512)
+    private String imageRef;
+
+    /** User who created the product; lets the creator edit it before it is linked to a business. */
+    @Column(name = "created_by")
+    private UUID createdBy;
 
     public ProductEntity() {
         // Default constructor
@@ -212,6 +231,38 @@ public class ProductEntity implements Serializable {
      */
     public void setCategoryFk(CategoryEntity categoryFk) {
         this.categoryFk = categoryFk;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    public String getImageRef() {
+        return imageRef;
+    }
+
+    public void setImageRef(String imageRef) {
+        this.imageRef = imageRef;
+    }
+
+    public UUID getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(UUID createdBy) {
+        this.createdBy = createdBy;
     }
 
 }

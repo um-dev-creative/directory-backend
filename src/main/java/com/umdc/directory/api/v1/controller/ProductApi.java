@@ -20,6 +20,7 @@ import static com.umdc.security.constant.ConstantApp.SESSION_TOKEN_KEY;
 
 // REST controller for product-related operations.
 @Tag(name = "products", description = "The Product API")
+@SuppressWarnings("PMD.AvoidDuplicateLiterals") // the OpenAPI response codes and texts repeat on every operation
 public interface ProductApi {
 
     // Provides an instance of ProductService.
@@ -78,14 +79,18 @@ public interface ProductApi {
     // @param businessId the UUID of the business
     // @param page the page number (1-based)
     // @param perPage the number of items per page
-    // @param active filter by active status (true/false)
+    // @param active filter by product status, only used when includeInactive is true
+    // @param includeInactive true lists inactive products too (owner only, needs session-token)
     // @return a ResponseEntity containing the paginated list of products
-    @Operation(summary = "List products for a business", description = "Returns paginated products for the given business id.")
+    @Operation(summary = "List products for a business",
+            description = "Public: only active products. With include_inactive=true the owner of the business gets all of them.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Products found",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ProductListResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid request parameters", content = @Content),
+            @ApiResponse(responseCode = "401", description = "include_inactive=true without a valid session token", content = @Content),
+            @ApiResponse(responseCode = "403", description = "include_inactive=true and the user does not own the business", content = @Content),
             @ApiResponse(responseCode = "404", description = "Business not found", content = @Content),
             @ApiResponse(responseCode = DirectoryAppConstants.INTERNAL_SERVER_ERROR_CODE, description = DirectoryAppConstants.INTERNAL_SERVER_ERROR_MESSAGE, content = @Content)
     })
@@ -94,9 +99,61 @@ public interface ProductApi {
             @PathVariable @Parameter(description = "Business UUID") UUID businessId,
             @Parameter(description = "Page number (1-based). Default 1") @RequestParam(name = "page", required = false) Integer page,
             @Parameter(description = "Items per page. Default 10, max 100") @RequestParam(name = "per_page", required = false) Integer perPage,
-            @Parameter(description = "Filter by active status (true/false)") @RequestParam(name = "active", required = false) Boolean active
+            @Parameter(description = "Filter by product status (true/false); only with include_inactive=true") @RequestParam(name = "active", required = false) Boolean active,
+            @Parameter(description = "Owner only: include inactive products") @RequestParam(name = "include_inactive", required = false) Boolean includeInactive,
+            @RequestHeader(value = SESSION_TOKEN_KEY, required = false) String sessionToken
     ) {
-        return getProductService().findByBusinessId(businessId, page, perPage, active);
+        return getProductService().findByBusinessId(businessId, page, perPage, active, includeInactive, sessionToken);
+    }
+
+    @Operation(summary = "Partially update a product", description = "Changes only the sent fields (name, description, category, price, currency, image, active).")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Product updated",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ProductCreateResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid data (price, currency, image, blank name)", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid session token", content = @Content),
+            @ApiResponse(responseCode = "403", description = "The user does not own the product", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Product not found", content = @Content),
+            @ApiResponse(responseCode = DirectoryAppConstants.INTERNAL_SERVER_ERROR_CODE, description = DirectoryAppConstants.INTERNAL_SERVER_ERROR_MESSAGE, content = @Content)
+    })
+    @PatchMapping(path = "/{productId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    default ResponseEntity<ProductCreateResponse> patchProduct(@PathVariable UUID productId,
+                                                               @RequestBody ProductUpdateRequest request,
+                                                               @RequestHeader(SESSION_TOKEN_KEY) String sessionToken) {
+        return getProductService().update(productId, request, sessionToken, false);
+    }
+
+    @Operation(summary = "Replace a product", description = "Full replacement: name, description and categoryId are required; an absent price, currency or image is cleared.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Product replaced",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ProductCreateResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid data", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid session token", content = @Content),
+            @ApiResponse(responseCode = "403", description = "The user does not own the product", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Product not found", content = @Content),
+            @ApiResponse(responseCode = DirectoryAppConstants.INTERNAL_SERVER_ERROR_CODE, description = DirectoryAppConstants.INTERNAL_SERVER_ERROR_MESSAGE, content = @Content)
+    })
+    @PutMapping(path = "/{productId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    default ResponseEntity<ProductCreateResponse> putProduct(@PathVariable UUID productId,
+                                                             @RequestBody ProductUpdateRequest request,
+                                                             @RequestHeader(SESSION_TOKEN_KEY) String sessionToken) {
+        return getProductService().update(productId, request, sessionToken, true);
+    }
+
+    @Operation(summary = "Deactivate a product", description = "Soft delete: the product becomes inactive (active=false) and can be reactivated with PATCH.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Product deactivated (also when it already was)", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid session token", content = @Content),
+            @ApiResponse(responseCode = "403", description = "The user does not own the product", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Product not found", content = @Content),
+            @ApiResponse(responseCode = DirectoryAppConstants.INTERNAL_SERVER_ERROR_CODE, description = DirectoryAppConstants.INTERNAL_SERVER_ERROR_MESSAGE, content = @Content)
+    })
+    @DeleteMapping(path = "/{productId}")
+    default ResponseEntity<Void> deleteProduct(@PathVariable UUID productId,
+                                               @RequestHeader(SESSION_TOKEN_KEY) String sessionToken) {
+        return getProductService().deactivate(productId, sessionToken);
     }
 
 }

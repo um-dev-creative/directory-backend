@@ -5,6 +5,7 @@ import com.umdc.directory.api.v1.to.LinkBusinessProductResponse;
 import com.umdc.directory.api.v1.to.ProductCreateRequest;
 import com.umdc.directory.api.v1.to.ProductCreateResponse;
 import com.umdc.directory.api.v1.to.ProductListResponse;
+import com.umdc.directory.api.v1.to.ProductUpdateRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -30,6 +31,21 @@ public interface ProductService {
     }
 
     default ResponseEntity<ProductListResponse> findByBusinessId(UUID businessId, Integer page, Integer perPage, Boolean active) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    }
+
+    default ResponseEntity<ProductListResponse> findByBusinessId(UUID businessId, Integer page, Integer perPage, Boolean active,
+                                                                 Boolean includeInactive, String token) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    }
+
+    /// Updates a product: `replace` false is PATCH (only the sent fields), true is PUT (full replacement).
+    default ResponseEntity<ProductCreateResponse> update(UUID productId, ProductUpdateRequest request, String token, boolean replace) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    }
+
+    /// Soft delete: the product becomes inactive.
+    default ResponseEntity<Void> deactivate(UUID productId, String token) {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 }
