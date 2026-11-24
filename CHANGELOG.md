@@ -24,6 +24,16 @@
 - Guard test `NoGeneralSchemaAccessTest`: fails on entities outside `directory_site`, migrations or repository queries that mention `general`, imports of general-schema entities, or a V12 that stops using the catalog lookup.
 - Guides: `docs/user-guide/no-general-schema-access.md`, `docs/technical/no-general-schema-access.md` (Mermaid diagrams, documented GRANT script for the `directory_app` role).
 
+## [Unreleased] - 2026-11-23 (F4-A session token security)
+
+### Security
+- `SessionJwtServiceImpl`: the caller parameters are applied first and can no longer overwrite `jti`, `type`, `iat`, `exp`, `nbf`, `sub`, `iss` or `aud`. The HMAC key (`APP_TOKEN_SECRET`, Base64) must decode to at least `umdc.security.jwt.min-key-bytes` bytes (default 32); a shorter or non-Base64 secret stops the startup with a clear message.
+- New `SessionTokenVerifier`: the single component that reads the user id of the `session-token` header. With `umdc.security.jwt.verify-signature=true` (default) it checks signature and expiry with the service key and a forged, unsigned or expired token yields no uid (401); with `false` it keeps the legacy unverified payload read. Used by favorites, favorite lists, saved searches, click events and the rate limiter user bucket. `JwtUtil.getUidFromToken` is unchanged for the remaining call sites.
+- New CORS filter for `umdc.api.endpoint/**` driven by `umdc.cors.allowed-origins` (`UMDC_CORS_ALLOWED_ORIGINS`, default empty: no cross-origin request allowed), with method and header allow-lists, `message`, `message-error`, `Retry-After` and `X-RateLimit-Limit` exposed, no credentials, and `*` refused at startup.
+
+### Added
+- Guides: `docs/user-guide/p4-token-security.md`, `docs/technical/p4-token-security.md` (Mermaid diagrams).
+
 ## [Unreleased] - 2026-11-23 (F3-A favorite lists, unique favorites index)
 
 ### Added

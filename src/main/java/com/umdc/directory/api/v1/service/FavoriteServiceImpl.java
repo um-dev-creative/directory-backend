@@ -1,5 +1,6 @@
 package com.umdc.directory.api.v1.service;
 
+import com.umdc.directory.security.SessionTokenVerifier;
 import com.umdc.directory.api.v1.to.*;
 import com.umdc.directory.constant.DirectoryAppConstants;
 import com.umdc.directory.constant.FavoriteType;
@@ -15,13 +16,13 @@ import com.umdc.directory.mapper.BusinessMapper;
 import com.umdc.directory.mapper.CampaignMapper;
 import com.umdc.directory.mapper.FavoriteMapper;
 import com.umdc.directory.mapper.ProductMapper;
-import com.umdc.directory.util.JwtUtil;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.JpaSort;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -54,6 +55,7 @@ public class FavoriteServiceImpl implements FavoriteService {
     private final ContactTypeProvider contactTypeProvider;
     private final ProductMapper productMapper;
     private final CampaignMapper campaignMapper;
+    private final SessionTokenVerifier sessionTokenVerifier;
 
     public FavoriteServiceImpl(UserFavoriteRepository userFavoriteRepository,
                                BusinessRepository businessRepository,
@@ -64,6 +66,22 @@ public class FavoriteServiceImpl implements FavoriteService {
                                ContactTypeProvider contactTypeProvider,
                                ProductMapper productMapper,
                                CampaignMapper campaignMapper) {
+        this(userFavoriteRepository, businessRepository, productRepository, campaignRepository, favoriteMapper,
+                businessMapper, contactTypeProvider, productMapper, campaignMapper, SessionTokenVerifier.unverified());
+    }
+
+    @Autowired
+    public FavoriteServiceImpl(UserFavoriteRepository userFavoriteRepository,
+                               BusinessRepository businessRepository,
+                               ProductRepository productRepository,
+                               CampaignRepository campaignRepository,
+                               FavoriteMapper favoriteMapper,
+                               BusinessMapper businessMapper,
+                               ContactTypeProvider contactTypeProvider,
+                               ProductMapper productMapper,
+                               CampaignMapper campaignMapper,
+                               SessionTokenVerifier sessionTokenVerifier) {
+        this.sessionTokenVerifier = Objects.requireNonNullElseGet(sessionTokenVerifier, SessionTokenVerifier::unverified);
         this.userFavoriteRepository = userFavoriteRepository;
         this.businessRepository = businessRepository;
         this.productRepository = productRepository;
@@ -85,7 +103,7 @@ public class FavoriteServiceImpl implements FavoriteService {
         UUID itemId = request.itemId();
         FavoriteType type = request.type();
 
-        UUID userId = JwtUtil.getUidFromToken(sessionToken);
+        UUID userId = sessionTokenVerifier.uid(sessionToken);
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -110,7 +128,7 @@ public class FavoriteServiceImpl implements FavoriteService {
     @Override
     @Transactional(readOnly = true)
     public ResponseEntity<FavoritesResponse> getFavorites(String sessionToken, String type, int page, int size, String sort) {
-        UUID userId = JwtUtil.getUidFromToken(sessionToken);
+        UUID userId = sessionTokenVerifier.uid(sessionToken);
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -194,7 +212,7 @@ public class FavoriteServiceImpl implements FavoriteService {
             return ResponseEntity.badRequest().build();
         }
 
-        UUID userId = JwtUtil.getUidFromToken(sessionToken);
+        UUID userId = sessionTokenVerifier.uid(sessionToken);
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -257,7 +275,7 @@ public class FavoriteServiceImpl implements FavoriteService {
     @Override
     @Transactional
     public ResponseEntity<Void> deleteFavorite(String sessionToken, UUID favoriteId) {
-        UUID userId = JwtUtil.getUidFromToken(sessionToken);
+        UUID userId = sessionTokenVerifier.uid(sessionToken);
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }

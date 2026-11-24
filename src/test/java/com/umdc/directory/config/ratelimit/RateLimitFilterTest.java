@@ -154,4 +154,40 @@ class RateLimitFilterTest {
         assertThat(call(f, post("/api/v1/businesses/b1/events", "1.1.1.1")).getStatus()).isEqualTo(200);
         assertThat(call(f, post("/api/v1/businesses/b1/events", "1.1.1.1")).getStatus()).isEqualTo(429);
     }
+
+    @Test
+    void verifiedModeIgnoresForgedTokensAndKeysByTheSignedUid() throws Exception {
+        var props = new com.umdc.security.jwt.JwtConfigProperties();
+        props.setSecret("bG9jYWxEZXZTZWNyZXRLZXlGb3JEaXJlY3RvcnlOb3RGb3JQcm9kdWN0aW9uVXNlMTIzNDU2");
+        props.setExpirationMs(60_000L);
+        var jwt = new com.umdc.directory.security.SessionJwtServiceImpl(props);
+        var verifier = new com.umdc.directory.security.SessionTokenVerifier(jwt, true);
+        RateLimitFilter f = filter(100, 1, false).withVerifier(verifier);
+        String good = jwt.generateSessionToken("u", java.util.Map.of("uid", "11111111-1111-1111-1111-111111111111"));
+
+        var r1 = req("/api/v1/x", "1.1.1.1");
+        r1.addHeader("session-token", good);
+        assertThat(call(f, r1).getStatus()).isEqualTo(200);
+        var r2 = req("/api/v1/x", "2.2.2.2");
+        r2.addHeader("session-token", good);
+        assertThat(call(f, r2).getStatus()).isEqualTo(429);
+
+        // forged token: no user bucket is spent, only the IP one
+        for (int i = 0; i < 3; i++) {
+            var r = req("/api/v1/x", "3.3.3.3");
+            r.addHeader("session-token", token("{\"uid\":\"11111111-1111-1111-1111-111111111111\"}"));
+            assertThat(call(f, r).getStatus()).isEqualTo(200);
+        }
+    }
+
+    @Test
+    void anUnverifyingVerifierKeepsTheLegacyRead() throws Exception {
+        RateLimitFilter f = filter(100, 1, false).withVerifier(com.umdc.directory.security.SessionTokenVerifier.unverified());
+        var r1 = req("/api/v1/x", "1.1.1.1");
+        r1.addHeader("session-token", token("{\"uid\":\"7\"}"));
+        assertThat(call(f, r1).getStatus()).isEqualTo(200);
+        var r2 = req("/api/v1/x", "2.2.2.2");
+        r2.addHeader("session-token", token("{\"uid\":\"7\"}"));
+        assertThat(call(f, r2).getStatus()).isEqualTo(429);
+    }
 }

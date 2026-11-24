@@ -1,5 +1,6 @@
 package com.umdc.directory.api.v1.service;
 
+import com.umdc.directory.security.SessionTokenVerifier;
 import com.umdc.directory.api.v1.to.LastSearchTO;
 import com.umdc.directory.api.v1.to.SavedSearchCreateRequest;
 import com.umdc.directory.api.v1.to.SavedSearchListResponse;
@@ -14,7 +15,7 @@ import com.umdc.directory.jpa.entity.SavedSearchEntity;
 import com.umdc.directory.jpa.entity.SearchParamsBase;
 import com.umdc.directory.jpa.repository.LastSearchRepository;
 import com.umdc.directory.jpa.repository.SavedSearchRepository;
-import com.umdc.directory.util.JwtUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -31,8 +32,16 @@ public class SavedSearchServiceImpl implements SavedSearchService {
 
     private final SavedSearchRepository savedSearchRepository;
     private final LastSearchRepository lastSearchRepository;
+    private final SessionTokenVerifier sessionTokenVerifier;
 
     public SavedSearchServiceImpl(SavedSearchRepository savedSearchRepository, LastSearchRepository lastSearchRepository) {
+        this(savedSearchRepository, lastSearchRepository, SessionTokenVerifier.unverified());
+    }
+
+    @Autowired
+    public SavedSearchServiceImpl(SavedSearchRepository savedSearchRepository, LastSearchRepository lastSearchRepository,
+                                  SessionTokenVerifier sessionTokenVerifier) {
+        this.sessionTokenVerifier = Objects.requireNonNullElseGet(sessionTokenVerifier, SessionTokenVerifier::unverified);
         this.savedSearchRepository = savedSearchRepository;
         this.lastSearchRepository = lastSearchRepository;
     }
@@ -40,7 +49,7 @@ public class SavedSearchServiceImpl implements SavedSearchService {
     @Override
     @Transactional
     public ResponseEntity<SavedSearchTO> create(String sessionToken, SavedSearchCreateRequest request) {
-        var userId = JwtUtil.getUidFromToken(sessionToken);
+        var userId = sessionTokenVerifier.uid(sessionToken);
         if (Objects.isNull(userId)) {
             return unauthorized();
         }
@@ -77,7 +86,7 @@ public class SavedSearchServiceImpl implements SavedSearchService {
     @Override
     @Transactional(readOnly = true)
     public ResponseEntity<SavedSearchListResponse> list(String sessionToken) {
-        var userId = JwtUtil.getUidFromToken(sessionToken);
+        var userId = sessionTokenVerifier.uid(sessionToken);
         if (Objects.isNull(userId)) {
             return unauthorized();
         }
@@ -88,7 +97,7 @@ public class SavedSearchServiceImpl implements SavedSearchService {
     @Override
     @Transactional
     public ResponseEntity<SavedSearchTO> rename(String sessionToken, UUID id, SavedSearchRenameRequest request) {
-        var userId = JwtUtil.getUidFromToken(sessionToken);
+        var userId = sessionTokenVerifier.uid(sessionToken);
         if (Objects.isNull(userId)) {
             return unauthorized();
         }
@@ -112,7 +121,7 @@ public class SavedSearchServiceImpl implements SavedSearchService {
     @Override
     @Transactional
     public ResponseEntity<Void> delete(String sessionToken, UUID id) {
-        var userId = JwtUtil.getUidFromToken(sessionToken);
+        var userId = sessionTokenVerifier.uid(sessionToken);
         if (Objects.isNull(userId)) {
             return unauthorized();
         }
@@ -127,7 +136,7 @@ public class SavedSearchServiceImpl implements SavedSearchService {
     @Override
     @Transactional
     public ResponseEntity<SearchReplayTO> replay(String sessionToken, UUID id) {
-        var userId = JwtUtil.getUidFromToken(sessionToken);
+        var userId = sessionTokenVerifier.uid(sessionToken);
         if (Objects.isNull(userId)) {
             return unauthorized();
         }
@@ -144,7 +153,7 @@ public class SavedSearchServiceImpl implements SavedSearchService {
     @Override
     @Transactional(readOnly = true)
     public ResponseEntity<LastSearchTO> getLast(String sessionToken) {
-        var userId = JwtUtil.getUidFromToken(sessionToken);
+        var userId = sessionTokenVerifier.uid(sessionToken);
         if (Objects.isNull(userId)) {
             return unauthorized();
         }
@@ -156,7 +165,7 @@ public class SavedSearchServiceImpl implements SavedSearchService {
     @Override
     @Transactional
     public ResponseEntity<LastSearchTO> putLast(String sessionToken, SearchParamsTO params) {
-        var userId = JwtUtil.getUidFromToken(sessionToken);
+        var userId = sessionTokenVerifier.uid(sessionToken);
         if (Objects.isNull(userId)) {
             return unauthorized();
         }

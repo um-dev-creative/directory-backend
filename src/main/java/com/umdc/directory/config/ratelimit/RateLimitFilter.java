@@ -1,6 +1,7 @@
 package com.umdc.directory.config.ratelimit;
 
 import com.umdc.directory.constant.DirectoryAppConstants;
+import com.umdc.directory.security.SessionTokenVerifier;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,14 +18,17 @@ import java.util.regex.Pattern;
 /// Anything outside the API path (`/actuator/health`, probes, docs) is never limited. A rejected request gets `429` with
 /// `Retry-After` (seconds) and `X-RateLimit-Limit`.
 ///
-/// The user id is read from the token payload (`uid`, else `sub`) only to choose the bucket; the token is not verified here
-/// (the session interceptor does that). Forging it can only create more user buckets: the IP bucket always applies.
+/// The user id (`uid`, else `sub`) only chooses the bucket. When a {@link SessionTokenVerifier} that verifies is set (see
+/// {@link #withVerifier}, `umdc.security.jwt.verify-signature=true`) an invalid, expired or forged token gets no user bucket, so it
+/// cannot be used to spread requests over invented buckets or to spend somebody else's; without it the payload is read unverified
+/// (legacy). The IP bucket always applies.
 public class RateLimitFilter extends OncePerRequestFilter {
 
     /// Header carrying the session token.
     static final String SESSION_HEADER = "session-token";
     private static final Pattern UID = Pattern.compile("\"(?:uid|sub)\"\\s*:\\s*\"?([^\",}\\s]+)\"?");
 
+    private SessionTokenVerifier verifier;
     private final RateLimitStore store;
     private final String apiPath;
     private final int ipPermitsPerMinute;
@@ -75,6 +79,13 @@ public class RateLimitFilter extends OncePerRequestFilter {
         this.trustForwardedHeader = trustForwardedHeader;
     }
 
+    /// @param sessionTokenVerifier verifier used to read the user id of the `session-token` header; null keeps the unverified read
+    /// @return this filter
+    public RateLimitFilter withVerifier(SessionTokenVerifier sessionTokenVerifier) {
+        this.verifier = sessionTokenVerifier;
+        return this;
+    }
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
@@ -91,7 +102,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
         String uid = null;
         if (decision.allowed()) {
-            uid = userId(request.getHeader(SESSION_HEADER));
+            String token = request.getHeader(SESSION_HEADER);
+            uid = verifier != null && verifier.verifies() ? verifier.bucketKey(token) : userId(token);
             if (uid != null) {
                 decision = store.tryConsume("uid:" + uid, userPermitsPerMinute);
             }

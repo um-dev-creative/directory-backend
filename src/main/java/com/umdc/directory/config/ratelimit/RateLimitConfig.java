@@ -1,5 +1,6 @@
 package com.umdc.directory.config.ratelimit;
 
+import com.umdc.directory.security.SessionTokenVerifier;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -23,6 +24,7 @@ public class RateLimitConfig {
     /// @param geocodePerMinute     `umdc.ratelimit.geocode-per-minute`: `POST /geocode` per user (else IP), default 10 (env `UMDC_RATELIMIT_GEOCODE_PER_MINUTE`)
     /// @param mapPerMinute         `umdc.ratelimit.map-per-minute`: `GET /businesses/map`, default 60 (env `UMDC_RATELIMIT_MAP_PER_MINUTE`)
     /// @param nearbyPerMinute      `umdc.ratelimit.nearby-per-minute`: `GET /businesses/nearby`, default 60 (env `UMDC_RATELIMIT_NEARBY_PER_MINUTE`)
+    /// @param verifierProvider     verifies the session token before its uid picks a user bucket
     /// @return the filter registration, ahead of the Spring Security chain
     @Bean
     public FilterRegistrationBean<RateLimitFilter> rateLimitFilterRegistration(
@@ -34,10 +36,12 @@ public class RateLimitConfig {
             @Value("${umdc.ratelimit.events-per-minute:20}") int eventsPerMinute,
             @Value("${umdc.ratelimit.geocode-per-minute:10}") int geocodePerMinute,
             @Value("${umdc.ratelimit.map-per-minute:60}") int mapPerMinute,
-            @Value("${umdc.ratelimit.nearby-per-minute:60}") int nearbyPerMinute) {
+            @Value("${umdc.ratelimit.nearby-per-minute:60}") int nearbyPerMinute,
+            ObjectProvider<SessionTokenVerifier> verifierProvider) {
         FilterRegistrationBean<RateLimitFilter> registration = new FilterRegistrationBean<>(
                 new RateLimitFilter(storeProvider.getIfAvailable(InMemoryRateLimitStore::new), apiPath, ipPerMinute, userPerMinute, trustForwardedHeader, eventsPerMinute,
-                        geocodePerMinute, mapPerMinute, nearbyPerMinute));
+                        geocodePerMinute, mapPerMinute, nearbyPerMinute)
+                        .withVerifier(verifierProvider.getIfAvailable()));
         registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 10);
         return registration;
     }
