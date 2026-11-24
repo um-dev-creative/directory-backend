@@ -22,6 +22,26 @@ class RateLimitConfigTest {
     }
 
     @Test
+    void readsTheGeoQuotaPropertiesAndAppliesDefaults() {
+        runner.withPropertyValues("umdc.ratelimit.enabled=true", "umdc.ratelimit.geocode-per-minute=1")
+                .run(ctx -> {
+                    RateLimitFilter f = (RateLimitFilter) ctx.getBean(FilterRegistrationBean.class).getFilter();
+                    for (String field : new String[]{"geocodePermitsPerMinute", "mapPermitsPerMinute", "nearbyPermitsPerMinute"}) {
+                        var fld = RateLimitFilter.class.getDeclaredField(field);
+                        fld.setAccessible(true);
+                        int expected = field.startsWith("geocode") ? 1 : 60;
+                        assertThat(fld.getInt(f)).isEqualTo(expected);
+                    }
+                });
+        runner.withPropertyValues("umdc.ratelimit.enabled=true").run(ctx -> {
+            RateLimitFilter f = (RateLimitFilter) ctx.getBean(FilterRegistrationBean.class).getFilter();
+            var fld = RateLimitFilter.class.getDeclaredField("geocodePermitsPerMinute");
+            fld.setAccessible(true);
+            assertThat(fld.getInt(f)).isEqualTo(10);
+        });
+    }
+
+    @Test
     void doesNothingWhenDisabledOrAbsent() {
         runner.withPropertyValues("umdc.ratelimit.enabled=false")
                 .run(ctx -> assertThat(ctx).doesNotHaveBean(FilterRegistrationBean.class));

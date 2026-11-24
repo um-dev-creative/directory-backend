@@ -1,5 +1,6 @@
 package com.umdc.directory.config.ratelimit;
 
+import com.umdc.directory.constant.DirectoryAppConstants;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,6 +31,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final int userPermitsPerMinute;
     private final boolean trustForwardedHeader;
     private final int eventPermitsPerMinute;
+    private final int geocodePermitsPerMinute;
+    private final int mapPermitsPerMinute;
+    private final int nearbyPermitsPerMinute;
 
     /// @param store                the bucket store
     /// @param apiPath              base path to protect
@@ -47,6 +51,22 @@ public class RateLimitFilter extends OncePerRequestFilter {
     /// @param eventPermitsPerMinute quota per IP and business for click events; 0 or less disables the extra bucket
     public RateLimitFilter(RateLimitStore store, String apiPath, int ipPermitsPerMinute, int userPermitsPerMinute,
                            boolean trustForwardedHeader, int eventPermitsPerMinute) {
+        this(store, apiPath, ipPermitsPerMinute, userPermitsPerMinute, trustForwardedHeader, eventPermitsPerMinute, 0, 0, 0);
+    }
+
+    /// Same as the other constructors, plus dedicated quotas for the geo routes, each keyed by user id when a session token
+    /// carries one, otherwise by client IP: `POST {apiPath}/geocode` (external provider cost), `GET {apiPath}/businesses/map`
+    /// and `GET {apiPath}/businesses/nearby`.
+    ///
+    /// @param geocodePermitsPerMinute quota for geocoding; 0 or less disables that bucket
+    /// @param mapPermitsPerMinute     quota for the map route; 0 or less disables that bucket
+    /// @param nearbyPermitsPerMinute  quota for the nearby route; 0 or less disables that bucket
+    public RateLimitFilter(RateLimitStore store, String apiPath, int ipPermitsPerMinute, int userPermitsPerMinute,
+                           boolean trustForwardedHeader, int eventPermitsPerMinute, int geocodePermitsPerMinute,
+                           int mapPermitsPerMinute, int nearbyPermitsPerMinute) {
+        this.geocodePermitsPerMinute = geocodePermitsPerMinute;
+        this.mapPermitsPerMinute = mapPermitsPerMinute;
+        this.nearbyPermitsPerMinute = nearbyPermitsPerMinute;
         this.eventPermitsPerMinute = eventPermitsPerMinute;
         this.store = store;
         this.apiPath = apiPath;
@@ -69,11 +89,15 @@ public class RateLimitFilter extends OncePerRequestFilter {
         if (decision.allowed() && eventPermitsPerMinute > 0 && isEventPost(request)) {
             decision = store.tryConsume("ev:" + ip + ":" + request.getRequestURI(), eventPermitsPerMinute);
         }
+        String uid = null;
         if (decision.allowed()) {
-            String uid = userId(request.getHeader(SESSION_HEADER));
+            uid = userId(request.getHeader(SESSION_HEADER));
             if (uid != null) {
                 decision = store.tryConsume("uid:" + uid, userPermitsPerMinute);
             }
+        }
+        if (decision.allowed()) {
+            decision = routeDecision(request, uid, ip, decision);
         }
         if (decision.allowed()) {
             chain.doFilter(request, response);
@@ -82,9 +106,33 @@ public class RateLimitFilter extends OncePerRequestFilter {
         response.setStatus(429);
         response.setHeader("Retry-After", Long.toString(decision.retryAfterSeconds()));
         response.setHeader("X-RateLimit-Limit", Integer.toString(decision.limit()));
+        response.setHeader(DirectoryAppConstants.MESSAGE_HEADER, "Too many requests, retry in " + decision.retryAfterSeconds() + " seconds");
         response.setContentType("application/json");
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.getWriter().write("{\"error\":\"too_many_requests\",\"retryAfterSeconds\":" + decision.retryAfterSeconds() + "}");
+    }
+
+    /// Applies the dedicated geo bucket of the request route, if any. Keyed by user id, else by IP.
+    private RateLimitDecision routeDecision(HttpServletRequest request, String uid, String ip, RateLimitDecision current) {
+        String path = request.getRequestURI();
+        String route;
+        int permits;
+        if ("POST".equals(request.getMethod()) && path.equals(apiPath + "/geocode")) {
+            route = "geocode";
+            permits = geocodePermitsPerMinute;
+        } else if ("GET".equals(request.getMethod()) && path.equals(apiPath + "/businesses/map")) {
+            route = "map";
+            permits = mapPermitsPerMinute;
+        } else if ("GET".equals(request.getMethod()) && path.equals(apiPath + "/businesses/nearby")) {
+            route = "nearby";
+            permits = nearbyPermitsPerMinute;
+        } else {
+            return current;
+        }
+        if (permits <= 0) {
+            return current;
+        }
+        return store.tryConsume("geo:" + route + ":" + (uid != null ? "uid:" + uid : "ip:" + ip), permits);
     }
 
     private boolean isEventPost(HttpServletRequest request) {
