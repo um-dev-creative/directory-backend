@@ -5,7 +5,6 @@ import com.umdc.directory.jpa.entity.BusinessEventDailyEntity;
 import com.umdc.directory.jpa.entity.CampaignEntity;
 import com.umdc.directory.jpa.entity.BusinessEventDailyId;
 import com.umdc.directory.jpa.entity.CategoryEntity;
-import com.umdc.directory.jpa.entity.UserEntity;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,12 +49,11 @@ class BusinessEventDailyRepositoryTest {
 
     private BusinessEntity business;
     private BusinessEntity other;
-    private UserEntity owner;
+    private UUID owner;
 
     @BeforeEach
     void data() {
-        owner = new UserEntity();
-        em.persist(owner);
+        owner = UUID.randomUUID();
         var category = new CategoryEntity();
         category.setName("Food");
         category.setDescription("Food");

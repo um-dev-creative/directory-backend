@@ -1,3 +1,16 @@
+## [Unreleased] - 2026-11-23 (R-1: no access to the general schema)
+
+### Changed
+- directory-backend now accesses only the `directory_site` schema. `UserEntity` and `ContactTypeEntity` (schema `general`, owned by Backbone) are removed; `BusinessEntity.user_fk`, `UserFavoriteEntity.user_fk` and `DigitalContactEntity.contact_type_fk` are plain UUID columns. JPQL, `findOwnerId`, `findByUserEntityFk`, the campaign owner specification and the DTOs behave as before. The `JOIN FETCH` on contact types in `BusinessRepository` is gone.
+- `V7__create_saved_search.sql` (never applied anywhere) no longer declares foreign keys to the `general` user table; the indexes are kept.
+- `BusinessMapper.toBusinessTO` takes the contact type names (id to name) served by Backbone; the one-argument overload maps without names.
+
+### Added
+- `ContactTypeProvider`: loads `BackboneClient.findAllContactType()`, caches the id to name map in memory (`umdc.directory.contact-types.cache-ttl-seconds`, default 600), serves the stale cache if Backbone fails and degrades to empty names (warning, no 500) when nothing is cached. Reused by `BusinessServiceImpl` and `FavoriteServiceImpl`.
+- Migration `V12__drop_cross_schema_foreign_keys.sql` (idempotent, no data deleted): drops every foreign key of `directory_site` that references another schema (found through `pg_constraint`; in QA: `fk_business_user_1`, `fk_contact_business_contact_type_1`, `user_favorite_user_fk_fkey`) and column defaults that call a function of `general`.
+- Guard test `NoGeneralSchemaAccessTest`: fails on entities outside `directory_site`, migrations or repository queries that mention `general`, imports of general-schema entities, or a V12 that stops using the catalog lookup.
+- Guides: `docs/user-guide/no-general-schema-access.md`, `docs/technical/no-general-schema-access.md` (Mermaid diagrams, documented GRANT script for the `directory_app` role).
+
 ## [Unreleased] - 2026-11-23 (API contract: Phase 2)
 
 ### Changed

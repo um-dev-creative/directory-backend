@@ -23,7 +23,7 @@ public interface DigitalContactMapper {
     @Mapping(target = "lastUpdate", source = "lastUpdate")
     @Mapping(target = "createdAt", source = "createdDate")
     @Mapping(target = "businessId", source = "business.id")
-    @Mapping(target = "contactTypeId", source = "contactType.id")
+    @Mapping(target = "contactTypeId", source = "contactTypeFk")
     DigitalContactTO toTO(DigitalContactEntity entity);
 }
 

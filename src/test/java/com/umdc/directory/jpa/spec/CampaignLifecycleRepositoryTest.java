@@ -1,11 +1,11 @@
 package com.umdc.directory.jpa.spec;
 
+import java.util.UUID;
 import com.umdc.directory.api.v1.service.CampaignStatusCounter;
 import com.umdc.directory.constant.CampaignStatus;
 import com.umdc.directory.jpa.entity.BusinessEntity;
 import com.umdc.directory.jpa.entity.CampaignEntity;
 import com.umdc.directory.jpa.entity.CategoryEntity;
-import com.umdc.directory.jpa.entity.UserEntity;
 import com.umdc.directory.jpa.repository.CampaignRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,18 +47,16 @@ class CampaignLifecycleRepositoryTest {
     private CampaignStatusCounter counter;
 
     private final LocalDateTime now = LocalDateTime.now();
-    private UserEntity owner;
-    private UserEntity other;
+    private UUID owner;
+    private UUID other;
     private BusinessEntity ownBusiness;
     private BusinessEntity otherBusiness;
     private CategoryEntity category;
 
     @BeforeEach
     void data() {
-        owner = new UserEntity();
-        other = new UserEntity();
-        em.persist(owner);
-        em.persist(other);
+        owner = UUID.randomUUID();
+        other = UUID.randomUUID();
         category = new CategoryEntity();
         category.setName("c");
         category.setDescription("c");
@@ -80,7 +78,7 @@ class CampaignLifecycleRepositoryTest {
         em.clear();
     }
 
-    private BusinessEntity business(UserEntity user) {
+    private BusinessEntity business(UUID user) {
         var b = new BusinessEntity();
         b.setName("b");
         b.setCategoryFk(category);
@@ -127,15 +125,15 @@ class CampaignLifecycleRepositoryTest {
     @Test
     void ownerSeesEverythingOfItsBusinessPlusPublicOnes() {
         assertEquals(Set.of("active", "scheduled", "paused", "expired", "draft", "other-active"),
-                titles(CampaignSpecifications.visibleTo(owner.getId(), now)));
+                titles(CampaignSpecifications.visibleTo(owner, now)));
     }
 
     @Test
     void ownerFilteredByBusinessAndStatusIsHiddenFromOthers() {
         Specification<CampaignEntity> mine = CampaignSpecifications.byFilters(null, null, ownBusiness.getId(), null)
                 .and(CampaignSpecifications.byStatus(CampaignStatus.PAUSED, now));
-        assertEquals(Set.of("paused"), titles(mine.and(CampaignSpecifications.visibleTo(owner.getId(), now))));
-        assertEquals(Set.of(), titles(mine.and(CampaignSpecifications.visibleTo(other.getId(), now))));
+        assertEquals(Set.of("paused"), titles(mine.and(CampaignSpecifications.visibleTo(owner, now))));
+        assertEquals(Set.of(), titles(mine.and(CampaignSpecifications.visibleTo(other, now))));
         assertEquals(Set.of(), titles(mine.and(CampaignSpecifications.visibleTo(null, now))));
     }
 

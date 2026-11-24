@@ -6,7 +6,6 @@ import com.umdc.directory.api.v1.to.FavoriteUpdateRequest;
 import com.umdc.directory.constant.FavoriteType;
 import com.umdc.directory.jpa.entity.BusinessEntity;
 import com.umdc.directory.jpa.entity.ProductEntity;
-import com.umdc.directory.jpa.entity.UserEntity;
 import com.umdc.directory.jpa.entity.UserFavoriteEntity;
 import com.umdc.directory.jpa.repository.BusinessRepository;
 import com.umdc.directory.jpa.repository.CampaignRepository;
@@ -96,9 +95,7 @@ class FavoriteServiceImplTest {
             saved.setCreatedAt(LocalDateTime.now());
             saved.setUpdatedAt(LocalDateTime.now());
             // set user so toResponse() can read user id
-            var userEntity = new UserEntity();
-            userEntity.setId(userId);
-            saved.setUser(userEntity);
+            saved.setUserFk(userId);
 
             when(userFavoriteRepository.saveAndFlush(any())).thenReturn(saved);
             when(favoriteMapper.toResponse(any(UserFavoriteEntity.class))).thenReturn(favoriteResponse);
@@ -123,9 +120,7 @@ class FavoriteServiceImplTest {
         existing.setId(userFavoriteId);
         existing.setCreatedAt(LocalDateTime.now());
         existing.setUpdatedAt(LocalDateTime.now());
-        var userEntity = new UserEntity();
-        userEntity.setId(userId);
-        existing.setUser(userEntity);
+        existing.setUserFk(userId);
 
         try (MockedStatic<JwtUtil> mockedStatic = Mockito.mockStatic(JwtUtil.class)) {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
@@ -160,9 +155,7 @@ class FavoriteServiceImplTest {
         UUID productId = UUID.randomUUID();
         FavoriteUpdateRequest req = new FavoriteUpdateRequest(productId, null);
         UserFavoriteEntity existing = new UserFavoriteEntity();
-        var owner = new UserEntity();
-        owner.setId(UUID.randomUUID());
-        existing.setUser(owner);
+        existing.setUserFk(UUID.randomUUID());
 
         try (MockedStatic<JwtUtil> mockedStatic = Mockito.mockStatic(JwtUtil.class)) {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
@@ -180,9 +173,7 @@ class FavoriteServiceImplTest {
         UUID productId = UUID.randomUUID();
         FavoriteUpdateRequest req = new FavoriteUpdateRequest(productId, false);
         UserFavoriteEntity existing = new UserFavoriteEntity();
-        var owner = new UserEntity();
-        owner.setId(userId);
-        existing.setUser(owner);
+        existing.setUserFk(userId);
         existing.setId(favId);
 
         FavoriteResponse favoriteResponse = new FavoriteResponse(favId, "PRODUCT", productId, userId, LocalDateTime.now(), LocalDateTime.now(), false);
@@ -219,9 +210,7 @@ class FavoriteServiceImplTest {
     void deleteFavoriteShouldReturnForbiddenWhenNotOwner() {
         UUID favId = UUID.randomUUID();
         UserFavoriteEntity existing = new UserFavoriteEntity();
-        var owner = new UserEntity();
-        owner.setId(UUID.randomUUID());
-        existing.setUser(owner);
+        existing.setUserFk(UUID.randomUUID());
 
         try (MockedStatic<JwtUtil> mockedStatic = Mockito.mockStatic(JwtUtil.class)) {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
@@ -237,9 +226,7 @@ class FavoriteServiceImplTest {
     void deleteFavoriteShouldSoftDeleteWhenOwner() {
         UUID favId = UUID.randomUUID();
         UserFavoriteEntity existing = new UserFavoriteEntity();
-        var owner = new UserEntity();
-        owner.setId(userId);
-        existing.setUser(owner);
+        existing.setUserFk(userId);
         existing.setId(favId);
 
         try (MockedStatic<JwtUtil> mockedStatic = Mockito.mockStatic(JwtUtil.class)) {

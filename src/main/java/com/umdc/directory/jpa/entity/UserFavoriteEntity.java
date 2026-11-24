@@ -3,8 +3,6 @@ package com.umdc.directory.jpa.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -27,11 +25,10 @@ public class UserFavoriteEntity implements Serializable {
     @Column(name = "id", nullable = false)
     private UUID id;
 
+    /** Plain UUID column: the user lives in Backbone (schema general) and is never mapped here. */
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "user_fk", nullable = false)
-    private UserEntity user;
+    @Column(name = "user_fk", nullable = false)
+    private UUID userFk;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "business_fk")
@@ -77,10 +74,10 @@ public class UserFavoriteEntity implements Serializable {
     /**
      * Convenience constructor to create a favorite for a given user.
      *
-     * @param user the user owning the favorite
+     * @param userFk the id of the user owning the favorite
      */
-    public UserFavoriteEntity(UserEntity user) {
-        this.user = user;
+    public UserFavoriteEntity(UUID userFk) {
+        this.userFk = userFk;
     }
 
     public UUID getId() {
@@ -91,12 +88,12 @@ public class UserFavoriteEntity implements Serializable {
         this.id = id;
     }
 
-    public UserEntity getUser() {
-        return user;
+    public UUID getUserFk() {
+        return userFk;
     }
 
-    public void setUser(UserEntity user) {
-        this.user = user;
+    public void setUserFk(UUID userFk) {
+        this.userFk = userFk;
     }
 
     public BusinessEntity getBusiness() {

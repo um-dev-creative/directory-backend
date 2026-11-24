@@ -8,7 +8,6 @@ import com.umdc.directory.constant.FavoriteType;
 import com.umdc.directory.jpa.entity.BusinessEntity;
 import com.umdc.directory.jpa.entity.CampaignEntity;
 import com.umdc.directory.jpa.entity.ProductEntity;
-import com.umdc.directory.jpa.entity.UserEntity;
 import com.umdc.directory.jpa.entity.UserFavoriteEntity;
 import com.umdc.directory.jpa.repository.BusinessRepository;
 import com.umdc.directory.jpa.repository.CampaignRepository;
@@ -78,11 +77,13 @@ class FavoriteServiceImplF0Test {
     @Mock
     private CampaignMapper campaignMapper;
 
+    private final ContactTypeProvider contactTypeProvider = org.mockito.Mockito.mock(ContactTypeProvider.class);
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
         service = new FavoriteServiceImpl(favorites, businessRepository, productRepository, campaignRepository,
-                favoriteMapper, businessMapper, productMapper, campaignMapper);
+                favoriteMapper, businessMapper, contactTypeProvider, productMapper, campaignMapper);
         jwt = Mockito.mockStatic(JwtUtil.class);
         jwt.when(() -> JwtUtil.getUidFromToken("token")).thenReturn(userId);
     }
@@ -222,10 +223,8 @@ class FavoriteServiceImplF0Test {
         return fav;
     }
 
-    private UserEntity userEntity() {
-        UserEntity u = new UserEntity();
-        u.setId(userId);
-        return u;
+    private UUID userEntity() {
+        return userId;
     }
 
     @Test
@@ -349,9 +348,7 @@ class FavoriteServiceImplF0Test {
     void updateIsOwnerCheckedBeforeAnyTargetLookup() {
         UUID favId = UUID.randomUUID();
         UserFavoriteEntity foreign = new UserFavoriteEntity();
-        UserEntity stranger = new UserEntity();
-        stranger.setId(UUID.randomUUID());
-        foreign.setUser(stranger);
+        foreign.setUserFk(UUID.randomUUID());
         when(favorites.findById(favId)).thenReturn(Optional.of(foreign));
 
         assertEquals(HttpStatus.FORBIDDEN, service.updateFavorite("token", favId, new FavoriteUpdateRequest(UUID.randomUUID(), null)).getStatusCode());

@@ -70,7 +70,7 @@ public class BusinessProfileImageServiceImpl implements BusinessProfileImageServ
         }
 
         var owner = businessOpt.get().getUserFk();
-        if (Objects.isNull(owner) || !userId.equals(owner.getId())) {
+        if (Objects.isNull(owner) || !userId.equals(owner)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 

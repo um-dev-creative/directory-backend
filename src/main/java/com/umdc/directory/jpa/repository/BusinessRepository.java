@@ -22,22 +22,22 @@ import java.util.UUID;
  */
 public interface BusinessRepository extends JpaRepository<BusinessEntity, UUID>, JpaSpecificationExecutor<BusinessEntity> {
 
-    @Query("SELECT bu FROM BusinessEntity bu WHERE bu.userEntityFk.id = :userId")
+    @Query("SELECT bu FROM BusinessEntity bu WHERE bu.userFk = :userId")
     Set<BusinessEntity> findByUserEntityFk(@NotNull @Param("userId") UUID userId);
 
     Optional<BusinessEntity> findByName(@NotNull String name);
 
-    @Query("SELECT count(bu.id) FROM BusinessEntity bu WHERE bu.userEntityFk.id = :userId")
+    @Query("SELECT count(bu.id) FROM BusinessEntity bu WHERE bu.userFk = :userId")
     int countByUserId(@Param("userId") UUID userId);
 
-    @Query("SELECT b.id FROM BusinessEntity b LEFT JOIN b.digitalContacts dc ON dc.business.id = b.id  WHERE b.userEntityFk.id = :userId")
+    @Query("SELECT b.id FROM BusinessEntity b LEFT JOIN b.digitalContacts dc ON dc.business.id = b.id  WHERE b.userFk = :userId")
     Set<UUID> findIdCollectionByUserId(@Param("userId") UUID userId);
 
-    @Query("SELECT b FROM BusinessEntity b LEFT JOIN FETCH b.digitalContacts dc LEFT JOIN FETCH dc.contactTypeEntity WHERE b.id = :businessId")
+    @Query("SELECT b FROM BusinessEntity b LEFT JOIN FETCH b.digitalContacts dc WHERE b.id = :businessId")
     Optional<BusinessEntity> findBusinessWithDigitalContactsById(@Param("businessId") UUID businessId);
 
     /// Id of the user who owns the business, without loading the business; empty when it does not exist.
-    @Query("SELECT b.userEntityFk.id FROM BusinessEntity b WHERE b.id = :businessId")
+    @Query("SELECT b.userFk FROM BusinessEntity b WHERE b.id = :businessId")
     Optional<UUID> findOwnerId(@Param("businessId") UUID businessId);
 
     /// The search (`BusinessSpecifications`) reads the category name of every row, so it is fetched with the page.

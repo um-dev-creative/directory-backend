@@ -8,7 +8,6 @@ import com.umdc.commons.services.cloudflare.to.ImageReferenceResponse;
 import com.umdc.commons.services.cloudflare.to.ImageUploadRequest;
 import com.umdc.commons.services.cloudflare.to.ImageUploadResponse;
 import com.umdc.directory.jpa.entity.BusinessEntity;
-import com.umdc.directory.jpa.entity.UserEntity;
 import com.umdc.directory.support.TestTokens;
 import com.umdc.directory.jpa.repository.BusinessRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -50,9 +49,7 @@ class BusinessProfileImageServiceImplTest {
         BusinessEntity entity = new BusinessEntity();
         entity.setId(businessId);
         if (ownerId != null) {
-            UserEntity owner = new UserEntity();
-            owner.setId(ownerId);
-            entity.setUserFk(owner);
+            entity.setUserFk(ownerId);
         }
         return entity;
     }

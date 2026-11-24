@@ -7,7 +7,6 @@ import com.umdc.directory.client.backbone.to.BackboneUserUpdateRequest;
 import com.umdc.directory.client.backbone.to.ContactType;
 import com.umdc.directory.constant.ContactTypeKey;
 import com.umdc.directory.jpa.entity.BusinessEntity;
-import com.umdc.directory.jpa.entity.UserEntity;
 import com.umdc.directory.jpa.repository.BusinessRepository;
 import com.umdc.directory.jpa.repository.CategoryRepository;
 import com.umdc.directory.jpa.repository.DigitalContactRepository;
@@ -39,9 +38,7 @@ class BusinessServiceImplExtendedTest {
 
     /** Marks the entity as owned by the user of {@link #OWNER_TOKEN}. */
     private static BusinessEntity owned(BusinessEntity entity) {
-        UserEntity owner = new UserEntity();
-        owner.setId(OWNER_ID);
-        entity.setUserFk(owner);
+        entity.setUserFk(OWNER_ID);
         return entity;
     }
 
@@ -65,7 +62,8 @@ class BusinessServiceImplExtendedTest {
 
     @BeforeEach
     void setUp() {
-        service = new BusinessServiceImpl(userService, businessRepository,categoryRepository, digitalContactRepository, businessMapper, backboneClient);
+        service = new BusinessServiceImpl(userService, businessRepository,categoryRepository, digitalContactRepository, businessMapper, backboneClient,
+                new ContactTypeProvider(backboneClient, 600));
         ReflectionTestUtils.setField(service, "applicationId", APPLICATION_ID);
         ReflectionTestUtils.setField(service, "initialRoleId", INITIAL_ROLE_ID);
     }
@@ -263,7 +261,7 @@ class BusinessServiceImplExtendedTest {
         BusinessTO expected = mock(BusinessTO.class);
 
         when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(owned(entity)));
-        when(businessMapper.toBusinessTO(entity)).thenReturn(expected);
+        when(businessMapper.toBusinessTO(org.mockito.ArgumentMatchers.eq(entity), org.mockito.ArgumentMatchers.anyMap())).thenReturn(expected);
 
         ResponseEntity<BusinessTO> result = service.findById(businessId);
 
@@ -293,8 +291,8 @@ class BusinessServiceImplExtendedTest {
         BusinessTO to2 = mock(BusinessTO.class);
 
         when(businessRepository.findByUserEntityFk(userId)).thenReturn(Set.of(entity1, entity2));
-        when(businessMapper.toBusinessTO(entity1)).thenReturn(to1);
-        when(businessMapper.toBusinessTO(entity2)).thenReturn(to2);
+        when(businessMapper.toBusinessTO(org.mockito.ArgumentMatchers.eq(entity1), org.mockito.ArgumentMatchers.anyMap())).thenReturn(to1);
+        when(businessMapper.toBusinessTO(org.mockito.ArgumentMatchers.eq(entity2), org.mockito.ArgumentMatchers.anyMap())).thenReturn(to2);
 
         ResponseEntity<Set<BusinessTO>> result = service.findByUserId(userId);
 
@@ -325,7 +323,7 @@ class BusinessServiceImplExtendedTest {
         BusinessTO expected = mock(BusinessTO.class);
 
         when(businessRepository.findByName(name)).thenReturn(Optional.of(entity));
-        when(businessMapper.toBusinessTO(entity)).thenReturn(expected);
+        when(businessMapper.toBusinessTO(org.mockito.ArgumentMatchers.eq(entity), org.mockito.ArgumentMatchers.anyMap())).thenReturn(expected);
 
         ResponseEntity<BusinessTO> result = service.findByName(name);
 
@@ -370,9 +368,7 @@ class BusinessServiceImplExtendedTest {
         UUID userId = UUID.randomUUID();
         String token = "valid-token";
         BusinessEntity business = new BusinessEntity();
-        UserEntity user = new UserEntity();
-        user.setId(userId);
-        business.setUserFk(user);
+        business.setUserFk(userId);
 
         try (MockedStatic<JwtUtil> mockedStatic = mockStatic(JwtUtil.class)) {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(token)).thenReturn(userId);
@@ -427,9 +423,7 @@ class BusinessServiceImplExtendedTest {
         UUID otherUserId = UUID.randomUUID();
         String token = "valid-token";
         BusinessEntity business = new BusinessEntity();
-        UserEntity user = new UserEntity();
-        user.setId(otherUserId);
-        business.setUserFk(user);
+        business.setUserFk(otherUserId);
 
         try (MockedStatic<JwtUtil> mockedStatic = mockStatic(JwtUtil.class)) {
             mockedStatic.when(() -> JwtUtil.getUidFromToken(token)).thenReturn(userId);
@@ -449,9 +443,7 @@ class BusinessServiceImplExtendedTest {
         UUID userId = UUID.randomUUID();
         String token = "valid-token";
         BusinessEntity business = new BusinessEntity();
-        UserEntity user = new UserEntity();
-        user.setId(userId);
-        business.setUserFk(user);
+        business.setUserFk(userId);
         GetUserResponse userResp = mock(GetUserResponse.class);
         when(userResp.notificationEmail()).thenReturn(true);
         when(userResp.notificationSms()).thenReturn(true);

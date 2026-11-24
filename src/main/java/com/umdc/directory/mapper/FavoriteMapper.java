@@ -55,9 +55,9 @@ public interface FavoriteMapper {
     }
 
     default UUID getUserId(UserFavoriteEntity entity) {
-        if (Objects.isNull(entity) || Objects.isNull(entity.getUser())) {
+        if (Objects.isNull(entity)) {
             return null;
         }
-        return entity.getUser().getId();
+        return entity.getUserFk();
     }
 }

@@ -7,7 +7,6 @@ import com.umdc.directory.client.backbone.to.ContactType;
 import com.umdc.directory.constant.ContactTypeKey;
 import com.umdc.directory.jpa.entity.CategoryEntity;
 import com.umdc.directory.jpa.entity.DigitalContactEntity;
-import com.umdc.directory.jpa.entity.UserEntity;
 import com.umdc.directory.jpa.repository.BusinessRepository;
 import com.umdc.directory.jpa.repository.CategoryRepository;
 import com.umdc.directory.jpa.repository.DigitalContactRepository;
@@ -46,6 +45,7 @@ public class BusinessServiceImpl implements BusinessService {
     private final DigitalContactRepository digitalContactRepository;
     private final BusinessMapper businessMapper;
     private final BackboneClient backboneClient;
+    private final ContactTypeProvider contactTypeProvider;
     private final Map<ContactTypeKey, UUID> contactTypeIds = new ConcurrentHashMap<>();
 
     @Value("${umdc.directory.application-id}")
@@ -60,13 +60,15 @@ public class BusinessServiceImpl implements BusinessService {
     public BusinessServiceImpl(UserService userService, BusinessRepository businessRepository,
                                CategoryRepository categoryRepository,
                                DigitalContactRepository digitalContactRepository,
-                               BusinessMapper businessMapper, BackboneClient backboneClient) {
+                               BusinessMapper businessMapper, BackboneClient backboneClient,
+                               ContactTypeProvider contactTypeProvider) {
         this.userService = userService;
         this.businessRepository = businessRepository;
         this.categoryRepository = categoryRepository;
         this.digitalContactRepository = digitalContactRepository;
         this.businessMapper = businessMapper;
         this.backboneClient = backboneClient;
+        this.contactTypeProvider = contactTypeProvider;
     }
 
     /**
@@ -133,12 +135,9 @@ public class BusinessServiceImpl implements BusinessService {
     }
 
     private void loadContactTypeIds() {
-        List<ContactType> contactTypeCollection;
-
-        try {
-            contactTypeCollection = Optional.ofNullable(backboneClient.findAllContactType()).orElse(Collections.emptyList());
-        } catch (RuntimeException ex) {
-            throw new IllegalArgumentException("Contact types are not available.", ex);
+        List<ContactType> contactTypeCollection = contactTypeProvider.contactTypes();
+        if (contactTypeCollection.isEmpty()) {
+            throw new IllegalArgumentException("Contact types are not available.");
         }
 
         var resolvedContactTypeIds = new EnumMap<ContactTypeKey, UUID>(ContactTypeKey.class);
@@ -204,7 +203,7 @@ public class BusinessServiceImpl implements BusinessService {
     public ResponseEntity<BusinessTO> findById(@NotNull UUID id) {
         var result = businessRepository.findBusinessWithDigitalContactsById(id);
         return result.map(businessEntity ->
-                        ResponseEntity.ok(businessMapper.toBusinessTO(businessEntity)))
+                        ResponseEntity.ok(businessMapper.toBusinessTO(businessEntity, contactTypeProvider.names())))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
@@ -213,8 +212,9 @@ public class BusinessServiceImpl implements BusinessService {
      */
     @Override
     public ResponseEntity<Set<BusinessTO>> findByUserId(@NotNull UUID userId) {
+        var names = contactTypeProvider.names();
         var businessPage = businessRepository.findByUserEntityFk(userId).stream()
-                .map(businessMapper::toBusinessTO).collect(Collectors.toSet());
+                .map(e -> businessMapper.toBusinessTO(e, names)).collect(Collectors.toSet());
         return ResponseEntity.ok(businessPage);
     }
 
@@ -231,7 +231,7 @@ public class BusinessServiceImpl implements BusinessService {
 
         var business = businessRepository.findByName(name.trim());
         return business.map(businessEntity ->
-                        ResponseEntity.ok(businessMapper.toBusinessTO(businessEntity)))
+                        ResponseEntity.ok(businessMapper.toBusinessTO(businessEntity, contactTypeProvider.names())))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .header(MESSAGE_HEADER, "Business not found.")
                         .build());
@@ -269,7 +269,7 @@ public class BusinessServiceImpl implements BusinessService {
         }
 
         var existingBusiness = businessOpt.get();
-        if (Objects.isNull(existingBusiness.getUserFk()) || !tokenUserId.equals(existingBusiness.getUserFk().getId())) {
+        if (Objects.isNull(existingBusiness.getUserFk()) || !tokenUserId.equals(existingBusiness.getUserFk())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .header(MESSAGE_HEADER, "Only the owner can update the business.")
                     .build();
@@ -316,9 +316,7 @@ public class BusinessServiceImpl implements BusinessService {
                             .header(MESSAGE_HEADER, "User not found.")
                             .build();
                 }
-                UserEntity userEntity = new UserEntity();
-                userEntity.setId(request.id());
-                existingBusiness.setUserFk(userEntity);
+                existingBusiness.setUserFk(request.id());
                 updated = true;
             } catch (Exception e) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -406,8 +404,7 @@ public class BusinessServiceImpl implements BusinessService {
 
         // Find existing digital contact by stored FK; fallback to relation id for backward compatibility.
         var existingContact = digitalContacts.stream()
-                .filter(dc -> Objects.equals(contactTypeId, dc.getContactTypeFk())
-                        || (Objects.nonNull(dc.getContactType()) && Objects.equals(contactTypeId, dc.getContactType().getId())))
+                .filter(dc -> Objects.equals(contactTypeId, dc.getContactTypeFk()))
                 .findFirst();
 
         if (existingContact.isPresent()) {
@@ -466,7 +463,7 @@ public class BusinessServiceImpl implements BusinessService {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
             var business = businessOpt.get();
-            if (Objects.isNull(business.getUserFk()) || !userId.equals(business.getUserFk().getId())) {
+            if (Objects.isNull(business.getUserFk()) || !userId.equals(business.getUserFk())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             businessRepository.deleteById(businessId);

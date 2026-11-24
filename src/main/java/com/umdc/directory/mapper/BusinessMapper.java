@@ -8,10 +8,11 @@ import com.umdc.directory.constant.ContactTypeKey;
 import com.umdc.directory.jpa.entity.BusinessEntity;
 import com.umdc.directory.jpa.entity.CategoryEntity;
 import com.umdc.directory.jpa.entity.DigitalContactEntity;
-import com.umdc.directory.jpa.entity.UserEntity;
+import org.mapstruct.Context;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -38,7 +39,7 @@ public interface BusinessMapper {
     @Mapping(target = "description", source = "description")
     @Mapping(target = "createdDate", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "lastUpdate", expression = "java(java.time.LocalDateTime.now())")
-    @Mapping(target = "userFk", expression = "java(getUser(businessCreateRequest.userId()))")
+    @Mapping(target = "userFk", source = "userId")
     @Mapping(target = "categoryFk", expression = "java(getCategory(businessCreateRequest.categoryId()))")
     BusinessEntity toSource(BusinessCreateRequest businessCreateRequest);
 
@@ -68,25 +69,23 @@ public interface BusinessMapper {
     @Mapping(target = "description", source = "description")
     @Mapping(target = "updatedDate", source = "lastUpdate")
     @Mapping(target = "createdDate", source = "createdDate")
-    @Mapping(target = "userId", source = "businessEntity.userFk.id")
+    @Mapping(target = "userId", source = "businessEntity.userFk")
     @Mapping(target = "categoryId", source = "businessEntity.categoryFk.id")
-    @Mapping(target = "email", expression = "java(getValueByName(com.umdc.directory.constant.ContactTypeKey.EML, businessEntity))")
-    @Mapping(target = "website", expression = "java(getValueByName(com.umdc.directory.constant.ContactTypeKey.WBH, businessEntity))")
-    @Mapping(target = "customerServiceEmail", expression = "java(getValueByName(com.umdc.directory.constant.ContactTypeKey.SCE, businessEntity))")
-    @Mapping(target = "orderManagementEmail", expression = "java(getValueByName(com.umdc.directory.constant.ContactTypeKey.MEC, businessEntity))")
+    @Mapping(target = "email", expression = "java(getValueByName(com.umdc.directory.constant.ContactTypeKey.EML, businessEntity, contactTypeNames))")
+    @Mapping(target = "website", expression = "java(getValueByName(com.umdc.directory.constant.ContactTypeKey.WBH, businessEntity, contactTypeNames))")
+    @Mapping(target = "customerServiceEmail", expression = "java(getValueByName(com.umdc.directory.constant.ContactTypeKey.SCE, businessEntity, contactTypeNames))")
+    @Mapping(target = "orderManagementEmail", expression = "java(getValueByName(com.umdc.directory.constant.ContactTypeKey.MEC, businessEntity, contactTypeNames))")
     @Mapping(target = "profileImageRef", source = "profileImageRef")
-    BusinessTO toBusinessTO(BusinessEntity businessEntity);
+    BusinessTO toBusinessTO(BusinessEntity businessEntity, @Context Map<UUID, String> contactTypeNames);
 
     /**
-     * Converts a BusinessEntity object to a BusinessCreateResponse object.
+     * Same as {@link #toBusinessTO(BusinessEntity, Map)} without contact type names (email/website stay null).
      *
-     * @param userId The BusinessEntity object to convert.
-     * @return The converted BusinessCreateResponse object.
+     * @param businessEntity The BusinessEntity object to convert.
+     * @return The converted BusinessTO object.
      */
-    default UserEntity getUser(UUID userId) {
-        UserEntity userEntity = new UserEntity();
-        userEntity.setId(userId);
-        return userEntity;
+    default BusinessTO toBusinessTO(BusinessEntity businessEntity) {
+        return toBusinessTO(businessEntity, Map.of());
     }
 
     /**
@@ -106,12 +105,13 @@ public interface BusinessMapper {
      *
      * @param key The contact type key used to identify the desired contact type.
      * @param businessEntity The business entity containing the digital contacts information.
+     * @param contactTypeNames Contact type names by id, as served by Backbone.
      * @return The content value of the matching contact type, or null if no matching contact is found.
      */
-    default String getValueByName(ContactTypeKey key, BusinessEntity businessEntity) {
+    default String getValueByName(ContactTypeKey key, BusinessEntity businessEntity, Map<UUID, String> contactTypeNames) {
         return businessEntity.getDigitalContacts().stream().filter(digitalContactEntity ->
-                Objects.nonNull(digitalContactEntity.getContactType())
-                        && key.toString().equals(digitalContactEntity.getContactType().getName())
+                Objects.nonNull(digitalContactEntity.getContactTypeFk())
+                        && key.toString().equals(contactTypeNames.get(digitalContactEntity.getContactTypeFk()))
         ).map(DigitalContactEntity::getContent).findFirst().orElse(null);
     }
 

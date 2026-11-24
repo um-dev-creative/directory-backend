@@ -1,10 +1,10 @@
 package com.umdc.directory.jpa.repository;
 
+import java.util.UUID;
 import com.umdc.directory.jpa.entity.BusinessEntity;
 import com.umdc.directory.jpa.entity.CategoryEntity;
 import com.umdc.directory.jpa.entity.CityEntity;
 import com.umdc.directory.jpa.entity.LocationEntity;
-import com.umdc.directory.jpa.entity.UserEntity;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,12 +48,11 @@ class LocationGeoRepositoryTest {
     private CategoryEntity food;
     private CategoryEntity bakery;
     private CategoryEntity services;
-    private UserEntity owner;
+    private UUID owner;
 
     @BeforeEach
     void data() {
-        owner = new UserEntity();
-        em.persist(owner);
+        owner = UUID.randomUUID();
         toronto = city("Toronto");
         ottawa = city("Ottawa");
         food = category("Food", null);

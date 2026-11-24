@@ -4,7 +4,6 @@ import com.umdc.directory.jpa.entity.BusinessEntity;
 import com.umdc.directory.jpa.entity.CampaignEntity;
 import com.umdc.directory.jpa.entity.CategoryEntity;
 import com.umdc.directory.jpa.entity.ProductEntity;
-import com.umdc.directory.jpa.entity.UserEntity;
 import com.umdc.directory.jpa.entity.UserFavoriteEntity;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,15 +42,13 @@ class UserFavoriteRepositoryTest {
     @Autowired
     private UserFavoriteRepository repository;
 
-    private UserEntity user;
-    private UserEntity other;
+    private UUID user;
+    private UUID other;
 
     @BeforeEach
     void data() {
-        user = new UserEntity();
-        other = new UserEntity();
-        em.persist(user);
-        em.persist(other);
+        user = UUID.randomUUID();
+        other = UUID.randomUUID();
         var category = new CategoryEntity();
         category.setName("Food");
         category.setDescription("Food");
@@ -111,7 +108,7 @@ class UserFavoriteRepositoryTest {
         return c;
     }
 
-    private void favorite(UserEntity owner, BusinessEntity b, ProductEntity p, CampaignEntity c,
+    private void favorite(UUID owner, BusinessEntity b, ProductEntity p, CampaignEntity c,
                           LocalDateTime createdAt, boolean active) {
         var f = new UserFavoriteEntity(owner);
         f.setBusiness(b);
@@ -130,7 +127,7 @@ class UserFavoriteRepositoryTest {
 
     @Test
     void allTypesAreOrderedByBucketThenCreatedAtDescAndOnlyActiveOfTheUser() {
-        Page<UserFavoriteEntity> page = repository.findPageByUser(user.getId(), -1,
+        Page<UserFavoriteEntity> page = repository.findPageByUser(user, -1,
                 PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt")));
 
         assertEquals(4, page.getTotalElements());
@@ -139,7 +136,7 @@ class UserFavoriteRepositoryTest {
 
     @Test
     void sortByNameAscUsesTheNameOfEachTarget() {
-        Page<UserFavoriteEntity> stores = repository.findPageByUser(user.getId(), 0,
+        Page<UserFavoriteEntity> stores = repository.findPageByUser(user, 0,
                 PageRequest.of(0, 10, JpaSort.unsafe(Sort.Direction.ASC, "COALESCE(b.name, p.name, c.title)")));
 
         assertEquals(List.of("Alpha", "Zeta"), names(stores));
@@ -148,8 +145,8 @@ class UserFavoriteRepositoryTest {
     @Test
     void paginationIsDoneByTheDatabaseAndKeepsTheTotal() {
         PageRequest first = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<UserFavoriteEntity> p0 = repository.findPageByUser(user.getId(), -1, first);
-        Page<UserFavoriteEntity> p1 = repository.findPageByUser(user.getId(), -1, first.next());
+        Page<UserFavoriteEntity> p0 = repository.findPageByUser(user, -1, first);
+        Page<UserFavoriteEntity> p1 = repository.findPageByUser(user, -1, first.next());
 
         assertEquals(List.of("Alpha", "Zeta", "Mango"), names(p0));
         assertEquals(List.of("Beta"), names(p1));
@@ -159,8 +156,8 @@ class UserFavoriteRepositoryTest {
     @Test
     void typeFiltersReturnOnlyThatBucket() {
         PageRequest any = PageRequest.of(0, 10, Sort.by("createdAt"));
-        assertEquals(List.of("Mango"), names(repository.findPageByUser(user.getId(), 1, any)));
-        assertEquals(List.of("Beta"), names(repository.findPageByUser(user.getId(), 2, any)));
+        assertEquals(List.of("Mango"), names(repository.findPageByUser(user, 1, any)));
+        assertEquals(List.of("Beta"), names(repository.findPageByUser(user, 2, any)));
         assertTrue(repository.findPageByUser(UUID.randomUUID(), -1, any).isEmpty());
     }
 }

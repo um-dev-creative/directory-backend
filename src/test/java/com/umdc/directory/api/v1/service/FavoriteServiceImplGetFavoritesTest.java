@@ -55,12 +55,14 @@ class FavoriteServiceImplGetFavoritesTest {
     @Mock
     private CampaignMapper campaignMapper;
 
+    private final ContactTypeProvider contactTypeProvider = org.mockito.Mockito.mock(ContactTypeProvider.class);
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
         favoriteService = new FavoriteServiceImpl(userFavoriteRepository,
                 businessRepository, productRepository, campaignRepository,
-                favoriteMapper, businessMapper, productMapper, campaignMapper);
+                favoriteMapper, businessMapper, contactTypeProvider, productMapper, campaignMapper);
     }
 
     @Test
@@ -128,7 +130,7 @@ class FavoriteServiceImplGetFavoritesTest {
             BusinessTO bto = new BusinessTO(bId, "B", null, null, null, null, null, null, null, null, null, false, null, null);
             OfferTO oto = new OfferTO(cId, "C", null, null, ce.getStartDate(), ce.getEndDate(), null, false);
 
-            when(businessMapper.toBusinessTO(any(BusinessEntity.class))).thenReturn(bto);
+            when(businessMapper.toBusinessTO(any(BusinessEntity.class), any())).thenReturn(bto);
             when(campaignMapper.toOfferTO(any(CampaignEntity.class))).thenReturn(oto);
 
             // full response
