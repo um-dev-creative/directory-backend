@@ -14,7 +14,9 @@ import com.umdc.directory.util.OpeningHoursEvaluator;
 import com.umdc.directory.util.OpeningHoursEvaluator.Slot;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import com.umdc.directory.jpa.spec.SearchRankingSpecifications;
 import com.umdc.directory.jpa.repository.BusinessRepository;
 import com.umdc.directory.jpa.repository.LocationRepository;
 import com.umdc.directory.jpa.spec.BusinessSearchCriteria;
@@ -32,10 +34,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.Instant;
+import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -49,8 +53,6 @@ public class BusinessSearchServiceImpl implements BusinessSearchService {
 
     private static final Logger logger = LoggerFactory.getLogger(BusinessSearchServiceImpl.class);
     private static final double EARTH_RADIUS_M = 6_371_000d;
-    /// Businesses examined when the answer depends on data that is not in the SQL filter (`open_now`, `sort=distance`).
-    static final int MAX_CANDIDATES = 1000;
 
     private final BusinessRepository businessRepository;
     private final LocationRepository locationRepository;
@@ -96,29 +98,63 @@ public class BusinessSearchServiceImpl implements BusinessSearchService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).header(DirectoryAppConstants.MESSAGE_ERROR_HEADER, e.getMessage()).build();
         }
         boolean onlyOpen = Boolean.TRUE.equals(openNow);
-        logger.info("Searching businesses cityId={} city={} categoryId={} page={} perPage={} openNow={} byDistance={}", cityId, city, categoryId,
-                resolvedPage, resolvedPerPage, onlyOpen, geo.sortByDistance());
+        // only counts and flags are logged: never the text of the search nor the coordinates
+        logger.info("Searching businesses page={} perPage={} hasCity={} hasCategory={} hasText={} openNow={} byDistance={}", resolvedPage,
+                resolvedPerPage, cityId != null || city != null, categoryId != null, text != null && !text.isBlank(), onlyOpen,
+                geo.sortByDistance());
 
-        var spec = BusinessSpecifications.from(new BusinessSearchCriteria(cityId, city, categoryId, text));
-        if (!onlyOpen && !geo.sortByDistance()) {
-            // name, then id: a stable order so a business never moves between pages
-            var pageable = PageRequest.of(resolvedPage - 1, resolvedPerPage, Sort.by("name").ascending().and(Sort.by("id")));
-            var result = businessRepository.findAll(spec, pageable);
-            return ResponseEntity.ok(response(result, enrich(result.getContent(), geo, clock.instant())));
+        Instant now = clock.instant();
+        Specification<BusinessEntity> spec = BusinessSpecifications.from(new BusinessSearchCriteria(cityId, city, categoryId, text));
+        if (onlyOpen) {
+            spec = spec.and(openNowSpec(now));
         }
-
-        // the filter or the order needs data that SQL does not see: examine the candidates in memory and page the result
-        var candidates = businessRepository.findAll(spec, PageRequest.of(0, MAX_CANDIDATES, Sort.by("name").ascending().and(Sort.by("id")))).getContent();
-        var all = enrich(candidates, geo, clock.instant());
-        var kept = new ArrayList<>(onlyOpen ? all.stream().filter(i -> Boolean.TRUE.equals(i.openNow())).toList() : all);
+        Pageable pageable;
         if (geo.sortByDistance()) {
-            // businesses without a distance go last; ties keep the name order (the sort is stable)
-            kept.sort(Comparator.comparing(BusinessSearchItemTO::distanceM, Comparator.nullsLast(Comparator.naturalOrder())));
+            // the order (distance, name, id) is part of the specification, evaluated by the database
+            spec = spec.and(SearchRankingSpecifications.orderByDistance(geo.lat(), geo.lng()));
+            pageable = PageRequest.of(resolvedPage - 1, resolvedPerPage);
+        } else {
+            // name, then id: a stable order so a business never moves between pages
+            pageable = PageRequest.of(resolvedPage - 1, resolvedPerPage, Sort.by("name").ascending().and(Sort.by("id")));
         }
-        int from = (int) Math.min((long) (resolvedPage - 1) * resolvedPerPage, kept.size());
-        var slice = kept.subList(from, Math.min(from + resolvedPerPage, kept.size()));
-        var paged = new PageImpl<>(slice, PageRequest.of(resolvedPage - 1, resolvedPerPage), kept.size());
-        return ResponseEntity.ok(response(paged, slice));
+        // the database filters, orders and pages: the total is exact and nothing is cut
+        var result = businessRepository.findAll(spec, pageable);
+        return ResponseEntity.ok(response(result, enrich(result.getContent(), geo, now)));
+    }
+
+    /// The filter `open_now` for the database: the local day and time of `now` in every time zone in use, grouped, so that the
+    /// comparison with the hours is made by SQL.
+    private Specification<BusinessEntity> openNowSpec(Instant now) {
+        List<TimezoneEntity> timezones = timezoneRepository.findAll();
+        Map<String, Set<UUID>> ids = new HashMap<>();
+        Map<String, int[]> day = new HashMap<>();
+        Map<String, LocalTime> time = new HashMap<>();
+        for (TimezoneEntity t : timezones) {
+            group(ids, day, time, OpeningHoursServiceImpl.zoneOf(t), now).add(t.getId());
+        }
+        // businesses without a known zone use the default zone
+        ZoneId fallback = OpeningHoursServiceImpl.zoneOf((TimezoneEntity) null);
+        group(ids, day, time, fallback, now);
+        String fallbackKey = key(fallback, now);
+        List<SearchRankingSpecifications.OpenGroup> groups = new ArrayList<>();
+        for (var e : ids.entrySet()) {
+            groups.add(new SearchRankingSpecifications.OpenGroup(day.get(e.getKey())[0], time.get(e.getKey()), e.getValue(),
+                    e.getKey().equals(fallbackKey)));
+        }
+        return SearchRankingSpecifications.openAt(groups, timezones.stream().map(TimezoneEntity::getId).collect(Collectors.toSet()));
+    }
+
+    private static String key(ZoneId zone, Instant now) {
+        var local = now.atZone(zone);
+        return local.getDayOfWeek().getValue() + "@" + local.toLocalTime().truncatedTo(ChronoUnit.SECONDS);
+    }
+
+    private static Set<UUID> group(Map<String, Set<UUID>> ids, Map<String, int[]> day, Map<String, LocalTime> time, ZoneId zone, Instant now) {
+        var local = now.atZone(zone);
+        String key = key(zone, now);
+        day.putIfAbsent(key, new int[]{local.getDayOfWeek().getValue()});
+        time.putIfAbsent(key, local.toLocalTime().truncatedTo(ChronoUnit.SECONDS));
+        return ids.computeIfAbsent(key, k -> new HashSet<>());
     }
 
     private static BusinessSearchResponse response(Page<?> page, List<BusinessSearchItemTO> items) {

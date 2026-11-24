@@ -287,47 +287,49 @@ class BusinessSearchServiceImplTest {
     }
 
     @Test
-    void sortByDistanceOrdersNearestFirstAndPagesInMemory() {
-        var far = business("A-far");
+    void sortByDistanceDelegatesOrderAndPagingToTheDatabaseWithoutACap() {
         var near = business("B-near");
-        var unknown = business("C-unknown");
-        var lf = located(far, "44.0", "-79.38");
+        var far = business("A-far");
         var ln = located(near, "43.66", "-79.38");
-        var lu = located(unknown, null, null);
+        var lf = located(far, "44.0", "-79.38");
         when(businessRepository.findAll(any(Specification.class), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(far, near, unknown)));
-        when(locationRepository.findByBusinessIdIn(any())).thenReturn(List.of(lf, ln, lu));
+                .thenReturn(new PageImpl<>(List.of(near, far), org.springframework.data.domain.PageRequest.of(1, 2), 1500));
+        when(locationRepository.findByBusinessIdIn(any())).thenReturn(List.of(ln, lf));
 
-        var first = service.search(null, null, null, null, 1, 2, null, "43.65", "-79.38", "DISTANCE").getBody();
-        assertEquals(3, first.totalCount());
-        assertEquals(2, first.totalPages());
-        assertEquals(List.of("B-near", "A-far"), first.data().stream().map(i -> i.name()).toList());
-        var second = service.search(null, null, null, null, 2, 2, null, "43.65", "-79.38", "distance").getBody();
-        assertEquals(List.of("C-unknown"), second.data().stream().map(i -> i.name()).toList());
-        var beyond = service.search(null, null, null, null, 9, 2, null, "43.65", "-79.38", "distance").getBody();
-        assertTrue(beyond.data().isEmpty());
+        var body = service.search(null, null, null, null, 2, 2, null, "43.65", "-79.38", "DISTANCE").getBody();
+
+        assertEquals(1500, body.totalCount());
+        assertEquals(750, body.totalPages());
+        assertEquals(List.of("B-near", "A-far"), body.data().stream().map(i -> i.name()).toList());
         var captor = ArgumentCaptor.forClass(Pageable.class);
-        verify(businessRepository, times(3)).findAll(any(Specification.class), captor.capture());
-        assertEquals(BusinessSearchServiceImpl.MAX_CANDIDATES, captor.getValue().getPageSize());
+        verify(businessRepository, times(1)).findAll(any(Specification.class), captor.capture());
+        assertEquals(1, captor.getValue().getPageNumber());
+        assertEquals(2, captor.getValue().getPageSize());
+        assertTrue(captor.getValue().getSort().isUnsorted());
     }
 
     @Test
-    void openNowTrueKeepsOnlyOpenBusinessesAndCountsThem() {
+    void openNowTrueAsksTheDatabaseForTheOpenBusinessesUsingTheZonesInUse() {
         var open = business("Open");
-        var closed = business("Closed");
-        var none = business("None");
         var lo = located(open, null, null);
-        var lc = located(closed, null, null);
-        var ln = located(none, null, null);
-        when(businessRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(open, closed, none)));
-        when(locationRepository.findByBusinessIdIn(any())).thenReturn(List.of(lo, lc, ln));
-        when(hoursRepository.findByLocationIdIn(any())).thenReturn(List.of(hours(lo, 1, "09:00", "20:00", false), hours(lc, 1, "01:00", "02:00", false)));
+        var tz = zone("America/Toronto");
+        var offset = zone("not-a-zone");
+        offset.setUtcOffset(java.time.Duration.ofHours(-5));
+        when(timezoneRepository.findAll()).thenReturn(List.of(tz, offset));
+        when(businessRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(open), org.springframework.data.domain.PageRequest.of(0, 10), 1));
+        when(locationRepository.findByBusinessIdIn(any())).thenReturn(List.of(lo));
+        when(hoursRepository.findByLocationIdIn(any())).thenReturn(List.of(hours(lo, 1, "09:00", "20:00", false)));
 
         var body = service.search(null, null, null, null, null, null, true, null, null, null).getBody();
 
         assertEquals(1, body.totalCount());
-        assertEquals(List.of("Open"), body.data().stream().map(i -> i.name()).toList());
         assertEquals(Boolean.TRUE, body.data().iterator().next().openNow());
+        verify(timezoneRepository).findAll();
+        var captor = ArgumentCaptor.forClass(Pageable.class);
+        verify(businessRepository).findAll(any(Specification.class), captor.capture());
+        assertEquals(10, captor.getValue().getPageSize());
+        assertEquals("name: ASC,id: ASC", captor.getValue().getSort().toString());
     }
 
     @Test
@@ -335,18 +337,16 @@ class BusinessSearchServiceImplTest {
         page(business("A"));
         var body = service.search(null, null, null, null, null, null, false, null, null, null).getBody();
         assertEquals(1, body.totalCount());
-        var captor = ArgumentCaptor.forClass(Pageable.class);
-        verify(businessRepository).findAll(any(Specification.class), captor.capture());
-        assertEquals(10, captor.getValue().getPageSize());
+        verify(timezoneRepository, never()).findAll();
     }
 
     @Test
-    void openNowWithNoCandidatesIsAnEmptyPage() {
+    void openNowWithNoResultsIsAnEmptyPage() {
         when(businessRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(Page.empty());
         var body = service.search(null, null, null, null, null, null, true, null, null, null).getBody();
         assertEquals(0, body.totalCount());
         assertTrue(body.data().isEmpty());
-        verifyNoInteractions(locationRepository, hoursRepository, timezoneRepository);
+        verifyNoInteractions(locationRepository, hoursRepository);
     }
 
     @Test
