@@ -59,6 +59,13 @@ This project adheres (loosely) to "Keep a Changelog" and follows semantic versio
 ### Notes
 - Documentation only: no code, schema or configuration change. The Phase 1 endpoints exist in the contract before they exist in `development`.
 - `PUT /favorites/{id}` is a `PATCH` in the code and the contract follows the code.
+## [Unreleased] - 2026-11-23 (F3-D: SonarQube workflow)
+
+### Fixed
+- The "SonarQube" workflow (`build.yml`) failed with `The scanner bootstrapping has failed` (HTTP 403 from SonarCloud: the `SONAR_TOKEN` secret is rejected). The workflow now validates the token first: when the secret is absent (forks) the analysis is skipped with a warning and only build and tests run; when SonarCloud rejects it the job fails with an explicit message telling how to renew it.
+- The scanner plugin version is pinned (`5.9.0.7382`) and the organization, host and JaCoCo report path (`target/site/jacoco/jacoco.xml`) are passed explicitly, because `sonar.coverage.jacoco.xmlReportPaths` in `pom.xml` resolves to `/site/jacoco/jacoco.xml`.
+- Guides: `docs/user-guide/f3-sonarqube-ci.md`, `docs/technical/f3-sonarqube-ci.md`.
+
 ## [Unreleased] - 2026-11-23 (analysis documents moved out of the repository)
 
 ### Removed
