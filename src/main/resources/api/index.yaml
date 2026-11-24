@@ -1122,7 +1122,7 @@ paths:
                 privacyDataOutActive:
                   type: boolean
             example:
-              password: shireRingBearer123
+              password: <password>
               email: luis.mata@icloud.com
               firstname: Gandalf
               lastname: Gray
