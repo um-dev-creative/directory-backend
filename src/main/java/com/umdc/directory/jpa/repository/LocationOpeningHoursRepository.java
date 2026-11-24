@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -18,6 +19,10 @@ public interface LocationOpeningHoursRepository extends JpaRepository<LocationOp
     /// The slots of a location in week order.
     @Query("SELECT h FROM LocationOpeningHoursEntity h WHERE h.locationFk = :locationId ORDER BY h.dayOfWeek ASC, h.opensAt ASC")
     List<LocationOpeningHoursEntity> findByLocationId(@Param("locationId") UUID locationId);
+
+    /// The slots of several locations in one query (the search loads a whole page at once).
+    @Query("SELECT h FROM LocationOpeningHoursEntity h WHERE h.locationFk IN :locationIds ORDER BY h.locationFk, h.dayOfWeek ASC, h.opensAt ASC")
+    List<LocationOpeningHoursEntity> findByLocationIdIn(@Param("locationIds") Collection<UUID> locationIds);
 
     /// Removes every slot of a location (the first half of replacing the whole schedule).
     @Modifying(flushAutomatically = true, clearAutomatically = true)

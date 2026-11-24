@@ -93,6 +93,37 @@ public final class GeoSearchValidator {
                 text(q), resolvedLimit);
     }
 
+    /// Validated optional point and order of `/businesses/search`; `lat` and `lng` are null when no point was sent.
+    public record SearchGeo(Double lat, Double lng, boolean sortByDistance) {
+    }
+
+    /// @param lat  optional latitude; sent together with `lng`
+    /// @param lng  optional longitude; sent together with `lat`
+    /// @param sort optional: `name` (default) or `distance` (needs the point)
+    /// @throws GeoSearchException when only one coordinate is sent, a value is invalid or `distance` is asked without a point
+    public static SearchGeo searchGeo(String lat, String lng, String sort) {
+        boolean hasLat = !blank(lat);
+        boolean hasLng = !blank(lng);
+        if (hasLat != hasLng) {
+            throw new GeoSearchException("lat and lng must be sent together");
+        }
+        boolean byDistance;
+        if (blank(sort) || "name".equalsIgnoreCase(sort.trim())) {
+            byDistance = false;
+        } else if ("distance".equalsIgnoreCase(sort.trim())) {
+            byDistance = true;
+        } else {
+            throw new GeoSearchException("sort must be distance or name");
+        }
+        if (!hasLat) {
+            if (byDistance) {
+                throw new GeoSearchException("sort=distance needs lat and lng");
+            }
+            return new SearchGeo(null, null, false);
+        }
+        return new SearchGeo(coordinate(lat, "lat", 90), coordinate(lng, "lng", 180), byDistance);
+    }
+
     /// Validated filters without geometry (saved searches that have no point or bbox).
     public record Filters(UUID categoryId, UUID cityId, String text) {
     }

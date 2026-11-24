@@ -136,4 +136,32 @@ class GeoSearchValidatorTest {
         var e = assertThrows(java.lang.reflect.InvocationTargetException.class, ctor::newInstance);
         assertTrue(e.getCause() instanceof IllegalStateException);
     }
+
+    @Test
+    void searchGeoWithoutPointDefaultsToNameOrder() {
+        var g = GeoSearchValidator.searchGeo(null, " ", null);
+        assertNull(g.lat());
+        assertNull(g.lng());
+        assertFalse(g.sortByDistance());
+        assertFalse(GeoSearchValidator.searchGeo(null, null, "NAME").sortByDistance());
+    }
+
+    @Test
+    void searchGeoWithPoint() {
+        var g = GeoSearchValidator.searchGeo(" 43.5 ", "-79.3", " Distance ");
+        assertEquals(43.5, g.lat());
+        assertEquals(-79.3, g.lng());
+        assertTrue(g.sortByDistance());
+        assertFalse(GeoSearchValidator.searchGeo("1", "2", "").sortByDistance());
+    }
+
+    @Test
+    void searchGeoRejectsBadInput() {
+        assertEquals("lat and lng must be sent together", assertThrows(GeoSearchException.class, () -> GeoSearchValidator.searchGeo("1", null, null)).getMessage());
+        assertEquals("lat and lng must be sent together", assertThrows(GeoSearchException.class, () -> GeoSearchValidator.searchGeo(null, "1", null)).getMessage());
+        assertEquals("sort must be distance or name", assertThrows(GeoSearchException.class, () -> GeoSearchValidator.searchGeo("1", "1", "x")).getMessage());
+        assertEquals("sort=distance needs lat and lng", assertThrows(GeoSearchException.class, () -> GeoSearchValidator.searchGeo(null, null, "distance")).getMessage());
+        assertEquals("lat must be a number", assertThrows(GeoSearchException.class, () -> GeoSearchValidator.searchGeo("a", "1", null)).getMessage());
+        assertEquals("lng must be between -180 and 180", assertThrows(GeoSearchException.class, () -> GeoSearchValidator.searchGeo("1", "200", null)).getMessage());
+    }
 }

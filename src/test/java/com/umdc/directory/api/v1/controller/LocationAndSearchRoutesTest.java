@@ -66,7 +66,7 @@ class LocationAndSearchRoutesTest {
     void searchIsRoutedBeforeTheBusinessById() throws Exception {
         var cityId = UUID.randomUUID();
         var categoryId = UUID.randomUUID();
-        when(searchService.search(cityId, "Toronto", categoryId, "pan", 2, 5))
+        when(searchService.search(cityId, "Toronto", categoryId, "pan", 2, 5, null, null, null, null))
                 .thenReturn(ResponseEntity.ok(new BusinessSearchResponse(0, 2, 5, 0, List.of())));
 
         mvc.perform(get("/api/v1/businesses/search").param("city_id", cityId.toString()).param("city", "Toronto")
@@ -78,8 +78,17 @@ class LocationAndSearchRoutesTest {
     }
 
     @Test
+    void searchPassesOpenNowAndThePoint() throws Exception {
+        when(searchService.search(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq(true), eq("43.6"), eq("-79.3"), eq("distance")))
+                .thenReturn(ResponseEntity.ok(new BusinessSearchResponse(0, 1, 10, 0, List.of())));
+        mvc.perform(get("/api/v1/businesses/search").param("open_now", "true").param("lat", "43.6").param("lng", "-79.3")
+                        .param("sort", "distance"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void searchParametersAreOptional() throws Exception {
-        when(searchService.search(isNull(), isNull(), isNull(), isNull(), isNull(), isNull()))
+        when(searchService.search(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull()))
                 .thenReturn(ResponseEntity.ok(new BusinessSearchResponse(0, 1, 10, 0, List.of())));
         mvc.perform(get("/api/v1/businesses/search")).andExpect(status().isOk());
     }
@@ -130,7 +139,7 @@ class LocationAndSearchRoutesTest {
     @Test
     void theApiInterfacesFallBackToTheNotImplementedServices() {
         assertEquals(HttpStatus.NOT_IMPLEMENTED, new CityApi() {}.list(null, null).getStatusCode());
-        assertEquals(HttpStatus.NOT_IMPLEMENTED, new BusinessSearchApi() {}.search(null, null, null, null, null, null).getStatusCode());
+        assertEquals(HttpStatus.NOT_IMPLEMENTED, new BusinessSearchApi() {}.search(null, null, null, null, null, null, null, null, null, null).getStatusCode());
         var locationApi = new LocationApi() {};
         assertEquals(HttpStatus.NOT_IMPLEMENTED, locationApi.list(businessId).getStatusCode());
         assertEquals(HttpStatus.NOT_IMPLEMENTED, locationApi.create(businessId, null, "t").getStatusCode());

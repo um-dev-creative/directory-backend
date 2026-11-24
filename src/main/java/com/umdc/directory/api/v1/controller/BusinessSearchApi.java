@@ -24,20 +24,25 @@ public interface BusinessSearchApi {
         return new BusinessSearchService() {};
     }
 
-    @Operation(summary = "Search businesses", description = "Paginated search; the filters that are sent are combined with AND. Results are ordered by name.")
+    @Operation(summary = "Search businesses", description = "Paginated search; the filters that are sent are combined with AND. Results are ordered by name (or by distance). Public: no session-token needed.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "A page of businesses with their locations"),
-            @ApiResponse(responseCode = "400", description = "Invalid page or per_page", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Invalid page, per_page, lat, lng or sort", content = @Content),
             @ApiResponse(responseCode = DirectoryAppConstants.INTERNAL_SERVER_ERROR_CODE, description = DirectoryAppConstants.INTERNAL_SERVER_ERROR_MESSAGE, content = @Content)
     })
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @SuppressWarnings("PMD.UseObjectForClearerAPI") // the parameters are the query string
     default ResponseEntity<BusinessSearchResponse> search(
             @Parameter(description = "City id from GET /api/v1/cities") @RequestParam(name = "city_id", required = false) UUID cityId,
             @Parameter(description = "City name (ignored when city_id is sent)") @RequestParam(name = "city", required = false) String city,
             @Parameter(description = "Category id; its sub-categories are included") @RequestParam(name = "category_id", required = false) UUID categoryId,
             @Parameter(description = "Text found in the name or the description") @RequestParam(name = "q", required = false) String text,
             @Parameter(description = "Page number (1-based). Default 1") @RequestParam(name = "page", required = false) Integer page,
-            @Parameter(description = "Items per page. Default 10, max 100") @RequestParam(name = "per_page", required = false) Integer perPage) {
-        return getService().search(cityId, city, categoryId, text, page, perPage);
+            @Parameter(description = "Items per page. Default 10, max 100") @RequestParam(name = "per_page", required = false) Integer perPage,
+            @Parameter(description = "true keeps only the businesses open right now") @RequestParam(name = "open_now", required = false) Boolean openNow,
+            @Parameter(description = "Latitude of the caller (with lng): fills distance_m") @RequestParam(name = "lat", required = false) String lat,
+            @Parameter(description = "Longitude of the caller (with lat)") @RequestParam(name = "lng", required = false) String lng,
+            @Parameter(description = "name (default) or distance (needs lat and lng)") @RequestParam(name = "sort", required = false) String sort) {
+        return getService().search(cityId, city, categoryId, text, page, perPage, openNow, lat, lng, sort);
     }
 }

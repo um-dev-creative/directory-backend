@@ -6,6 +6,7 @@ import com.umdc.directory.api.v1.to.OpeningStatusTO;
 import com.umdc.directory.constant.DirectoryAppConstants;
 import com.umdc.directory.constant.OpeningHoursMessages;
 import com.umdc.directory.jpa.entity.LocationOpeningHoursEntity;
+import com.umdc.directory.jpa.entity.TimezoneEntity;
 import com.umdc.directory.jpa.repository.BusinessRepository;
 import com.umdc.directory.jpa.repository.LocationOpeningHoursRepository;
 import com.umdc.directory.jpa.repository.LocationRepository;
@@ -130,12 +131,16 @@ public class OpeningHoursServiceImpl implements OpeningHoursService {
 
     /// Zone of the business: its timezone name when it is an IANA id, else its fixed UTC offset, else the default zone.
     ZoneId zoneOf(UUID businessId) {
-        var timezone = hoursRepository.findTimezoneOfBusiness(businessId);
-        if (timezone.isPresent()) {
+        return zoneOf(hoursRepository.findTimezoneOfBusiness(businessId).orElse(null));
+    }
+
+    /// Zone of a timezone row: its name when it is an IANA id, else its fixed UTC offset, else the default zone (also for null).
+    static ZoneId zoneOf(TimezoneEntity timezone) {
+        if (timezone != null) {
             try {
-                return ZoneId.of(timezone.get().getName());
+                return ZoneId.of(timezone.getName());
             } catch (DateTimeException | NullPointerException e) {
-                var offset = timezone.get().getUtcOffset();
+                var offset = timezone.getUtcOffset();
                 if (offset != null) {
                     try {
                         return ZoneOffset.ofTotalSeconds((int) offset.toSeconds());
