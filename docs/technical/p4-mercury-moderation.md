@@ -1,7 +1,7 @@
 # Mercury alignment (MER-11), business moderation (S8), S1 and S4 (technical guide)
 
 ## 1. Mercury (MER-11)
-See `docs/technical/mercury-m2m-auth.md`. Summary: `MercuryAuthClient.token(AuthRequest)` replaces the Backbone-token exchange; no retry loop on 401,
+See `docs/technical/mercury-m2m-auth.md`. Summary: `MercuryTokens` exchanges the Backbone M2M token of Directory's managed client for Mercury's token (an earlier version of this change used an alias/password login, which Mercury does not accept; corrected); no retry loop on 401,
 `Retry-After` honoured on 429 (surfaced to the caller as 429/503 with `message-error`), timeouts 3 s / 5 s, `MercuryVerificationService` over the
 Feign client and the Kafka producer.
 

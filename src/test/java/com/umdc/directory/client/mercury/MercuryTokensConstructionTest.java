@@ -11,9 +11,9 @@ import static org.mockito.Mockito.mock;
 class MercuryTokensConstructionTest {
 
     @Test
-    @DisplayName("the Spring constructor uses the system clock and reports a missing login")
+    @DisplayName("the Spring constructor uses the system clock and reports a missing managed client")
     void publicConstructor() {
-        var tokens = new MercuryTokens(mock(MercuryAuthClient.class), "", "");
+        var tokens = new MercuryTokens(mock(com.umdc.directory.client.backbone.BackboneManagedClient.class), mock(MercuryAuthClient.class), "", "", java.util.List.of());
 
         assertThrows(MercuryUnavailableException.class, tokens::token);
     }
