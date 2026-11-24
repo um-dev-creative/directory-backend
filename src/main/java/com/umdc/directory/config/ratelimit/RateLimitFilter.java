@@ -29,6 +29,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final int ipPermitsPerMinute;
     private final int userPermitsPerMinute;
     private final boolean trustForwardedHeader;
+    private final int eventPermitsPerMinute;
 
     /// @param store                the bucket store
     /// @param apiPath              base path to protect
@@ -37,6 +38,16 @@ public class RateLimitFilter extends OncePerRequestFilter {
     /// @param trustForwardedHeader use the first `X-Forwarded-For` address as client IP (only behind a trusted proxy)
     public RateLimitFilter(RateLimitStore store, String apiPath, int ipPermitsPerMinute, int userPermitsPerMinute,
                            boolean trustForwardedHeader) {
+        this(store, apiPath, ipPermitsPerMinute, userPermitsPerMinute, trustForwardedHeader, 0);
+    }
+
+    /// Same as the other constructor, plus a stricter quota for `POST {apiPath}/businesses/{id}/events` (click events), applied
+    /// per client IP and business.
+    ///
+    /// @param eventPermitsPerMinute quota per IP and business for click events; 0 or less disables the extra bucket
+    public RateLimitFilter(RateLimitStore store, String apiPath, int ipPermitsPerMinute, int userPermitsPerMinute,
+                           boolean trustForwardedHeader, int eventPermitsPerMinute) {
+        this.eventPermitsPerMinute = eventPermitsPerMinute;
         this.store = store;
         this.apiPath = apiPath;
         this.ipPermitsPerMinute = ipPermitsPerMinute;
@@ -53,7 +64,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-        RateLimitDecision decision = store.tryConsume("ip:" + clientIp(request), ipPermitsPerMinute);
+        String ip = clientIp(request);
+        RateLimitDecision decision = store.tryConsume("ip:" + ip, ipPermitsPerMinute);
+        if (decision.allowed() && eventPermitsPerMinute > 0 && isEventPost(request)) {
+            decision = store.tryConsume("ev:" + ip + ":" + request.getRequestURI(), eventPermitsPerMinute);
+        }
         if (decision.allowed()) {
             String uid = userId(request.getHeader(SESSION_HEADER));
             if (uid != null) {
@@ -70,6 +85,19 @@ public class RateLimitFilter extends OncePerRequestFilter {
         response.setContentType("application/json");
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.getWriter().write("{\"error\":\"too_many_requests\",\"retryAfterSeconds\":" + decision.retryAfterSeconds() + "}");
+    }
+
+    private boolean isEventPost(HttpServletRequest request) {
+        if (!"POST".equals(request.getMethod())) {
+            return false;
+        }
+        String path = request.getRequestURI();
+        String prefix = apiPath + "/businesses/";
+        if (!path.startsWith(prefix) || !path.endsWith("/events") || path.length() <= prefix.length() + "/events".length()) {
+            return false;
+        }
+        String id = path.substring(prefix.length(), path.length() - "/events".length());
+        return id.indexOf('/') < 0;
     }
 
     String clientIp(HttpServletRequest request) {

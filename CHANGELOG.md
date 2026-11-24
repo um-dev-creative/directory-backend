@@ -114,6 +114,22 @@ This project adheres (loosely) to "Keep a Changelog" and follows semantic versio
 - Not run against Vault, Config Server, Kafka or a real PostgreSQL: smoke-test in a real environment before releasing.
 - Supersedes Dependabot PR #105 (plexus-utils), now at 4.1.0.
 
+## [Unreleased] - 2026-11-23 (F2-D aggregated click events)
+
+### Added
+- **RF-10 click events without personal data.** `POST /api/v1/businesses/{businessId}/events` with `{"type": "ROUTE|CALL|WEB|SAVE", "campaign_id": optional}` adds one to a daily counter per business, campaign, type and UTC day and answers `204`. No IP, user id or per-click row is stored. An event by the owner is not counted; invalid type or missing body is `400`; an unknown business, or a campaign that is not the business's, is `404`.
+- The increment is one atomic `UPDATE ... SET event_count = event_count + 1`; the first event of a key inserts the row and a concurrent first event falls back to the `UPDATE` (each step in its own transaction), the same approach as the view counters.
+- `GET /api/v1/businesses/{businessId}/events/summary?from=&to=` (owner only: `401`/`403`/`404`; default last 30 days, max 365, else `400`) returns the total, totals per type, one entry per campaign (`campaign_id` null for events without campaign) and one entry per day with zeros included.
+- Stricter rate limit for the event route: `RateLimitFilter` has an extra bucket per client IP and business for `POST .../events`, `umdc.ratelimit.events-per-minute` (default 20), on top of the general quotas; repeated bursts get `429` with `Retry-After` and cannot inflate the counters.
+- Migration `V11__create_business_event_daily.sql` (idempotent, applied by hand) and `CampaignRepository.existsByIdAndBusinessFk_Id`. Guides: `docs/user-guide/f2-click-events.md`, `docs/technical/f2-click-events.md` (with the endpoint list to merge into `api/index.yaml`).
+
+### Tests
+- `BusinessEventServiceImplTest`, `BusinessEventRoutesTest`, `BusinessEventDailyRepositoryTest` (real queries on H2, DB-side increment), `BusinessEventTypeTest` and four new `RateLimitFilterTest` cases.
+
+### Notes
+- **Action needed:** apply `V11` before deploying. `src/main/resources/api/index.yaml` is not changed here; the contract update follows separately.
+- The counter cannot tell unique users apart: a user who clicks again is counted again, limited only by the rate limit.
+
 ## [Unreleased] - 2026-11-23 (F0-B favorites)
 
 ### Fixed

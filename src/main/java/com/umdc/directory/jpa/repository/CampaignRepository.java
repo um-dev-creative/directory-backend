@@ -13,6 +13,9 @@ import java.util.UUID;
  */
 public interface CampaignRepository extends JpaRepository<CampaignEntity, UUID>, JpaSpecificationExecutor<CampaignEntity> {
 
+    /// Whether the campaign exists and belongs to the business.
+    boolean existsByIdAndBusinessFk_Id(UUID id, UUID businessId);
+
     long countByActiveTrue();
 
     long countByActiveFalse();

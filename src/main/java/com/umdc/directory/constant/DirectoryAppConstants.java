@@ -57,6 +57,14 @@ public final class DirectoryAppConstants {
     public static final String STATS_ONLY_OWNER = "Only the owner of the business can see its statistics";
     public static final String UNAUTHORIZED_MESSAGE = "Unauthorized";
 
+    // Aggregated click events (RF-10)
+    public static final int EVENTS_DEFAULT_DAYS = 30;
+    public static final int EVENTS_MAX_DAYS = 365;
+    public static final String EVENT_INVALID_TYPE = "type must be one of ROUTE, CALL, WEB, SAVE";
+    public static final String EVENT_BODY_REQUIRED = "Request body is required";
+    public static final String EVENTS_INVALID_RANGE = "from must not be after to and the range must be at most " + EVENTS_MAX_DAYS + " days";
+    public static final String EVENTS_ONLY_OWNER = "Only the owner of the business can see its events";
+
     // Locations (sedes), cities and business search
     public static final String CITY_NOT_FOUND = "City not found";
     public static final String LOCATION_NOT_FOUND = "Location not found";

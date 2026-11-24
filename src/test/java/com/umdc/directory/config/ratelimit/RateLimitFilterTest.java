@@ -99,4 +99,59 @@ class RateLimitFilterTest {
         assertThat(RateLimitFilter.userId(token("{\"x\":1}"))).isNull();
         assertThat(RateLimitFilter.userId(token("{\"uid\":7}"))).isEqualTo("7");
     }
+
+    private static RateLimitFilter eventFilter(int events) {
+        return new RateLimitFilter(new InMemoryRateLimitStore(new AtomicLong()::get), "/api/v1", 1000, 1000, false, events);
+    }
+
+    private static MockHttpServletRequest post(String uri, String ip) {
+        MockHttpServletRequest r = new MockHttpServletRequest("POST", uri);
+        r.setRequestURI(uri);
+        r.setRemoteAddr(ip);
+        return r;
+    }
+
+    @Test
+    void clickEventsHaveAStricterQuotaPerClientAndBusiness() throws Exception {
+        RateLimitFilter f = eventFilter(2);
+        assertThat(call(f, post("/api/v1/businesses/b1/events", "1.1.1.1")).getStatus()).isEqualTo(200);
+        assertThat(call(f, post("/api/v1/businesses/b1/events", "1.1.1.1")).getStatus()).isEqualTo(200);
+        MockHttpServletResponse res = call(f, post("/api/v1/businesses/b1/events", "1.1.1.1"));
+        assertThat(res.getStatus()).isEqualTo(429);
+        assertThat(res.getHeader("X-RateLimit-Limit")).isEqualTo("2");
+        assertThat(res.getHeader("Retry-After")).isNotNull();
+        // another business, another client, and the owner-only summary are not affected
+        assertThat(call(f, post("/api/v1/businesses/b2/events", "1.1.1.1")).getStatus()).isEqualTo(200);
+        assertThat(call(f, post("/api/v1/businesses/b1/events", "2.2.2.2")).getStatus()).isEqualTo(200);
+        assertThat(call(f, req("/api/v1/businesses/b1/events/summary", "1.1.1.1")).getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    void onlyPostsToTheEventsRouteUseTheEventBucket() throws Exception {
+        RateLimitFilter f = eventFilter(1);
+        for (int i = 0; i < 3; i++) {
+            assertThat(call(f, req("/api/v1/businesses/b1/events", "1.1.1.1")).getStatus()).isEqualTo(200);
+            assertThat(call(f, post("/api/v1/businesses/events", "1.1.1.1")).getStatus()).isEqualTo(200);
+            assertThat(call(f, post("/api/v1/businesses/a/b/events", "1.1.1.1")).getStatus()).isEqualTo(200);
+            assertThat(call(f, post("/api/v1/businesses/b1/views", "1.1.1.1")).getStatus()).isEqualTo(200);
+            assertThat(call(f, post("/api/v1/other/b1/events", "1.1.1.1")).getStatus()).isEqualTo(200);
+        }
+    }
+
+    @Test
+    void theEventBucketIsOffWhenTheQuotaIsZeroAndTheDefaultConstructorKeepsItOff() throws Exception {
+        RateLimitFilter zero = eventFilter(0);
+        RateLimitFilter plain = filter(1000, 1000, false);
+        for (int i = 0; i < 5; i++) {
+            assertThat(call(zero, post("/api/v1/businesses/b1/events", "1.1.1.1")).getStatus()).isEqualTo(200);
+            assertThat(call(plain, post("/api/v1/businesses/b1/events", "1.1.1.1")).getStatus()).isEqualTo(200);
+        }
+    }
+
+    @Test
+    void theGeneralIpQuotaStillAppliesFirstToEvents() throws Exception {
+        RateLimitFilter f = new RateLimitFilter(new InMemoryRateLimitStore(new AtomicLong()::get), "/api/v1", 1, 1000, false, 50);
+        assertThat(call(f, post("/api/v1/businesses/b1/events", "1.1.1.1")).getStatus()).isEqualTo(200);
+        assertThat(call(f, post("/api/v1/businesses/b1/events", "1.1.1.1")).getStatus()).isEqualTo(429);
+    }
 }
