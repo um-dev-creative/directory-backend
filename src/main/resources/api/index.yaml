@@ -1469,8 +1469,10 @@ paths:
   /api/v1/businesses/search:
     get:
       summary: Search businesses by city, category and text
-      description: Paginated (page is 1-based, per_page 1..100, default 10). Filters are combined with AND; results are ordered by name. category_id
-        includes its sub-categories; city is ignored when city_id is sent.
+      description: Public (no session-token needed). Paginated (page is 1-based, per_page 1..100, default 10). Filters are combined with AND;
+        results are ordered by name, or by distance with `sort=distance` (needs `lat` and `lng`). category_id includes its sub-categories; city
+        is ignored when city_id is sent. `open_now=true` and `sort=distance` are resolved over the first 1000 matches (by name) and `total_count`
+        is the number kept. Phase 3 is additive; old clients ignore the new item fields.
       parameters:
       - name: city_id
         in: query
@@ -1503,17 +1505,49 @@ paths:
           minimum: 1
           maximum: 100
           default: 10
+      - name: open_now
+        in: query
+        description: true keeps only the businesses open right now (any location, using its opening hours in the business time zone); false or absent
+          does not filter
+        schema:
+          type: boolean
+      - name: lat
+        in: query
+        description: Latitude of the caller, -90..90. Send it together with lng; fills distance_m
+        schema:
+          type: number
+          minimum: -90
+          maximum: 90
+      - name: lng
+        in: query
+        description: Longitude of the caller, -180..180. Send it together with lat
+        schema:
+          type: number
+          minimum: -180
+          maximum: 180
+      - name: sort
+        in: query
+        description: name (default) or distance (nearest first, businesses without distance last; needs lat and lng)
+        schema:
+          type: string
+          enum:
+          - name
+          - distance
+          default: name
       - name: session-token
         in: header
-        required: true
+        required: false
+        description: Optional; this endpoint is public
         schema:
           type: string
       responses:
         '200':
           description: 'Page of businesses with their locations: { total_count, page, per_page, total_pages, data: [ { id, name, description,
-            categoryId, categoryName, verified, profileImageRef, locations: [Location] } ] }'
+            categoryId, categoryName, verified, profileImageRef, locations: [Location], open_now, distance_m } ] }. `open_now` (boolean) is null
+            when no location has opening hours. `distance_m` (integer, metres to the nearest location with coordinates) is null when no point
+            was sent or no location has coordinates.'
         '400':
-          description: Invalid page or per_page (reason in the message-error header)
+          description: Invalid page, per_page, lat, lng or sort (reason in the message-error header)
         '429':
           $ref: '#/components/responses/TooManyRequests'
   /api/v1/cities:
@@ -2033,7 +2067,9 @@ paths:
     get:
       summary: Locations near a point
       description: Public. Locations within `radius_m` metres of (lat, lng), one row per location with `distance_m`. Sorted by distance (ties
-        by id) or by name. An invalid parameter is 400 with the reason in the `message-error` header.
+        by id) or by name. An invalid parameter is 400 with the reason in the `message-error` header. Dedicated quota, 60 requests per minute per user
+        (or per IP when there is no session-token), configurable with `umdc.ratelimit.nearby-per-minute`; over it the answer is 429 with `Retry-After`,
+        `X-RateLimit-Limit` and `message`.
       tags:
       - v1
       - businesses
@@ -2114,7 +2150,9 @@ paths:
       summary: Businesses of a map area
       description: 'Public. GeoJSON FeatureCollection. At zoom 14 and above: one Point per location. Below 14: grid clusters (Point features with
         properties `cluster=true` and `count`). `truncated` is true when more results than `limit` exist. An invalid, inverted or too large bbox
-        (more than 90 degrees per axis) or any other invalid parameter is 400 with the reason in `message-error`.'
+        (more than 90 degrees per axis) or any other invalid parameter is 400 with the reason in `message-error`. Dedicated quota: 60 requests per minute
+        per user (or per IP when there is no session-token), configurable with `umdc.ratelimit.map-per-minute`; over it the answer is 429 with `Retry-After`,
+        `X-RateLimit-Limit` and `message`.'
       tags:
       - v1
       - businesses
@@ -2267,7 +2305,8 @@ paths:
     post:
       summary: Geocode an address
       description: Authenticated. Returns up to 5 coordinate candidates; nothing is stored. The reason of a failure is in the `message-error`
-        header.
+        header. Dedicated quota, 10 requests per minute per user (or per IP), configurable with `umdc.ratelimit.geocode-per-minute`; over it the
+        answer is 429 with `Retry-After`, `X-RateLimit-Limit` and `message`, and the geocoding provider is not called.
       tags:
       - v1
       - geocoding
@@ -2864,6 +2903,288 @@ paths:
           description: "Business not found"
         '429':
           $ref: '#/components/responses/TooManyRequests'
+  /api/v1/users/me/favorite-lists:
+    post:
+      summary: Create a favorite list
+      description: 'At most 20 per user; the name is unique per user ignoring case, 1..80 characters.'
+      tags:
+      - v1
+      - favorite-lists
+      parameters:
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: "Required. Without a valid token the answer is 401 (`message-error: Unauthorized`)."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FavoriteListNameRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoriteList'
+        '400':
+          description: "Missing body or invalid name"
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: "Duplicate name or the limit of 20 lists was reached"
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    get:
+      summary: List my favorite lists
+      description: Newest first, with the number of active favorites of each.
+      tags:
+      - v1
+      - favorite-lists
+      parameters:
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: "Required. Without a valid token the answer is 401 (`message-error: Unauthorized`)."
+      responses:
+        '200':
+          description: The lists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoriteListsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/users/me/favorite-lists/{id}:
+    get:
+      summary: Get a favorite list
+      description: The list with one page (0-based) of its active favorites, newest first. A list of another user answers 404, never 403.
+      tags:
+      - v1
+      - favorite-lists
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: "Required. Without a valid token the answer is 401 (`message-error: Unauthorized`)."
+      responses:
+        '200':
+          description: The list and its page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoriteListDetail'
+        '400':
+          description: "page below 0 or size below 1"
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: "Not found (or not the caller's)"
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    patch:
+      summary: Rename a favorite list
+      description: Same rules as the creation.
+      tags:
+      - v1
+      - favorite-lists
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: "Required. Without a valid token the answer is 401 (`message-error: Unauthorized`)."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FavoriteListNameRequest'
+      responses:
+        '200':
+          description: Renamed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoriteList'
+        '400':
+          description: "Invalid name"
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: "Not found (or not the caller's)"
+        '409':
+          description: "Another list of the caller has that name"
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    delete:
+      summary: Delete a favorite list
+      description: Deletes the list and its items; the favorites themselves are kept.
+      tags:
+      - v1
+      - favorite-lists
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: "Required. Without a valid token the answer is 401 (`message-error: Unauthorized`)."
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: "Not found (or not the caller's)"
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/users/me/favorite-lists/{id}/items:
+    post:
+      summary: Add a favorite to a list
+      description: Only an active store or product favorite of the caller; a favorite may be in several lists. Validation order is 401, 404 list, 400 body, 404 favorite, 409 inactive, 400 offer, 409 already in the list.
+      tags:
+      - v1
+      - favorite-lists
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: "Required. Without a valid token the answer is 401 (`message-error: Unauthorized`)."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FavoriteListItemRequest'
+      responses:
+        '201':
+          description: Added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoriteListItem'
+        '400':
+          description: "Missing favorite_id or the favorite is an offer"
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: "List or favorite not found (or not the caller's)"
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
+        '409':
+          description: "Favorite inactive or already in the list"
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/users/me/favorite-lists/{id}/items/{favoriteId}:
+    delete:
+      summary: Remove a favorite from a list
+      description: The favorite itself is kept.
+      tags:
+      - v1
+      - favorite-lists
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: favoriteId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+        description: "Required. Without a valid token the answer is 401 (`message-error: Unauthorized`)."
+      responses:
+        '204':
+          description: Removed
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: "List not found or the favorite is not in it"
+          headers:
+            message-error:
+              $ref: '#/components/headers/MessageError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
 components:
   securitySchemes:
     BearerAuth:
@@ -2900,6 +3221,10 @@ components:
           description: Requests per minute allowed for the bucket that rejected the request
           schema:
             type: integer
+        message:
+          description: 'Reason, e.g. `Too many requests, retry in N seconds`'
+          schema:
+            type: string
       content:
         application/json:
           schema:
@@ -3491,6 +3816,103 @@ components:
                 format: int64
               byType:
                 $ref: '#/components/schemas/EventCounts'
+    FavoriteListNameRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+      required:
+      - name
+    FavoriteListItemRequest:
+      type: object
+      properties:
+        favorite_id:
+          type: string
+          format: uuid
+      required:
+      - favorite_id
+    FavoriteList:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        item_count:
+          type: integer
+          description: Active favorites in the list
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    FavoriteListsResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FavoriteList'
+        max:
+          type: integer
+          example: 20
+    FavoriteListItem:
+      type: object
+      properties:
+        favorite_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum:
+          - STORE
+          - PRODUCT
+        item_id:
+          type: string
+          format: uuid
+          description: Id of the store or the product
+        name:
+          type: string
+        added_at:
+          type: string
+          format: date-time
+    FavoriteListDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        items:
+          type: object
+          description: One page of the active favorites
+          properties:
+            total_count:
+              type: integer
+              format: int64
+            page:
+              type: integer
+              description: 0-based
+            per_page:
+              type: integer
+              maximum: 100
+            total_pages:
+              type: integer
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/FavoriteListItem'
 security:
 - BearerAuth: []
 tags:
@@ -3499,4 +3921,5 @@ tags:
 - name: opening-hours
 - name: geocoding
 - name: saved-searches
+- name: favorite-lists
 - name: business-events

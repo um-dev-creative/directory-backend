@@ -1,3 +1,14 @@
+## [Unreleased] - 2026-11-23 (API contract: Phase 3)
+
+### Changed
+- `src/main/resources/api/index.yaml` documents Phase 3: favorite lists (`/users/me/favorite-lists`, seven operations with their schemas and 400/401/404/409 answers); `GET /businesses/search` gets `open_now`, `lat`, `lng`, `sort` (`name`|`distance`) and the nullable item fields `open_now` and `distance_m` (additive; the endpoint stays public, `session-token` is optional); `POST /geocode`, `GET /businesses/map` and `GET /businesses/nearby` document their dedicated quotas (10, 60 and 60 requests per minute by default) and the `429` answer with `Retry-After`, `X-RateLimit-Limit` and `message`, which is added to the shared `TooManyRequests` response.
+
+### Added
+- Guides: `docs/user-guide/api-contract-f3.md`, `docs/technical/api-contract-f3.md` (Mermaid diagrams).
+
+### Notes
+- Documentation only: no code, schema or configuration change.
+
 ## [Unreleased] - 2026-11-23 (R-1: no access to the general schema)
 
 ### Changed
