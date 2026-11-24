@@ -31,6 +31,7 @@ class MigrationsPostgresIT {
             CREATE SCHEMA IF NOT EXISTS directory_site;
             CREATE FUNCTION directory_site.uuid_generate_v4() RETURNS uuid AS 'SELECT gen_random_uuid()' LANGUAGE sql;
             CREATE TABLE directory_site.business (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), user_fk UUID);
+            CREATE TABLE directory_site.category (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name VARCHAR(255));
             CREATE TABLE directory_site.product (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), active BOOLEAN NOT NULL DEFAULT TRUE);
             CREATE TABLE directory_site.campaign (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 business_fk UUID, active BOOLEAN NOT NULL DEFAULT TRUE, start_date TIMESTAMP, end_date TIMESTAMP);
