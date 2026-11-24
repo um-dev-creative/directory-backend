@@ -116,4 +116,17 @@ class CategoryGetResponseTest {
         assertEquals(active, response.active());
     }
 
+
+    @org.junit.jupiter.api.Test
+    void localizedCopyKeepsOtherFieldsAndSetsLocale() {
+        var id = java.util.UUID.randomUUID();
+        var base = new CategoryGetResponse(id, "Food", "d", null, null, null, true);
+        org.junit.jupiter.api.Assertions.assertNull(base.locale());
+        var copy = base.localized("Comida", "es");
+        org.junit.jupiter.api.Assertions.assertEquals("Comida", copy.name());
+        org.junit.jupiter.api.Assertions.assertEquals("es", copy.locale());
+        org.junit.jupiter.api.Assertions.assertEquals(id, copy.id());
+        org.junit.jupiter.api.Assertions.assertEquals("d", copy.description());
+        org.junit.jupiter.api.Assertions.assertTrue(copy.active());
+    }
 }

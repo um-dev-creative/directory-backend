@@ -45,6 +45,76 @@ class CategoryServiceImplTest {
     @Mock
     CategoryMapper categoryMapper;
 
+    @Mock
+    com.umdc.directory.jpa.repository.CategoryTranslationRepository translationRepository;
+
+    @org.junit.jupiter.api.AfterEach
+    void resetLocale() {
+        org.springframework.context.i18n.LocaleContextHolder.resetLocaleContext();
+    }
+
+    private CategoryGetResponse sample(UUID id, String name) {
+        return new CategoryGetResponse(id, name, "d", null, LocalDateTime.now(), LocalDateTime.now(), true);
+    }
+
+    @Test
+    @DisplayName("find - answers the translated name and the locale for the request locale")
+    void findTranslated() {
+        UUID id = UUID.randomUUID();
+        org.springframework.context.i18n.LocaleContextHolder.setLocale(java.util.Locale.of("es"));
+        when(categoryRepository.findFirstById(id)).thenReturn(java.util.Optional.of(new CategoryEntity()));
+        when(categoryMapper.toCategoryGetResponse(any(CategoryEntity.class))).thenReturn(sample(id, "Food"));
+        when(translationRepository.findByCategoryFkInAndLocale(List.of(id), "es"))
+                .thenReturn(List.of(new com.umdc.directory.jpa.entity.CategoryTranslationEntity(id, "es", "Comida")));
+        var body = categoryServiceImpl.find(id).getBody();
+        assertEquals("Comida", body.name());
+        assertEquals("es", body.locale());
+        assertEquals("d", body.description());
+    }
+
+    @Test
+    @DisplayName("find - falls back to the base name when there is no translation (fr-CA request)")
+    void findFallsBackToBaseName() {
+        UUID id = UUID.randomUUID();
+        org.springframework.context.i18n.LocaleContextHolder.setLocale(java.util.Locale.CANADA_FRENCH);
+        when(categoryRepository.findFirstById(id)).thenReturn(java.util.Optional.of(new CategoryEntity()));
+        when(categoryMapper.toCategoryGetResponse(any(CategoryEntity.class))).thenReturn(sample(id, "Food"));
+        when(translationRepository.findByCategoryFkInAndLocale(List.of(id), "fr-CA")).thenReturn(List.of());
+        var body = categoryServiceImpl.find(id).getBody();
+        assertEquals("Food", body.name());
+        assertEquals("fr-CA", body.locale());
+    }
+
+    @Test
+    @DisplayName("findAll - unsupported request locale resolves to en; items without id skip the lookup")
+    void findAllDefaultLocaleAndNullIds() {
+        org.springframework.context.i18n.LocaleContextHolder.setLocale(java.util.Locale.GERMAN);
+        when(categoryRepository.findAll()).thenReturn(List.of());
+        when(categoryMapper.toCategoryGetResponse(ArgumentMatchers.<Collection<CategoryEntity>>any()))
+                .thenReturn(List.of(sample(null, "NoId")));
+        var body = categoryServiceImpl.findAll().getBody();
+        assertEquals("NoId", body.iterator().next().name());
+        assertEquals("en", body.iterator().next().locale());
+        org.mockito.Mockito.verifyNoInteractions(translationRepository);
+    }
+
+    @Test
+    @DisplayName("findAll - duplicate translation rows keep the first; each item gets its own name")
+    void findAllMixedTranslations() {
+        UUID a = UUID.randomUUID();
+        UUID b = UUID.randomUUID();
+        org.springframework.context.i18n.LocaleContextHolder.setLocale(java.util.Locale.of("es"));
+        when(categoryRepository.findAll()).thenReturn(List.of());
+        when(categoryMapper.toCategoryGetResponse(ArgumentMatchers.<Collection<CategoryEntity>>any()))
+                .thenReturn(List.of(sample(a, "A"), sample(b, "B")));
+        when(translationRepository.findByCategoryFkInAndLocale(List.of(a, b), "es")).thenReturn(List.of(
+                new com.umdc.directory.jpa.entity.CategoryTranslationEntity(a, "es", "Uno"),
+                new com.umdc.directory.jpa.entity.CategoryTranslationEntity(a, "es", "Dup")));
+        var items = List.copyOf(categoryServiceImpl.findAll().getBody());
+        assertEquals("Uno", items.get(0).name());
+        assertEquals("B", items.get(1).name());
+    }
+
     @Test
     @DisplayName("Find category by ID - Success")
     void findCategoryByIdSuccess() {
@@ -71,7 +141,7 @@ class CategoryServiceImplTest {
 
         ResponseEntity<CategoryGetResponse> response = categoryServiceImpl.find(categoryId);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(categoryGetResponse, response.getBody());
+        assertEquals(categoryGetResponse.localized(categoryGetResponse.name(), "en"), response.getBody());
     }
 
     @Test
@@ -112,7 +182,8 @@ class CategoryServiceImplTest {
 
         ResponseEntity<PaginatedResponse<CategoryGetResponse>> response = categoryServiceImpl.findByParentId(parentId, 0, 20);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(categoryGetResponses, response.getBody().items());
+        assertEquals(categoryGetResponses.stream().map(r -> r.localized(r.name(), "en")).toList(),
+                java.util.List.copyOf(response.getBody().items()));
     }
 
     @Test

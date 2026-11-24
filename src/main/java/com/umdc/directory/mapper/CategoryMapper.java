@@ -27,6 +27,7 @@ public interface CategoryMapper {
     @Mapping(target = "description", source = "description")
     @Mapping(target = "createdDate", source = "createdDate")
     @Mapping(target = "categoryParentId", source = "categoryParentFk.id")
+    @Mapping(target = "locale", ignore = true)
     CategoryGetResponse toCategoryGetResponse(CategoryEntity categoryEntity);
 
     Collection<CategoryGetResponse> toCategoryGetResponse(Collection<CategoryEntity> categoryEntities);
