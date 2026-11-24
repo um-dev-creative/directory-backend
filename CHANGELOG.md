@@ -1,3 +1,18 @@
+## [Unreleased] - 2026-11-24 (Fix: Mercury M2M exchange)
+
+### Fixed
+- Directory authenticates to Mercury again with the Backbone M2M exchange, the only way Mercury supports (Mercury `application.yml`, commit 975e5c6): `BackboneManagedClient` gets the Backbone token of Directory's managed client (client credentials), `MercuryAuthClient.exchange(Bearer)` trades it at `POST /api/v1/auth/token` for Mercury's own token, used for `/api/v1/verification-code` and `/api/v1/mail`. This corrects PR #147 (MER-11), which replaced it with an alias/password login that Mercury does not accept; the earlier entry below that describes the alias/password login is superseded.
+- Kept from that change, adapted: a 401 is never retry-looped (one fresh pair of tokens at most), `Retry-After` of a 429 is honoured, failures answer 429 or 503 with `message-error`, timeouts 3 s / 5 s, both tokens cached until a minute before expiry, no secret in logs.
+
+### Removed
+- `MercuryAuthClient.token(AuthRequest)`, `umdc.clients.mercury.login.*` and `DIRECTORY_BACKEND_LOGIN_ALIAS` / `DIRECTORY_BACKEND_LOGIN_PASSWORD`.
+
+### Documentation
+- `CLAUDE.md`, `README.md`, `docs/user-guide/mercury-m2m-auth.md`, `docs/technical/mercury-m2m-auth.md` and `docs/technical/p4-mercury-moderation.md` no longer claim alias/password or `session-token-bkd` for Mercury.
+
+### Notes
+- Operators set `MERCURY_M2M_CLIENT_ID`, `MERCURY_M2M_CLIENT_SECRET` and optionally `MERCURY_M2M_SCOPES`.
+
 ## [Unreleased] - 2026-11-23 (API contract: Phase 3)
 
 ### Changed

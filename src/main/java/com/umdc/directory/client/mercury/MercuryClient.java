@@ -13,8 +13,8 @@ import java.util.UUID;
 
 import static com.umdc.security.constant.ConstantApp.SESSION_TOKEN_KEY;
 
-/// Feign client for the Mercury service (MER-11). Every call here carries Directory's Mercury token in `session-token`; get it from
-/// {@link MercuryTokens} (the login itself is {@link MercuryAuthClient}). That token has no user: it is only good for
+/// Feign client for the Mercury service. Every call here carries Directory's Mercury token in `session-token`; get it from
+/// {@link MercuryTokens} (the Backbone M2M exchange itself is {@link MercuryAuthClient}). That token has no user: it is only good for
 /// `/api/v1/verification-code` and `/api/v1/mail`. A user-scoped Mercury call (campaigns, templates) must instead send
 /// `Authorization: Bearer <Backbone opaque token>` (added by [MercuryFeignConfigurer]) and the end user's own backbone `session-token`,
 /// passed through unchanged; Mercury refuses a refresh token or a logged-out token there (401). Timeouts: 3 s connect, 5 s read.

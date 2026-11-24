@@ -129,10 +129,10 @@ Mercury integration (configuration essentials)
 ----------------------------------------------
 Directory Backend calls Mercury through `com.umdc.directory.client.mercury.MercuryClient`:
 
-- `POST /api/v1/auth/token` with a registered alias/password gets a Mercury token for the M2M endpoints
-  (`/api/v1/verification-code`, `/api/v1/mail`). Mercury no longer requires the `session-token-bkd` header (it is
-  ignored). The alias/password must match Mercury's `umdc.mercury.login-clients`. Repeated wrong credentials are
-  throttled (`429` + `Retry-After`).
+- Directory does not log in to Mercury with an alias and a password. It gets the Backbone M2M token of its managed client
+  (`MERCURY_M2M_CLIENT_ID`, `MERCURY_M2M_CLIENT_SECRET`, `MERCURY_M2M_SCOPES`) and trades it at Mercury
+  (`POST /api/v1/auth/token`, `Authorization: Bearer <Backbone M2M token>`) for Mercury's own token, which serves the M2M endpoints
+  (`/api/v1/verification-code`, `/api/v1/mail`). A refused token is not retried in a loop and a `429` `Retry-After` is honoured.
 - For user-scoped Mercury operations (campaigns, templates) send the calling service's
   `Authorization: Bearer <Backbone opaque token>` **and** the end user's `session-token`.
 - The session secret is **not** used by this service to talk to Mercury, but Mercury and backbone-rest must share
