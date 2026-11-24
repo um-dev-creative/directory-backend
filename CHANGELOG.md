@@ -110,6 +110,19 @@ This project adheres (loosely) to "Keep a Changelog" and follows semantic versio
 - The scanner plugin version is pinned (`5.9.0.7382`) and the organization, host and JaCoCo report path (`target/site/jacoco/jacoco.xml`) are passed explicitly, because `sonar.coverage.jacoco.xmlReportPaths` in `pom.xml` resolves to `/site/jacoco/jacoco.xml`.
 - Guides: `docs/user-guide/f3-sonarqube-ci.md`, `docs/technical/f3-sonarqube-ci.md`.
 
+## [Unreleased] - 2026-11-23 (F4-F: build hygiene)
+
+### Fixed
+- `mvn verify` no longer prints `[ERROR] An error has occurred ... Connection refused` from `springdoc-openapi:generate`. Cause: the plugin (integration-test phase) only downloads `/v3/api-docs` from an already running app and nothing in the build starts one. It is now skipped by the property `springdoc.skip` (default `true`); run it against a live instance with `-Dspringdoc.skip=false`.
+- `sonar.coverage.jacoco.xmlReportPaths` pointed to `/site/jacoco/jacoco.xml`; it is now `target/site/jacoco/jacoco.xml`.
+
+### Changed
+- Surefire `argLine` is `@{jacoco.argLine} ${argLine}`: the JaCoCo agent is always first and any `-DargLine` injected by an IDE or CI is appended instead of being lost. Coverage is still measured on `mvn clean verify` with the METHOD >= 0.85 gate unchanged.
+
+### Added
+- Disabled-by-default Maven profile `pg-it` and smoke test `MigrationsPostgresIT` (Testcontainers + PostgreSQL 16, needs Docker): applies the `db/migration` scripts twice to prove they run and are idempotent. Not part of the default build or the coverage gate (the class is excluded from test compilation unless the profile is active).
+- Guides: `docs/user-guide/p4-build-hygiene.md`, `docs/technical/p4-build-hygiene.md` (Mermaid diagrams; plan for PostgreSQL integration tests and a read-only summary of the open critical/high Dependabot alerts; no dependency version changed).
+
 ## [Unreleased] - 2026-11-23 (analysis documents moved out of the repository)
 
 ### Removed
