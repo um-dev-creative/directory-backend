@@ -1,11 +1,8 @@
 package com.umdc.directory.client.mercury;
 
-import com.umdc.directory.client.backbone.BackboneManagedClient;
 import com.umdc.directory.constant.DirectoryMessage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -14,11 +11,11 @@ import static org.mockito.Mockito.mock;
 class MercuryTokensConstructionTest {
 
     @Test
-    @DisplayName("the Spring constructor uses the system clock and reports a missing managed client")
+    @DisplayName("the Spring constructor uses the system clock and reports a missing login")
     void publicConstructor() {
-        var tokens = new MercuryTokens(mock(BackboneManagedClient.class), mock(MercuryAuthClient.class), "", "", List.of("mercury:message:write"));
+        var tokens = new MercuryTokens(mock(MercuryAuthClient.class), "", "");
 
-        assertThrows(IllegalStateException.class, tokens::token);
+        assertThrows(MercuryUnavailableException.class, tokens::token);
     }
 
     @Test

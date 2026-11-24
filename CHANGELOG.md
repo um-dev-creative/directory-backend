@@ -82,6 +82,24 @@ This project adheres (loosely) to "Keep a Changelog" and follows semantic versio
 - The endpoint stays public (no `session-token`). New fields are additive: existing clients are unaffected.
 - Guides: `docs/user-guide/f3-search-open-now.md`, `docs/technical/f3-search-open-now.md` (Mermaid diagrams).
 
+## [Unreleased] - 2026-11-23 (F4-B Mercury alignment, business moderation, S1 and S4)
+
+### Security
+- S4: `POST /session-token` no longer trusts the `uid` of the Backbone token without checking it: the token is validated with Backbone first (401 otherwise); a forged JWT used to yield a session token for any user. The legacy alias-only `POST /token` limits the alias (1 to 128 characters, no control characters), logs each use and can be switched off with `umdc.auth.alias-token.enabled` (default `true`, contract unchanged).
+- S1: `PATCH /businesses/{id}` answers 403 when the body `id` is another user's, so an owner can no longer reassign a business; the owner's own id is accepted and ignored.
+
+### Changed
+- Mercury (MER-11): `MercuryAuthClient.token(AuthRequest)` logs in with the alias and password alone (`DIRECTORY_BACKEND_LOGIN_ALIAS` / `_PASSWORD`); the Backbone managed-client exchange (`BackboneManagedClient`, `MERCURY_M2M_*`) is removed. A refused login is never retried and pauses Mercury calls for one minute; a 429 is honoured (`Retry-After`) and surfaced as 429, other Mercury failures as 503, both with `message-error`. Mercury calls have 3 s connect and 5 s read timeouts.
+- `GET /businesses/{id}` and `GET /businesses/user/{userId}` accept an optional `session-token` header (only used when moderation is on).
+- `AuthServiceImpl` reads the verification status through `MercuryVerificationService`; the session token always carries the `uid`.
+
+### Added
+- Business moderation (S8), off by default (`umdc.moderation.enabled=false`): `moderation_status` `PENDING`/`APPROVED`/`REJECTED`; with moderation on new businesses start `PENDING` and search, map, nearby, detail and the per-user list return only `APPROVED` ones (the owner still sees theirs). Endpoints: `POST /businesses/{id}/verification/request`, `POST /businesses/{id}/verification/confirm`, `GET /businesses/{id}/moderation` (owner), `POST /businesses/{id}/moderation/approve|reject` (role `umdc.moderation.admin-role`, default `LH_ADMIN`, claim `umdc.moderation.role-claim`; 403 otherwise).
+- Ownership verification code: 9 digits sent through Mercury by e-mail, valid 15 minutes, one per minute, 5 tries; only its SHA-256 is stored.
+- `MercuryVerificationService` (send code, verify code, status), `MercuryErrors`, `MercuryThrottledException`, `MercuryUnavailableException`.
+- Migration `V15__business_moderation.sql` (idempotent): `moderation_status` (`DEFAULT 'APPROVED'`, CHECK, index) and the verification columns.
+- Guides: `docs/user-guide/p4-mercury-moderation.md`, `docs/technical/p4-mercury-moderation.md`; `mercury-m2m-auth.md` rewritten for MER-11 (Mermaid diagrams).
+
 ## [Unreleased] - 2026-11-23 (F2-A products: edit, deactivate, price, image)
 
 ### Added

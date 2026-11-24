@@ -75,6 +75,28 @@ class LocationGeoRepositoryTest {
     }
 
     @Test
+    void moderationOnHidesBusinessesThatAreNotApprovedFromNearbyMapAndClusters() {
+        em.createQuery("update BusinessEntity b set b.moderationStatus = com.umdc.directory.constant.ModerationStatus.PENDING where b.name = 'Alfa Taqueria'").executeUpdate();
+        em.clear();
+        try {
+            com.umdc.directory.config.ModerationSettings.configure(false, "LH_ADMIN", "roles");
+            assertEquals(4, repository.countNearby(LAT, LNG, 15000, null, null, null));
+            var all = repository.findInBbox(-80, 43, -79, 44, null, null, null, 50);
+
+            com.umdc.directory.config.ModerationSettings.configure(true, "LH_ADMIN", "roles");
+            assertEquals(2, repository.countNearby(LAT, LNG, 15000, null, null, null));
+            var names = repository.findNearby(LAT, LNG, 15000, null, null, null, true, 50, 0).stream().map(r -> r.name()).toList();
+            assertEquals(List.of("Legal", "Zeta Bakery"), names);
+            var approved = repository.findInBbox(-80, 43, -79, 44, null, null, null, 50);
+            assertEquals(all.size() - 2, approved.size());
+            assertTrue(approved.stream().noneMatch(r -> "Alfa Taqueria".equals(r.name())));
+            assertEquals(approved.size(), repository.findClusters(-80, 43, -79, 44, null, null, null, 1.0, 10).stream().mapToLong(c -> c.count()).sum());
+        } finally {
+            com.umdc.directory.config.ModerationSettings.configure(false, "LH_ADMIN", "roles");
+        }
+    }
+
+    @Test
     void radiusKeepsOnlyTheLocationsInside() {
         assertEquals(3, repository.countNearby(LAT, LNG, 5000, null, null, null));
         assertEquals(4, repository.countNearby(LAT, LNG, 15000, null, null, null));

@@ -131,6 +131,23 @@ class BusinessSearchRepositoryTest {
     }
 
     @Test
+    void moderationOffReturnsEveryStatusAndOnReturnsOnlyApproved() {
+        em.createQuery("update BusinessEntity b set b.moderationStatus = com.umdc.directory.constant.ModerationStatus.PENDING where b.name = 'Taquería El Sol'").executeUpdate();
+        em.createQuery("update BusinessEntity b set b.moderationStatus = com.umdc.directory.constant.ModerationStatus.REJECTED where b.name = 'Abogado Pérez'").executeUpdate();
+        em.clear();
+        try {
+            com.umdc.directory.config.ModerationSettings.configure(false, "LH_ADMIN", "roles");
+            assertEquals(4, names(new BusinessSearchCriteria(null, null, null, null)).size());
+
+            com.umdc.directory.config.ModerationSettings.configure(true, "LH_ADMIN", "roles");
+            assertEquals(List.of("Panadería La Estrella", "Sin sede"), names(new BusinessSearchCriteria(null, null, null, null)));
+            assertEquals(List.of("Panadería La Estrella"), names(new BusinessSearchCriteria(toronto.getId(), null, null, null)));
+        } finally {
+            com.umdc.directory.config.ModerationSettings.configure(false, "LH_ADMIN", "roles");
+        }
+    }
+
+    @Test
     void noFilterReturnsEveryBusiness() {
         assertEquals(4, names(new BusinessSearchCriteria(null, null, null, null)).size());
     }

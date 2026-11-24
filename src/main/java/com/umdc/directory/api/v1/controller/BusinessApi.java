@@ -60,12 +60,13 @@ public interface BusinessApi {
         @ApiResponse(responseCode = "200", description = "Business found",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                 schema = @Schema(implementation = BusinessTO.class))),
-        @ApiResponse(responseCode = "404", description = "Business not found", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Business not found (or, with moderation on, not approved and the caller is not the owner)", content = @Content),
         @ApiResponse(responseCode = DirectoryAppConstants.INTERNAL_SERVER_ERROR_CODE, description = DirectoryAppConstants.INTERNAL_SERVER_ERROR_MESSAGE, content = @Content)
     })
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE, path = "/{id}")
-    default ResponseEntity<BusinessTO> findBusiness(@PathVariable UUID id) {
-        return this.getService().findById(id);
+    default ResponseEntity<BusinessTO> findBusiness(@PathVariable UUID id,
+            @RequestHeader(value = SESSION_TOKEN_KEY, required = false) String sessionToken) {
+        return this.getService().findById(id, sessionToken);
     }
 
     // Finds businesses by user ID.
@@ -81,8 +82,9 @@ public interface BusinessApi {
         @ApiResponse(responseCode = DirectoryAppConstants.INTERNAL_SERVER_ERROR_CODE, description = DirectoryAppConstants.INTERNAL_SERVER_ERROR_MESSAGE, content = @Content)
     })
     @GetMapping(path = "/user/{userId}")
-    default ResponseEntity<Set<BusinessTO>> findByUserId(@PathVariable UUID userId) {
-        return this.getService().findByUserId(userId);
+    default ResponseEntity<Set<BusinessTO>> findByUserId(@PathVariable UUID userId,
+            @RequestHeader(value = SESSION_TOKEN_KEY, required = false) String sessionToken) {
+        return this.getService().findByUserId(userId, sessionToken);
     }
 
     /**
@@ -110,8 +112,8 @@ public interface BusinessApi {
                             schema = @Schema(implementation = BusinessUpdateResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid request data (validation error)", content = @Content),
             @ApiResponse(responseCode = "401", description = "Missing or invalid session token", content = @Content),
-            @ApiResponse(responseCode = "403", description = "User is not the owner of the business", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Business not found or referenced entity (category/user) not found", content = @Content),
+            @ApiResponse(responseCode = "403", description = "User is not the owner of the business, or the body id is another user's (a business cannot be reassigned)", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Business not found or referenced category not found", content = @Content),
             @ApiResponse(responseCode = DirectoryAppConstants.INTERNAL_SERVER_ERROR_CODE, description = DirectoryAppConstants.INTERNAL_SERVER_ERROR_MESSAGE, content = @Content)
     })
     @PatchMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

@@ -1,21 +1,21 @@
 package com.umdc.directory.client.mercury;
 
 import com.umdc.directory.api.v1.to.PrxTokenString;
+import com.umdc.directory.client.interceptor.MercuryAuthFeignConfig;
+import com.umdc.security.to.AuthRequest;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestBody;
 
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-
-/// Feign client of Mercury's token exchange. No `configuration`: the `Authorization` header here is the Backbone M2M token passed by
-/// the caller, so the OAuth Bearer that [MercuryClient] adds to its calls must not be added as well.
-@FeignClient(name = "mercuryAuthClient", url = "https://prx-qa.backbone.tst/mercury")
+/// Feign client of Mercury's token endpoint (MER-11). The configuration only sets timeouts: no OAuth Bearer is added here.
+@FeignClient(name = "mercuryAuthClient", url = "https://prx-qa.backbone.tst/mercury", configuration = MercuryAuthFeignConfig.class)
 public interface MercuryAuthClient {
 
-    /// Trades Directory's Backbone M2M token for Mercury's own M2M token.
+    /// Logs Directory in to Mercury with its registered alias and password alone (Mercury's `umdc.mercury.login-clients`). Wrong
+    /// credentials are throttled by Mercury (about 5 failures in 15 minutes, then 429 with `Retry-After`).
     ///
-    /// @param bearer `Bearer <Backbone M2M token>`
-    /// @return Mercury's token, to be sent in `session-token`
+    /// @param request the alias and password of Directory's login client
+    /// @return Mercury's token; it carries no user and is only good for `/api/v1/verification-code` and `/api/v1/mail`
     @PostMapping("/api/v1/auth/token")
-    PrxTokenString exchange(@RequestHeader(AUTHORIZATION) String bearer);
+    PrxTokenString token(@RequestBody AuthRequest request);
 }

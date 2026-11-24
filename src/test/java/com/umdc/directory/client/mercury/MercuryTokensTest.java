@@ -1,13 +1,10 @@
 package com.umdc.directory.client.mercury;
 
-import com.umdc.directory.client.backbone.BackboneManagedClient;
-import com.umdc.directory.client.backbone.to.ManagedClientToken;
-import com.umdc.directory.client.backbone.to.ManagedClientTokenRequest;
 import com.umdc.directory.api.v1.to.PrxTokenString;
+import com.umdc.security.to.AuthRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -17,15 +14,16 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -34,12 +32,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class MercuryTokensTest {
 
-    private static final UUID CLIENT = UUID.fromString("22222222-2222-2222-2222-222222222222");
     private static final Instant NOW = Instant.parse("2026-01-01T00:00:00Z");
-    private static final List<String> SCOPES = List.of("mercury:message:read", "mercury:message:write");
 
-    @Mock
-    private BackboneManagedClient backbone;
     @Mock
     private MercuryAuthClient mercury;
 
@@ -49,13 +43,17 @@ class MercuryTokensTest {
     @BeforeEach
     void setUp() {
         clock = new MutableClock(NOW);
-        tokens = new MercuryTokens(backbone, mercury, clock, CLIENT.toString(), "secret", SCOPES);
+        tokens = new MercuryTokens(mercury, clock, "directory", "pw");
+    }
+
+    private static feign.FeignException feign(int status, Map<String, Collection<String>> headers) {
+        var request = feign.Request.create(feign.Request.HttpMethod.GET, "/test", Map.of(), null, StandardCharsets.UTF_8, null);
+        var response = feign.Response.builder().status(status).reason("test").request(request).headers(headers).build();
+        return feign.FeignException.errorStatus("test", response);
     }
 
     private static feign.FeignException feign(int status) {
-        var request = feign.Request.create(feign.Request.HttpMethod.GET, "/test", java.util.Map.of(), null, StandardCharsets.UTF_8, null);
-        var response = feign.Response.builder().status(status).reason("test").request(request).build();
-        return feign.FeignException.errorStatus("test", response);
+        return feign(status, Map.of());
     }
 
     private static String jwtExpiringAt(Instant exp) {
@@ -64,51 +62,30 @@ class MercuryTokensTest {
     }
 
     @Test
-    void tradesTheBackboneTokenForMercurysAndSendsItAsBearer() {
-        when(backbone.token(any())).thenReturn(new ManagedClientToken("backbone-token", 300));
-        when(mercury.exchange("Bearer backbone-token")).thenReturn(new PrxTokenString("mercury-token"));
+    void logsInWithTheAliasAndPasswordAlone() {
+        when(mercury.token(new AuthRequest("directory", "pw"))).thenReturn(new PrxTokenString("mercury-token"));
 
         assertEquals("mercury-token", tokens.token());
-
-        var request = ArgumentCaptor.forClass(ManagedClientTokenRequest.class);
-        verify(backbone).token(request.capture());
-        assertEquals(new ManagedClientTokenRequest(CLIENT, "secret", SCOPES), request.getValue());
     }
 
     @Test
-    void keepsMercurysTokenUntilAMinuteBeforeItExpires() {
-        var mercuryToken = jwtExpiringAt(NOW.plus(Duration.ofMinutes(10)));
-        when(backbone.token(any())).thenReturn(new ManagedClientToken("b", 3600));
-        when(mercury.exchange(anyString())).thenReturn(new PrxTokenString(mercuryToken));
+    void keepsTheTokenUntilAMinuteBeforeItExpires() {
+        var token = jwtExpiringAt(NOW.plus(Duration.ofMinutes(10)));
+        when(mercury.token(any())).thenReturn(new PrxTokenString(token));
 
-        assertEquals(mercuryToken, tokens.token());
+        assertEquals(token, tokens.token());
         clock.set(NOW.plus(Duration.ofMinutes(8)));
-        assertEquals(mercuryToken, tokens.token());
-        verify(mercury, times(1)).exchange(anyString());
+        assertEquals(token, tokens.token());
+        verify(mercury, times(1)).token(any());
 
         clock.set(NOW.plus(Duration.ofMinutes(9)).plusSeconds(1));
         tokens.token();
-        verify(mercury, times(2)).exchange(anyString());
-        verify(backbone, times(1)).token(any());   // the Backbone token (1 h) is still good
+        verify(mercury, times(2)).token(any());
     }
 
     @Test
-    void asksBackboneAgainWhenItsTokenExpired() {
-        when(backbone.token(any())).thenReturn(new ManagedClientToken("b", 120));
-        when(mercury.exchange(anyString())).thenReturn(new PrxTokenString("opaque"));   // no readable exp: kept 5 minutes
-
-        tokens.token();
-        clock.set(NOW.plus(Duration.ofMinutes(6)));
-        tokens.token();
-
-        verify(backbone, times(2)).token(any());
-        verify(mercury, times(2)).exchange(anyString());
-    }
-
-    @Test
-    void anUnreadableMercuryTokenIsKeptForTheFallbackTime() {
-        when(backbone.token(any())).thenReturn(new ManagedClientToken("b", 0));
-        when(mercury.exchange(anyString())).thenReturn(new PrxTokenString("not-a-jwt"), new PrxTokenString("second"));
+    void anUnreadableTokenIsKeptForTheFallbackTime() {
+        when(mercury.token(any())).thenReturn(new PrxTokenString("not-a-jwt"), new PrxTokenString("second"));
 
         assertEquals("not-a-jwt", tokens.token());
         clock.set(NOW.plus(MercuryTokens.FALLBACK).minusSeconds(1));
@@ -118,29 +95,93 @@ class MercuryTokensTest {
     }
 
     @Test
-    void aShortBackboneLifeNeverGoesNegative() {
-        when(backbone.token(any())).thenReturn(new ManagedClientToken("b", 10));
-        when(mercury.exchange(anyString())).thenReturn(new PrxTokenString("m"));
+    void refusesToCallMercuryWhenTheLoginIsNotConfigured() {
+        var unconfigured = new MercuryTokens(mercury, clock, "", "");
 
+        var error = assertThrows(MercuryUnavailableException.class, unconfigured::token);
+
+        assertTrue(error.getMessage().contains("DIRECTORY_BACKEND_LOGIN_ALIAS"));
+        verify(mercury, never()).token(any());
+    }
+
+    @Test
+    void aBlankPasswordIsNotConfiguredEither() {
+        var unconfigured = new MercuryTokens(mercury, clock, "directory", " ");
+
+        assertThrows(MercuryUnavailableException.class, unconfigured::token);
+    }
+
+    @Test
+    void aRefusedLoginIsNotRetriedAndMercuryIsLeftAloneForAMinute() {
+        when(mercury.token(any())).thenThrow(feign(401));
+
+        var error = assertThrows(MercuryUnavailableException.class, tokens::token);
+        assertFalse(error.getMessage().contains("pw"));
+        assertThrows(MercuryUnavailableException.class, tokens::token);
+        verify(mercury, times(1)).token(any());
+
+        clock.set(NOW.plus(MercuryTokens.LOGIN_BACKOFF));
+        assertThrows(MercuryUnavailableException.class, tokens::token);
+        verify(mercury, times(2)).token(any());
+    }
+
+    @Test
+    void aThrottledLoginHonoursRetryAfterAndSendsNothingMeanwhile() {
+        when(mercury.token(any())).thenThrow(feign(429, Map.of("Retry-After", List.of("120"))));
+
+        var first = assertThrows(MercuryThrottledException.class, tokens::token);
+        assertEquals(120, first.getRetryAfterSeconds());
+
+        clock.set(NOW.plusSeconds(100));
+        var second = assertThrows(MercuryThrottledException.class, tokens::token);
+        assertEquals(20, second.getRetryAfterSeconds());
+        verify(mercury, times(1)).token(any());
+
+        clock.set(NOW.plusSeconds(120));
+        org.mockito.Mockito.doReturn(new PrxTokenString("m")).when(mercury).token(any());
         assertEquals("m", tokens.token());
     }
 
     @Test
-    void refusesToCallAnythingWhenTheManagedClientIsNotConfigured() {
-        var unconfigured = new MercuryTokens(backbone, mercury, clock, "", "", SCOPES);
+    void aThrottleWithoutAUsableRetryAfterWaitsTheDefault() {
+        when(mercury.token(any())).thenThrow(feign(429, Map.of("retry-after", List.of("Wed, 21 Oct 2026 07:28:00 GMT"))));
 
-        var error = assertThrows(IllegalStateException.class, unconfigured::token);
+        var error = assertThrows(MercuryThrottledException.class, tokens::token);
 
-        assertTrue(error.getMessage().contains("MERCURY_M2M_CLIENT_ID"));
-        verify(backbone, never()).token(any());
-        verify(mercury, never()).exchange(anyString());
+        assertEquals(MercuryTokens.DEFAULT_RETRY_AFTER_SECONDS, error.getRetryAfterSeconds());
     }
 
     @Test
-    void aMercury401DropsBothTokensAndRetriesOnce() {
-        when(backbone.token(any())).thenReturn(new ManagedClientToken("b1", 3600), new ManagedClientToken("b2", 3600));
-        when(mercury.exchange("Bearer b1")).thenReturn(new PrxTokenString("m1"));
-        when(mercury.exchange("Bearer b2")).thenReturn(new PrxTokenString("m2"));
+    void aZeroRetryAfterWaitsTheDefault() {
+        when(mercury.token(any())).thenThrow(feign(429, Map.of("Retry-After", List.of("0"))));
+
+        assertEquals(MercuryTokens.DEFAULT_RETRY_AFTER_SECONDS, assertThrows(MercuryThrottledException.class, tokens::token).getRetryAfterSeconds());
+    }
+
+    @Test
+    void otherLoginFailuresAreUnavailable() {
+        when(mercury.token(any())).thenThrow(feign(500));
+
+        assertTrue(assertThrows(MercuryUnavailableException.class, tokens::token).getMessage().contains("500"));
+    }
+
+    @Test
+    void aTransportFailureOfTheLoginIsUnavailable() {
+        when(mercury.token(any())).thenThrow(new IllegalStateException("connection reset"));
+
+        assertThrows(MercuryUnavailableException.class, tokens::token);
+    }
+
+    @Test
+    void anEmptyAnswerIsUnavailable() {
+        when(mercury.token(any())).thenReturn(new PrxTokenString(" "));
+
+        assertThrows(MercuryUnavailableException.class, tokens::token);
+    }
+
+    @Test
+    void aCallThatGets401LogsInAgainOnceAndRepeats() {
+        when(mercury.token(any())).thenReturn(new PrxTokenString("m1"), new PrxTokenString("m2"));
         var calls = new AtomicInteger();
 
         var result = tokens.withToken(token -> {
@@ -156,29 +197,72 @@ class MercuryTokensTest {
 
     @Test
     void aSecond401IsNotRetriedAgain() {
-        when(backbone.token(any())).thenReturn(new ManagedClientToken("b", 3600));
-        when(mercury.exchange(anyString())).thenReturn(new PrxTokenString("m"));
+        when(mercury.token(any())).thenReturn(new PrxTokenString("m"));
+        var calls = new AtomicInteger();
 
         assertThrows(feign.FeignException.Unauthorized.class, () -> tokens.withToken(token -> {
+            calls.incrementAndGet();
             throw feign(401);
         }));
+        assertEquals(2, calls.get());
     }
 
     @Test
-    void otherFailuresPassThroughWithoutNewTokens() {
-        when(backbone.token(any())).thenReturn(new ManagedClientToken("b", 3600));
-        when(mercury.exchange(anyString())).thenReturn(new PrxTokenString("m"));
+    void aLoginRefusedWhileRetryingIsNotLooped() {
+        when(mercury.token(any())).thenReturn(new PrxTokenString("m1")).thenThrow(feign(401));
+
+        assertThrows(MercuryUnavailableException.class, () -> tokens.withToken(token -> {
+            throw feign(401);
+        }));
+        verify(mercury, times(2)).token(any());
+    }
+
+    @Test
+    void aCallThatGets429IsNotRetriedAndBlocksTheNextOnes() {
+        when(mercury.token(any())).thenReturn(new PrxTokenString("m"));
+        var calls = new AtomicInteger();
+
+        var error = assertThrows(MercuryThrottledException.class, () -> tokens.withToken(token -> {
+            calls.incrementAndGet();
+            throw feign(429, Map.of("Retry-After", List.of("30")));
+        }));
+
+        assertEquals(30, error.getRetryAfterSeconds());
+        assertEquals(1, calls.get());
+        assertThrows(MercuryThrottledException.class, () -> tokens.withToken(token -> "never"));
+    }
+
+    @Test
+    void aRetriedCallThatGets429IsThrottled() {
+        when(mercury.token(any())).thenReturn(new PrxTokenString("m"));
+        var calls = new AtomicInteger();
+
+        assertThrows(MercuryThrottledException.class, () -> tokens.withToken(token -> {
+            if (calls.getAndIncrement() == 0) {
+                throw feign(401);
+            }
+            throw feign(429);
+        }));
+        assertEquals(2, calls.get());
+    }
+
+    @Test
+    void otherFailuresPassThroughWithoutANewLogin() {
+        when(mercury.token(any())).thenReturn(new PrxTokenString("m"));
 
         assertThrows(feign.FeignException.class, () -> tokens.withToken(token -> {
             throw feign(500);
         }));
-        verify(backbone, times(1)).token(any());
+        verify(mercury, times(1)).token(any());
     }
 
     @Test
-    void theRecordsNeverPrintSecrets() {
-        assertTrue(!new ManagedClientTokenRequest(CLIENT, "secret", SCOPES).toString().contains("secret"));
-        assertTrue(!new ManagedClientToken("backbone-token", 1).toString().contains("backbone-token"));
+    void invalidateForcesANewLogin() {
+        when(mercury.token(any())).thenReturn(new PrxTokenString("a"), new PrxTokenString("b"));
+
+        assertEquals("a", tokens.token());
+        tokens.invalidate();
+        assertEquals("b", tokens.token());
     }
 
     /// A clock the test moves by hand.

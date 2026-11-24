@@ -1,5 +1,6 @@
 package com.umdc.directory.jpa.repository;
 
+import com.umdc.directory.config.ModerationSettings;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
@@ -153,6 +154,10 @@ public class LocationGeoRepository {
     }
 
     private void filters(StringBuilder where, UUID categoryId, UUID cityId, String text, List<Object> params) {
+        if (ModerationSettings.enabled()) {
+            // moderation on: only approved businesses are public on the map and in nearby
+            where.append(" and b.moderation_status = 'APPROVED'");
+        }
         if (categoryId != null) {
             where.append(" and (c.id = :p").append(params.size() + 1).append(" or c.category_parent_fk = :p").append(params.size() + 1).append(")");
             params.add(categoryId);

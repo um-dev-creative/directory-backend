@@ -25,13 +25,13 @@ public class BusinessController implements BusinessApi {
     }
 
     @Override
-    public ResponseEntity<BusinessTO> findBusiness(UUID id) {
-        return businessService.findById(id);
+    public ResponseEntity<BusinessTO> findBusiness(UUID id, String sessionToken) {
+        return businessService.findById(id, sessionToken);
     }
 
     @Override
-    public ResponseEntity<Set<BusinessTO>> findByUserId(UUID userId) {
-        return businessService.findByUserId(userId);
+    public ResponseEntity<Set<BusinessTO>> findByUserId(UUID userId, String sessionToken) {
+        return businessService.findByUserId(userId, sessionToken);
     }
 
     @Override
