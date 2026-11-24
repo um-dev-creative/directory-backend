@@ -11,6 +11,17 @@
 - Guard test `NoGeneralSchemaAccessTest`: fails on entities outside `directory_site`, migrations or repository queries that mention `general`, imports of general-schema entities, or a V12 that stops using the catalog lookup.
 - Guides: `docs/user-guide/no-general-schema-access.md`, `docs/technical/no-general-schema-access.md` (Mermaid diagrams, documented GRANT script for the `directory_app` role).
 
+## [Unreleased] - 2026-11-23 (F3-A favorite lists, unique favorites index)
+
+### Added
+- RF-11: favorite lists of a consumer under `/api/v1/users/me/favorite-lists` (`session-token`, `401` without it; a list of another user is `404`): `POST` create (max 20 per user, name unique per user ignoring case, `409` otherwise), `GET` list with `item_count`, `GET /{id}?page&size` (list with a page of its active favorites, newest first), `PATCH /{id}` rename, `DELETE /{id}` (the favorites are kept), `POST /{id}/items` `{favorite_id}` and `DELETE /{id}/items/{favoriteId}`. A favorite (store or product) can be in several lists; only the caller's active favorites are accepted (`404` foreign or unknown, `409` inactive or already in the list, `400` offers).
+- Migration `V13__create_favorite_list.sql` (idempotent): tables `favorite_list` (`user_fk` plain UUID, unique `(user_fk, lower(name))`) and `favorite_list_item` (unique `(list_fk, favorite_fk)`, cascade deletes).
+- Migration `V14__favorites_unique_index.sql` (idempotent, never deletes): reports duplicates in comments, marks older duplicate active favorites inactive, creates the partial unique indexes `uq_fav_user_business`, `uq_fav_user_product`, `uq_fav_user_campaign` (active rows) and the `ck_fav_one_target` check (exactly one item reference, `NOT VALID` until validated).
+- Guides: `docs/user-guide/f3-favorite-lists.md`, `docs/technical/f3-favorite-lists.md` (Mermaid diagrams, endpoint shapes for the OpenAPI contract).
+
+### Notes
+- The existing `/api/v1/favorites` endpoints are unchanged.
+
 ## [Unreleased] - 2026-11-23 (API contract: Phase 2)
 
 ### Changed
