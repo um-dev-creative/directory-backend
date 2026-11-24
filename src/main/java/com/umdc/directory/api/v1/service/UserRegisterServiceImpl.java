@@ -2,6 +2,9 @@ package com.umdc.directory.api.v1.service;
 
 import com.umdc.directory.api.v1.to.ConfirmCodeRequest;
 import com.umdc.directory.client.mercury.MercuryClient;
+import com.umdc.directory.client.mercury.MercuryErrors;
+import com.umdc.directory.client.mercury.MercuryThrottledException;
+import com.umdc.directory.client.mercury.MercuryUnavailableException;
 import com.umdc.directory.client.mercury.MercuryTokens;
 import com.umdc.directory.mapper.ConfirmCodeMapper;
 import feign.FeignException;
@@ -51,6 +54,8 @@ public class UserRegisterServiceImpl implements UserRegisterService {
         try {
             var verificationRequest = confirmCodeMapper.toVerificationCodeRequest(confirmCodeRequest, applicationId);
             return mercuryTokens.withToken(mercuryToken -> mercuryClient.confirmCode(mercuryToken, verificationRequest));
+        } catch (MercuryThrottledException | MercuryUnavailableException e) {
+            return MercuryErrors.toResponse(e);
         } catch (FeignException e) {
             Optional<String> message = Optional.ofNullable(e.responseHeaders().get(MESSAGE_HEADER))
                     .flatMap(h -> h.stream().findFirst());

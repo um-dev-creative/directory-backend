@@ -330,7 +330,7 @@ class BusinessServiceImplTest {
     void testUpdateBusinessSuccess() {
         UUID businessId = UUID.randomUUID();
         BusinessUpdateRequest request = new BusinessUpdateRequest(
-                businessId,
+                null,
                 "Updated Name",
                 "Updated Description",
                 null,
@@ -346,24 +346,6 @@ class BusinessServiceImplTest {
         when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(owned(existingBusiness)));
         // No duplicate name
         when(businessRepository.findByName(request.name())).thenReturn(Optional.empty());
-        // Stub user lookup using request.id() (here businessId is reused as userId in service logic)
-        BackboneUserGetResponse backboneUserGetResponse = new BackboneUserGetResponse(
-                businessId,
-                "alias",
-                "12345GTGT",
-                "user@email.com",
-                "displayName",
-                LocalDateTime.now(),
-                LocalDateTime.now(),
-                true,
-                true,
-                true,
-                true,
-                null,
-                List.of(new Role()),
-                List.of(new Application())
-        );
-        when(backboneClient.findUserById(businessId)).thenReturn(backboneUserGetResponse);
         // Save returns updated entity
         when(businessRepository.save(any(BusinessEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -434,7 +416,7 @@ class BusinessServiceImplTest {
     void update_nameConflict_conflict() {
         UUID businessId = UUID.randomUUID();
         BusinessUpdateRequest request = new BusinessUpdateRequest(
-                businessId,
+                null,
                 "ExistingName",
                 null,
                 null,
@@ -483,28 +465,41 @@ class BusinessServiceImplTest {
     }
 
     @Test
-    @DisplayName("update - user lookup throws -> NOT_FOUND")
-    void update_userLookupThrows_notFound() {
+    @DisplayName("update - S1: a body id of another user is FORBIDDEN and nothing is looked up or saved")
+    void update_reassignToAnotherUser_forbidden() {
         UUID businessId = UUID.randomUUID();
-        UUID userId = UUID.randomUUID();
-        BusinessUpdateRequest request = new BusinessUpdateRequest(
-                userId,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null);
+        BusinessUpdateRequest request = new BusinessUpdateRequest(UUID.randomUUID(), "Other name", null, null, null, null, null, null);
 
         BusinessEntity existingBusiness = new BusinessEntity();
         existingBusiness.setId(businessId);
-
         when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(owned(existingBusiness)));
-        when(backboneClient.findUserById(userId)).thenThrow(new RuntimeException("backend error"));
 
         ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request, OWNER_TOKEN);
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertNotNull(response.getHeaders().getFirst("message"));
+        verify(businessRepository, never()).save(any(BusinessEntity.class));
+        verify(backboneClient, never()).findUserById(any());
+        assertNull(existingBusiness.getName());
+    }
+
+    @Test
+    @DisplayName("update - S1: the owner's own id in the body is accepted, ignored and the owner stays")
+    void update_sameOwnerIdInBody_ok() {
+        UUID businessId = UUID.randomUUID();
+        BusinessEntity existingBusiness = new BusinessEntity();
+        existingBusiness.setId(businessId);
+        var owned = owned(existingBusiness);
+        BusinessUpdateRequest request = new BusinessUpdateRequest(owned.getUserFk(), null, "New description", null, null, null, null, null);
+        when(businessRepository.findBusinessWithDigitalContactsById(businessId)).thenReturn(Optional.of(owned));
+        when(businessRepository.save(any(BusinessEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        var ownerBefore = owned.getUserFk();
+
+        ResponseEntity<BusinessUpdateResponse> response = businessService.update(businessId, request, OWNER_TOKEN);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(ownerBefore, owned.getUserFk());
+        verify(backboneClient, never()).findUserById(any());
     }
 
     @Test

@@ -1,8 +1,7 @@
 package com.umdc.directory.services;
 
 import com.umdc.directory.client.backbone.BackboneClient;
-import com.umdc.directory.client.mercury.MercuryClient;
-import com.umdc.directory.client.mercury.MercuryTokens;
+import com.umdc.directory.api.v1.service.MercuryVerificationService;
 import com.umdc.security.service.SessionJwtService;
 import com.umdc.security.to.AuthRequest;
 import com.umdc.security.to.AuthResponse;
@@ -18,9 +17,8 @@ class AuthServiceImplTest {
 
     private final SessionJwtService sessionJwtService = mock(SessionJwtService.class);
     private final BackboneClient backboneClient = mock(BackboneClient.class);
-    private final MercuryClient mercuryClient = mock(MercuryClient.class);
-    private final MercuryTokens mercuryTokens = mock(MercuryTokens.class);
-    private final AuthServiceImpl authService = new AuthServiceImpl(sessionJwtService, backboneClient, mercuryClient, mercuryTokens);
+    private final MercuryVerificationService mercuryVerification = mock(MercuryVerificationService.class);
+    private final AuthServiceImpl authService = new AuthServiceImpl(sessionJwtService, backboneClient, mercuryVerification);
 
     @Test
     @DisplayName("token should return OK status with valid alias")
@@ -94,17 +92,12 @@ class AuthServiceImplTest {
         return "h." + payload + ".s";
     }
 
-    @SuppressWarnings("unchecked")
-    private void runsCallsWithTheMercuryToken() {
-        when(mercuryTokens.withToken(any())).thenAnswer(inv -> ((java.util.function.Function<String, Object>) inv.getArgument(0)).apply("mercury"));
-    }
-
     @Test
-    @DisplayName("token with the backbone session reads the verification status with Mercury's M2M token")
+    @DisplayName("token with the backbone session reads the verification status from Mercury")
     void tokenWithBackboneSessionAddsTheVerificationStatus() {
         var user = java.util.UUID.randomUUID();
-        runsCallsWithTheMercuryToken();
-        when(mercuryClient.isVerificationCodeDone("mercury", user)).thenReturn(true);
+        when(backboneClient.validate(anyString())).thenReturn(true);
+        when(mercuryVerification.isVerified(user)).thenReturn(true);
         when(sessionJwtService.generateSessionToken(anyString(), anyMap())).thenReturn("jwt");
 
         var response = authService.token(new AuthRequest("alias", ""), backboneTokenOf(user));
@@ -114,23 +107,144 @@ class AuthServiceImplTest {
     }
 
     @Test
-    @DisplayName("token with the backbone session marks the verification incomplete when Mercury has no code")
-    void tokenWithBackboneSessionMarksIncompleteOnNotFound() {
+    @DisplayName("token with the backbone session marks the verification incomplete (and keeps the uid) when Mercury has no code")
+    void tokenWithBackboneSessionMarksIncomplete() {
         var user = java.util.UUID.randomUUID();
-        when(mercuryTokens.withToken(any())).thenThrow(new feign.FeignException.NotFound("nf",
-                feign.Request.create(feign.Request.HttpMethod.GET, "http://x", java.util.Map.of(), null, java.nio.charset.StandardCharsets.UTF_8, null), new byte[0], java.util.Map.of()));
+        when(backboneClient.validate(anyString())).thenReturn(true);
+        when(mercuryVerification.isVerified(user)).thenReturn(false);
         when(sessionJwtService.generateSessionToken(anyString(), anyMap())).thenReturn("jwt");
 
         var response = authService.token(new AuthRequest("alias", ""), backboneTokenOf(user));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(sessionJwtService).generateSessionToken(eq("alias"), argThat(p -> "false".equals(p.get("vcCompleted"))));
+        verify(sessionJwtService).generateSessionToken(eq("alias"), argThat(p -> "false".equals(p.get("vcCompleted")) && user.toString().equals(p.get("uid"))));
     }
 
     @Test
-    @DisplayName("token with the backbone session rejects a blank alias without touching Mercury")
+    @DisplayName("token with the backbone session rejects a blank or null alias without touching Backbone or Mercury")
     void tokenWithBackboneSessionRejectsBlankAlias() {
         assertEquals(HttpStatus.BAD_REQUEST, authService.token(new AuthRequest("", ""), "x").getStatusCode());
-        verifyNoInteractions(mercuryClient, mercuryTokens);
+        assertEquals(HttpStatus.BAD_REQUEST, authService.token(new AuthRequest(null, ""), "x").getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, authService.token(null, "x").getStatusCode());
+        verifyNoInteractions(backboneClient, mercuryVerification);
+    }
+
+    @Test
+    @DisplayName("S4: a backbone token that Backbone does not validate gets 401 and no session token")
+    void tokenWithAForgedBackboneSessionIsRefused() {
+        var user = java.util.UUID.randomUUID();
+        when(backboneClient.validate(anyString())).thenReturn(false);
+
+        var response = authService.token(new AuthRequest("alias", ""), backboneTokenOf(user));
+
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        verifyNoInteractions(sessionJwtService, mercuryVerification);
+    }
+
+    @Test
+    @DisplayName("S4: a missing, blank or unvalidatable backbone token gets 401")
+    void tokenWithoutAUsableBackboneSessionIsRefused() {
+        assertEquals(HttpStatus.UNAUTHORIZED, authService.token(new AuthRequest("alias", ""), null).getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, authService.token(new AuthRequest("alias", ""), " ").getStatusCode());
+        when(backboneClient.validate("boom")).thenThrow(new IllegalStateException("backbone down"));
+        assertEquals(HttpStatus.UNAUTHORIZED, authService.token(new AuthRequest("alias", ""), "boom").getStatusCode());
+        verifyNoInteractions(sessionJwtService);
+    }
+
+    @Test
+    @DisplayName("a validated backbone token without uid gets 401")
+    void tokenWithoutUidIsRefused() {
+        when(backboneClient.validate(anyString())).thenReturn(true);
+
+        assertEquals(HttpStatus.UNAUTHORIZED, authService.token(new AuthRequest("alias", ""), "h.e30.s").getStatusCode());
+    }
+
+    @Test
+    @DisplayName("a throttled Mercury is answered 429 with Retry-After and no session token")
+    void mercuryThrottleIsSurfaced() {
+        var user = java.util.UUID.randomUUID();
+        when(backboneClient.validate(anyString())).thenReturn(true);
+        when(mercuryVerification.isVerified(user)).thenThrow(new com.umdc.directory.client.mercury.MercuryThrottledException(42));
+
+        var response = authService.token(new AuthRequest("alias", ""), backboneTokenOf(user));
+
+        assertEquals(HttpStatus.TOO_MANY_REQUESTS, response.getStatusCode());
+        assertEquals("42", response.getHeaders().getFirst("Retry-After"));
+        assertNotNull(response.getHeaders().getFirst("message-error"));
+        verifyNoInteractions(sessionJwtService);
+    }
+
+    @Test
+    @DisplayName("an unavailable Mercury is answered 503")
+    void mercuryUnavailableIsSurfaced() {
+        var user = java.util.UUID.randomUUID();
+        when(backboneClient.validate(anyString())).thenReturn(true);
+        when(mercuryVerification.isVerified(user)).thenThrow(new com.umdc.directory.client.mercury.MercuryUnavailableException("down"));
+
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, authService.token(new AuthRequest("alias", ""), backboneTokenOf(user)).getStatusCode());
+    }
+
+    @Test
+    @DisplayName("a blank session token from the signer is NOT_ACCEPTABLE")
+    void blankSignedTokenIsNotAcceptable() {
+        var user = java.util.UUID.randomUUID();
+        when(backboneClient.validate(anyString())).thenReturn(true);
+        when(sessionJwtService.generateSessionToken(anyString(), anyMap())).thenReturn("");
+
+        assertEquals(HttpStatus.NOT_ACCEPTABLE, authService.token(new AuthRequest("alias", ""), backboneTokenOf(user)).getStatusCode());
+    }
+
+    @Test
+    @DisplayName("S4: the alias-only token can be switched off (403) and rejects control characters and over-long aliases")
+    void aliasOnlyTokenIsRestricted() {
+        assertEquals(HttpStatus.BAD_REQUEST, authService.token(new AuthRequest("a\nb", "")).getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, authService.token(new AuthRequest("x".repeat(129), "")).getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, authService.token((AuthRequest) null).getStatusCode());
+
+        org.springframework.test.util.ReflectionTestUtils.setField(authService, "aliasTokenEnabled", false);
+        var response = authService.token(new AuthRequest("validAlias", ""));
+
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertNotNull(response.getHeaders().getFirst("message-error"));
+        verifyNoInteractions(sessionJwtService);
+    }
+
+    @Test
+    @DisplayName("with moderation on the roles of the user go in the roles claim; a Backbone failure only skips the claim")
+    void rolesClaimWithModeration() {
+        var user = java.util.UUID.randomUUID();
+        var role = new com.umdc.commons.general.pojo.Role();
+        role.setName("LH_ADMIN");
+        var backboneUser = new com.umdc.directory.client.backbone.to.BackboneUserGetResponse(user, "a", null, "a@x.com", "A", null, null,
+                true, false, false, false, null, java.util.List.of(role), null);
+        when(backboneClient.validate(anyString())).thenReturn(true);
+        when(mercuryVerification.isVerified(user)).thenReturn(true);
+        when(sessionJwtService.generateSessionToken(anyString(), anyMap())).thenReturn("jwt");
+        com.umdc.directory.config.ModerationSettings.configure(true, "LH_ADMIN", "roles");
+        try {
+            when(backboneClient.findUserById(user)).thenReturn(backboneUser);
+            authService.token(new AuthRequest("alias", ""), backboneTokenOf(user));
+            verify(sessionJwtService).generateSessionToken(eq("alias"), argThat(p -> "LH_ADMIN".equals(p.get("roles"))));
+
+            doThrow(new IllegalStateException("down")).when(backboneClient).findUserById(user);
+            assertEquals(HttpStatus.OK, authService.token(new AuthRequest("alias", ""), backboneTokenOf(user)).getStatusCode());
+
+            doReturn(null).when(backboneClient).findUserById(user);
+            assertEquals(HttpStatus.OK, authService.token(new AuthRequest("alias", ""), backboneTokenOf(user)).getStatusCode());
+        } finally {
+            com.umdc.directory.config.ModerationSettings.configure(false, "LH_ADMIN", "roles");
+        }
+    }
+
+    @Test
+    @DisplayName("with moderation off Backbone is not asked for roles")
+    void noRolesClaimWithoutModeration() {
+        var user = java.util.UUID.randomUUID();
+        when(backboneClient.validate(anyString())).thenReturn(true);
+        when(sessionJwtService.generateSessionToken(anyString(), anyMap())).thenReturn("jwt");
+
+        authService.token(new AuthRequest("alias", ""), backboneTokenOf(user));
+
+        verify(backboneClient, never()).findUserById(any());
     }
 }

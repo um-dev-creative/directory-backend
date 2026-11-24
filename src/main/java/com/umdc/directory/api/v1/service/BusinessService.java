@@ -31,6 +31,15 @@ public interface BusinessService {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
+    /// Finds a business by its ID for a viewer. With moderation on, a business that is not approved is visible only to its owner (404 otherwise).
+    ///
+    /// @param id the UUID of the business
+    /// @param token the session token of the viewer, may be null
+    /// @return a ResponseEntity containing the business transfer object and HTTP status
+    default ResponseEntity<BusinessTO> findById(@NotNull UUID id, String token) {
+        return findById(id);
+    }
+
     /// Finds a business by its name.
     ///
     /// @param name the name of the business
@@ -47,11 +56,20 @@ public interface BusinessService {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
+    /// Finds the businesses of a user for a viewer. With moderation on, only the approved ones, unless the viewer is that user.
+    ///
+    /// @param userId the UUID of the user
+    /// @param token the session token of the viewer, may be null
+    /// @return a ResponseEntity containing the business transfer objects
+    default ResponseEntity<Set<BusinessTO>> findByUserId(UUID userId, String token) {
+        return findByUserId(userId);
+    }
+
     /// Updates an existing business.
     ///
     /// @param id the UUID of the business to update
     /// @param request the request object containing updated business details
-    /// @param token the session token of the caller, who must own the business (401, 404, 403)
+    /// @param token the session token of the caller, who must own the business (401, 404, 403); a `request.id()` other than the caller's is 403
     /// @return a ResponseEntity containing the update response with updatedDate
     default ResponseEntity<BusinessUpdateResponse> update(@NotNull UUID id, @NotNull BusinessUpdateRequest request, String token) {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();

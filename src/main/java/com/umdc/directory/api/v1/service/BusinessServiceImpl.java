@@ -4,7 +4,9 @@ import com.umdc.directory.api.v1.to.*;
 import com.umdc.directory.client.backbone.BackboneClient;
 import com.umdc.directory.client.backbone.to.BackboneUserUpdateRequest;
 import com.umdc.directory.client.backbone.to.ContactType;
+import com.umdc.directory.config.ModerationSettings;
 import com.umdc.directory.constant.ContactTypeKey;
+import com.umdc.directory.constant.ModerationStatus;
 import com.umdc.directory.jpa.entity.CategoryEntity;
 import com.umdc.directory.jpa.entity.DigitalContactEntity;
 import com.umdc.directory.jpa.repository.BusinessRepository;
@@ -110,6 +112,7 @@ public class BusinessServiceImpl implements BusinessService {
             var backboneUserGetResponse = backboneClient.findUserById(businessCreateRequest.userId());
             if (Objects.nonNull(backboneUserGetResponse)) {
                 var business = businessMapper.toSource(businessCreateRequest);
+                business.setModerationStatus(ModerationSettings.enabled() ? ModerationStatus.PENDING : ModerationStatus.APPROVED);
                 var savedBusiness = businessRepository.save(business);
 
                 var standardRoleFounded = backboneUserGetResponse.roles().stream().filter(role -> role.getName().equals(LH_STANDARD.name())).findFirst();
@@ -201,10 +204,28 @@ public class BusinessServiceImpl implements BusinessService {
      */
     @Override
     public ResponseEntity<BusinessTO> findById(@NotNull UUID id) {
-        var result = businessRepository.findBusinessWithDigitalContactsById(id);
+        return findById(id, null);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ResponseEntity<BusinessTO> findById(@NotNull UUID id, String token) {
+        var result = businessRepository.findBusinessWithDigitalContactsById(id)
+                .filter(business -> visibleTo(business, token));
         return result.map(businessEntity ->
                         ResponseEntity.ok(businessMapper.toBusinessTO(businessEntity, contactTypeProvider.names())))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    }
+
+    /// With moderation on, a business that is not `APPROVED` is visible only to its owner.
+    private static boolean visibleTo(com.umdc.directory.jpa.entity.BusinessEntity business, String token) {
+        if (!ModerationSettings.enabled() || business.getModerationStatus() == ModerationStatus.APPROVED) {
+            return true;
+        }
+        var viewer = JwtUtil.getUidFromToken(token);
+        return Objects.nonNull(viewer) && viewer.equals(business.getUserFk());
     }
 
     /**
@@ -212,8 +233,17 @@ public class BusinessServiceImpl implements BusinessService {
      */
     @Override
     public ResponseEntity<Set<BusinessTO>> findByUserId(@NotNull UUID userId) {
+        return findByUserId(userId, null);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ResponseEntity<Set<BusinessTO>> findByUserId(@NotNull UUID userId, String token) {
         var names = contactTypeProvider.names();
         var businessPage = businessRepository.findByUserEntityFk(userId).stream()
+                .filter(business -> visibleTo(business, token))
                 .map(e -> businessMapper.toBusinessTO(e, names)).collect(Collectors.toSet());
         return ResponseEntity.ok(businessPage);
     }
@@ -274,6 +304,12 @@ public class BusinessServiceImpl implements BusinessService {
                     .header(MESSAGE_HEADER, "Only the owner can update the business.")
                     .build();
         }
+        // S1: the owner cannot hand the business to another user through the body id; the owner's own id is accepted and ignored.
+        if (Objects.nonNull(request.id()) && !tokenUserId.equals(request.id())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .header(MESSAGE_HEADER, "The business cannot be reassigned to another user.")
+                    .build();
+        }
         boolean updated = false;
 
         // Update basic fields
@@ -305,24 +341,6 @@ public class BusinessServiceImpl implements BusinessService {
             categoryEntity.setId(request.categoryId());
             existingBusiness.setCategoryFk(categoryEntity);
             updated = true;
-        }
-
-        // Validate and update user if provided
-        if (Objects.nonNull(request.id())) {
-            try {
-                var user = backboneClient.findUserById(request.id());
-                if (Objects.isNull(user)) {
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                            .header(MESSAGE_HEADER, "User not found.")
-                            .build();
-                }
-                existingBusiness.setUserFk(request.id());
-                updated = true;
-            } catch (Exception e) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .header(MESSAGE_HEADER, "User not found.")
-                        .build();
-            }
         }
 
         // Validate website if provided

@@ -58,7 +58,7 @@ class BusinessApiTest {
     void findBusinessByIdNotFound() {
         UUID id = UUID.randomUUID();
 
-        ResponseEntity<BusinessTO> result = businessApi.findBusiness(id);
+        ResponseEntity<BusinessTO> result = businessApi.findBusiness(id, null);
         assertEquals(HttpStatus.NOT_IMPLEMENTED, result.getStatusCode());
     }
 
@@ -66,7 +66,7 @@ class BusinessApiTest {
     @DisplayName("Find businesses by user ID - Success")
     void findBusinessesByUserIdSuccess() {
         UUID userId = UUID.randomUUID();
-        ResponseEntity<Set<BusinessTO>> result = businessApi.findByUserId(userId);
+        ResponseEntity<Set<BusinessTO>> result = businessApi.findByUserId(userId, null);
         assertEquals(HttpStatus.NOT_IMPLEMENTED, result.getStatusCode());
     }
 

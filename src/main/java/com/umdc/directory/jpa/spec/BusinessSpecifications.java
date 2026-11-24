@@ -1,5 +1,7 @@
 package com.umdc.directory.jpa.spec;
 
+import com.umdc.directory.config.ModerationSettings;
+import com.umdc.directory.constant.ModerationStatus;
 import com.umdc.directory.jpa.entity.BusinessEntity;
 import com.umdc.directory.jpa.entity.CategoryEntity;
 import com.umdc.directory.jpa.entity.CityEntity;
@@ -29,7 +31,16 @@ public final class BusinessSpecifications {
     public static Specification<BusinessEntity> from(BusinessSearchCriteria criteria) {
         return inCity(criteria.cityId(), criteria.city())
                 .and(inCategory(criteria.categoryId()))
-                .and(matchesText(criteria.text()));
+                .and(matchesText(criteria.text()))
+                .and(approvedOnly());
+    }
+
+    /// With moderation on (`umdc.moderation.enabled`), only `APPROVED` businesses; otherwise no predicate.
+    static Specification<BusinessEntity> approvedOnly() {
+        if (!ModerationSettings.enabled()) {
+            return Specification.unrestricted();
+        }
+        return (root, query, cb) -> cb.equal(root.get("moderationStatus"), ModerationStatus.APPROVED);
     }
 
     /// Businesses that have at least one location in the city (by id, or by name when no id is given). `EXISTS` keeps one row per business.

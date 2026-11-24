@@ -1,5 +1,6 @@
 package com.umdc.directory.jpa.entity;
 
+import com.umdc.directory.constant.ModerationStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -105,6 +106,26 @@ public class BusinessEntity implements Serializable {
     @Size(max = 512)
     @Column(name = "profile_image_ref", length = 512)
     private String profileImageRef;
+
+    /// Moderation state (`PENDING`, `APPROVED`, `REJECTED`). Rows that existed before moderation are `APPROVED`.
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @ColumnDefault("'APPROVED'")
+    @Column(name = "moderation_status", nullable = false, length = 16)
+    private ModerationStatus moderationStatus = ModerationStatus.APPROVED;
+
+    /// SHA-256 (hex) of the ownership verification code sent to the owner; null when no code is pending. The code itself is never stored.
+    @Size(max = 64)
+    @Column(name = "verification_code_hash", length = 64)
+    private String verificationCodeHash;
+
+    /// When the pending verification code stops being valid.
+    @Column(name = "verification_expires_at")
+    private LocalDateTime verificationExpiresAt;
+
+    /// Wrong codes entered against the pending verification code.
+    @Column(name = "verification_attempts")
+    private Integer verificationAttempts;
 
     public BusinessEntity() {
         // Default constructor
@@ -299,5 +320,37 @@ public class BusinessEntity implements Serializable {
 
     public void setProfileImageRef(String profileImageRef) {
         this.profileImageRef = profileImageRef;
+    }
+
+    public ModerationStatus getModerationStatus() {
+        return moderationStatus;
+    }
+
+    public void setModerationStatus(ModerationStatus moderationStatus) {
+        this.moderationStatus = moderationStatus;
+    }
+
+    public String getVerificationCodeHash() {
+        return verificationCodeHash;
+    }
+
+    public void setVerificationCodeHash(String verificationCodeHash) {
+        this.verificationCodeHash = verificationCodeHash;
+    }
+
+    public LocalDateTime getVerificationExpiresAt() {
+        return verificationExpiresAt;
+    }
+
+    public void setVerificationExpiresAt(LocalDateTime verificationExpiresAt) {
+        this.verificationExpiresAt = verificationExpiresAt;
+    }
+
+    public int getVerificationAttempts() {
+        return verificationAttempts == null ? 0 : verificationAttempts;
+    }
+
+    public void setVerificationAttempts(Integer verificationAttempts) {
+        this.verificationAttempts = verificationAttempts;
     }
 }

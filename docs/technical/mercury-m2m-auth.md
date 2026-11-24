@@ -1,31 +1,43 @@
-# Authentication towards mercury (technical guide)
+# Authentication towards mercury (technical guide, MER-11)
 
-Directory exchanges the Backbone M2M token of its managed client for mercury's own M2M token.
+Directory logs in to mercury with its registered alias and password alone. The token is cached and used only for
+`/api/v1/verification-code` and `/api/v1/mail`.
 
 ```mermaid
 sequenceDiagram
     participant D as Directory (MercuryTokens)
-    participant B as backbone-rest
     participant M as mercury
-    D->>B: POST /api/v1/managed-clients/token {clientId, clientSecret, scopes}
-    B-->>D: accessToken (Backbone M2M), expiresIn
-    D->>M: POST /api/v1/auth/token, Authorization: Bearer <Backbone M2M>
-    M->>B: introspect the Bearer (application_id, scopes)
-    M-->>D: token (mercury M2M: sub=client, aid=application, scope)
-    D->>M: POST /api/v1/verification-code, session-token: <mercury M2M>
-    M-->>D: 200 / 4xx
+    D->>M: POST /api/v1/auth/token {alias, password}
+    alt 200
+        M-->>D: token (no user)
+        D->>M: POST /api/v1/verification-code, session-token: token
+        M-->>D: 2xx / 4xx
+    else 401
+        M-->>D: 401
+        Note over D: no retry; no call to mercury for 1 minute (503 to the caller)
+    else 429
+        M-->>D: 429 Retry-After: n
+        Note over D: nothing sent for n seconds; 429 + Retry-After to the caller
+    end
 ```
 
 | Piece | Role |
 | --- | --- |
-| `client/mercury/MercuryTokens` | Gets and caches both tokens (until one minute before `expiresIn` / the JWT `exp`; 5 minutes when `exp` cannot be read). `withToken(call)` runs a mercury call and, on a 401, drops both caches and repeats it once. Thread-safe (one lock). |
-| `client/backbone/BackboneManagedClient` | Feign client of `POST /api/v1/managed-clients/token`. **No `configuration`:** the endpoint is public, so the OAuth Bearer of `BackboneFeignConfigurer` must not be sent. |
-| `client/mercury/MercuryAuthClient` | Feign client of mercury's `POST /api/v1/auth/token`. **No `configuration`** either: its `Authorization` is the Backbone M2M token and `MercuryFeignConfigurer` would add a second one. |
-| `client/mercury/MercuryClient` | Calls that carry mercury's token in `session-token` (`confirmCode`, `isVerificationCodeDone`). |
+| `client/mercury/MercuryAuthClient` | Feign client of `POST /api/v1/auth/token` (`AuthRequest`). Its configuration (`MercuryAuthFeignConfig`) only sets timeouts: no OAuth Bearer is added. |
+| `client/mercury/MercuryTokens` | Logs in, caches the token until one minute before `exp` (5 minutes when `exp` cannot be read), thread-safe. `withToken(call)` runs a call; a 401 of the call drops the token and repeats it **once**; a 401 of the login is never retried; a 429 (login or call) records the `Retry-After` and every later call fails fast with `MercuryThrottledException` until it passes. |
+| `client/mercury/MercuryClient` | Calls that carry Directory's token in `session-token` (`confirmCode`, `isVerificationCodeDone`). `MercuryFeignConfigurer` adds the OAuth Bearer and the timeouts (connect 3 s, read 5 s). |
+| `client/mercury/MercuryErrors` | `MercuryThrottledException` becomes 429 + `Retry-After`; `MercuryUnavailableException` (not configured, login refused, 5xx, timeout) becomes 503. Both carry `message-error` and never a credential. |
+| `api/v1/service/MercuryVerificationService` | Thin layer: `sendCode` (Kafka e-mail that mercury delivers), `verifyCode` (`POST /verification-code`), `isVerified` (`latest-status`). Never logs a code or a token. |
 
-Properties (`bootstrap.yml`, `umdc.clients.mercury.m2m`): `client-id` (`MERCURY_M2M_CLIENT_ID`), `client-secret` (`MERCURY_M2M_CLIENT_SECRET`),
-`scopes` (`MERCURY_M2M_SCOPES`, default `mercury:message:read,mercury:message:write`). An empty id or secret makes `MercuryTokens.token()` throw
-`IllegalStateException`; the context still starts. Tokens and the secret are never logged (the records override `toString`). mercury lets a client act
-only on the application Backbone ties it to (403 otherwise). The Feign base URLs are still the ones hard-coded in the `@FeignClient` annotations.
+Properties: `umdc.clients.mercury.login.alias` / `umdc.clients.mercury.login.password`; when absent, the environment variables
+`DIRECTORY_BACKEND_LOGIN_ALIAS` / `DIRECTORY_BACKEND_LOGIN_PASSWORD` are read. Empty = not configured (the context still starts; calls answer 503).
 
-Tests: `MercuryTokensTest` (exchange, cache expiry, fallback, retry on 401, not configured), `UserRegisterServiceImplTest`, `AuthServiceImplTest`.
+User-scoped mercury calls (campaigns, templates) are different: they need `Authorization: Bearer <Backbone opaque token>` and the end user's own
+backbone `session-token`, passed through unchanged. mercury rejects a refresh token or a logged-out token there (401). Directory has no such call
+today; the token of this guide must never be used for them.
+
+Follow-up outside this change (the YAML is not part of it): the `umdc.clients.mercury.m2m` block of `bootstrap.yml` is no longer read and can be
+removed; `BackboneManagedClient`, `ManagedClientToken` and `ManagedClientTokenRequest` were deleted.
+
+Tests: `MercuryTokensTest` (login, cache, 401 without loops, 429 and `Retry-After`, not configured, unavailable), `MercuryErrorsTest`,
+`MercuryVerificationServiceTest`, `AuthServiceImplTest`, `UserRegisterServiceImplTest`.
