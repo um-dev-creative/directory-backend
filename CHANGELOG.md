@@ -89,6 +89,17 @@ This project adheres (loosely) to "Keep a Changelog" and follows semantic versio
 ### Notes
 - `src/main/resources/api/index.yaml` is not updated here; the endpoint list is in the technical guide.
 
+## [Unreleased] - 2026-11-23 (F4-C: Redis rate limiting and map cache)
+
+### Added
+- `RedisRateLimitStore`: shared token-bucket rate limit in Redis (atomic Lua script, Redis `TIME`), selected with `umdc.ratelimit.store=memory|redis` (env `UMDC_RATELIMIT_STORE`, default `memory`). Limit, `Retry-After` and `X-RateLimit-Limit` are identical to the in-memory store (both pass the same contract tests).
+- `GeoResponseCache`: optional Redis cache of `GET /businesses/map` and `GET /businesses/nearby` answers, keyed by the zoom, the bbox (or centre) snapped to a grid, the filters (hashed) and the paging; no per-user data in keys, TTL only invalidation. Off by default: `umdc.geo.cache-enabled` (`UMDC_GEO_CACHE_ENABLED`) and `umdc.geo.cache-ttl-seconds` (`UMDC_GEO_CACHE_TTL_SECONDS`, default 60). When on, the query uses the snapped bbox/centre so a cached answer is exactly the answer of its key.
+- Both fail open: a Redis error falls back to the in-memory limiter (or a cache miss) with a warning, and a short circuit breaker (`RedisFailOpenGuard`, 5 s) avoids waiting for the timeout on every request. A Redis outage never produces a 5xx.
+- Guides: `docs/user-guide/f4-redis.md`, `docs/technical/f4-redis.md` (Mermaid diagrams, environment variables).
+
+### Notes
+- Defaults keep the previous behaviour (in-memory limiter, no cache). No migration, no API contract change.
+
 ## [Unreleased] - 2026-11-23 (F3-C: geo route quotas)
 
 ### Added
