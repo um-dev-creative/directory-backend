@@ -40,6 +40,12 @@
         <java.version>25</java.version>
         <!-- Use a dedicated jacoco argLine property to avoid conflicts with CI/global agent injection -->
         <jacoco.argLine/>
+        <!-- Extra JVM args for the tests (IDE/CI may pass -DargLine=...); appended AFTER the JaCoCo agent, never replacing it -->
+        <argLine/>
+        <!-- springdoc-openapi-maven-plugin only downloads /v3/api-docs from an already running app: skipped unless -Dspringdoc.skip=false -->
+        <springdoc.skip>true</springdoc.skip>
+        <!-- Files excluded from test compilation by default; profile pg-it sets it to a pattern that matches nothing -->
+        <pg-it.testExclude>**/*PostgresIT.java</pg-it.testExclude>
         <!--        PRX Commons-->
         <com.umdc.commons.version>0.0.4</com.umdc.commons.version>
         <com.umdc.commons-services.version>0.0.3</com.umdc.commons-services.version>
@@ -106,7 +112,7 @@
             **/mapper/*, **/*Test.*, **/cache/*, **/cache/domain/*, **/security/*, **/producer/*,**/interceptor/*
         </sonar.exclusions>
         <sonar.coverage.exclusions>${sonar.exclusions}</sonar.coverage.exclusions>
-        <sonar.coverage.jacoco.xmlReportPaths>/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
         <project.ruleset>${project.basedir}/ruleset.xml</project.ruleset>
     </properties>
 
@@ -475,8 +481,9 @@
                 <version>${maven.surefire.version}</version>
                 <configuration>
                     <!-- Late replacement (@{...}): ${...} is interpolated (empty) before JaCoCo's prepare-agent sets the property.
+                         The JaCoCo agent comes first, then any -DargLine injected by an IDE/CI (property argLine, empty by default).
                          Do not append a manual mockito javaagent. -->
-                    <argLine>@{jacoco.argLine}</argLine>
+                    <argLine>@{jacoco.argLine} ${argLine}</argLine>
                 </configuration>
                 <dependencies>
                     <dependency>
@@ -599,6 +606,11 @@
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-maven-plugin</artifactId>
                 <version>1.5</version>
+                <configuration>
+                    <!-- default true: nothing starts the app in this build, so the goal could only fail with "Connection refused".
+                         Run it against a running instance with: mvn verify -Dspringdoc.skip=false [-Dspringdoc.apiDocsUrl=...] -->
+                    <skip>${springdoc.skip}</skip>
+                </configuration>
                 <executions>
                     <execution>
                         <phase>integration-test</phase>
@@ -619,6 +631,9 @@
                     </compilerArgs>
                     <!-- Use release to match the project's java.version -->
                     <release>${java.version}</release>
+                    <testExcludes>
+                        <testExclude>${pg-it.testExclude}</testExclude>
+                    </testExcludes>
                     <!-- Ensure MapStruct annotation processor runs during compile and test-compile -->
                     <annotationProcessorPaths>
                         <path>
@@ -700,6 +715,46 @@
                                     <mainClass>com.umdc.directory.benchmark.BenchmarkRunner</mainClass>
                                     <classpathScope>test</classpathScope>
                                 </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!--
+            pg-it profile (disabled by default): PostgreSQL integration tests with Testcontainers (needs Docker).
+            Activate with: mvn -B verify -Ppg-it   (see docs/technical/p4-build-hygiene.md). Not part of the default build or the 85% gate.
+        -->
+        <profile>
+            <id>pg-it</id>
+            <properties>
+                <pg-it.testExclude>none/**</pg-it.testExclude>
+                <!-- the default surefire run must not run the *IT classes and the JaCoCo gate stays on the unit tests -->
+                <jacoco.skip>true</jacoco.skip>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.testcontainers</groupId>
+                    <artifactId>testcontainers-postgresql</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <includes>
+                                <include>**/*PostgresIT.java</include>
+                            </includes>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
                             </execution>
                         </executions>
                     </plugin>
