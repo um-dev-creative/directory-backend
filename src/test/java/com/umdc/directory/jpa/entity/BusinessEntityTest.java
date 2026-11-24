@@ -68,7 +68,7 @@ class BusinessEntityTest {
     @DisplayName("Get User Foreign Key Test")
     void getUserFkTest() {
         BusinessEntity businessEntity = new BusinessEntity();
-        UserEntity userEntity = new UserEntity();
+        UUID userEntity = UUID.randomUUID();
         businessEntity.setUserFk(userEntity);
         assertEquals(userEntity, businessEntity.getUserFk());
     }

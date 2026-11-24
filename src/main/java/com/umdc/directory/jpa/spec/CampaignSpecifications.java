@@ -118,7 +118,7 @@ public final class CampaignSpecifications {
             if (userId == null) {
                 return publicOnes;
             }
-            Predicate own = cb.equal(root.get("businessFk").get("userEntityFk").get("id"), userId);
+            Predicate own = cb.equal(root.get("businessFk").get("userFk"), userId);
             return cb.or(own, publicOnes);
         };
     }

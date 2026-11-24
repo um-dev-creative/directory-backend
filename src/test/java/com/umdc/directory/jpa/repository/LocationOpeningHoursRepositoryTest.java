@@ -4,7 +4,6 @@ import com.umdc.directory.jpa.entity.BusinessEntity;
 import com.umdc.directory.jpa.entity.CategoryEntity;
 import com.umdc.directory.jpa.entity.LocationOpeningHoursEntity;
 import com.umdc.directory.jpa.entity.TimezoneEntity;
-import com.umdc.directory.jpa.entity.UserEntity;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,8 +85,7 @@ class LocationOpeningHoursRepositoryTest {
         timezone.setCreatedAt(LocalDateTime.now());
         timezone.setLastUpdated(LocalDateTime.now());
         em.persist(timezone);
-        var owner = new UserEntity();
-        em.persist(owner);
+        var owner = UUID.randomUUID();
         var category = new CategoryEntity();
         category.setName("Food");
         category.setDescription("Food");
@@ -105,7 +103,7 @@ class LocationOpeningHoursRepositoryTest {
         assertTrue(repository.findTimezoneOfBusiness(UUID.randomUUID()).isEmpty());
     }
 
-    private BusinessEntity business(String name, CategoryEntity category, UserEntity owner, UUID timezoneId) {
+    private BusinessEntity business(String name, CategoryEntity category, UUID owner, UUID timezoneId) {
         var b = new BusinessEntity();
         b.setName(name);
         b.setCategoryFk(category);

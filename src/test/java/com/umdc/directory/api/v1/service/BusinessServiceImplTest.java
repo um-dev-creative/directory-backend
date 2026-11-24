@@ -9,8 +9,6 @@ import com.umdc.directory.client.backbone.to.ContactType;
 import com.umdc.directory.constant.ContactTypeKey;
 import com.umdc.directory.constant.RoleKey;
 import com.umdc.directory.jpa.entity.BusinessEntity;
-import com.umdc.directory.jpa.entity.ContactTypeEntity;
-import com.umdc.directory.jpa.entity.UserEntity;
 import com.umdc.directory.jpa.repository.BusinessRepository;
 import com.umdc.directory.jpa.repository.CategoryRepository;
 import com.umdc.directory.jpa.repository.DigitalContactRepository;
@@ -40,9 +38,7 @@ class BusinessServiceImplTest {
 
     /** Marks the entity as owned by the user of {@link #OWNER_TOKEN}. */
     private static BusinessEntity owned(BusinessEntity entity) {
-        UserEntity owner = new UserEntity();
-        owner.setId(OWNER_ID);
-        entity.setUserFk(owner);
+        entity.setUserFk(OWNER_ID);
         return entity;
     }
 
@@ -68,15 +64,13 @@ class BusinessServiceImplTest {
     @Mock
     private EntityManager entityManager;
 
-    @Mock
-    private TypedQuery<ContactTypeEntity> contactTypeQuery;
-
-    @InjectMocks
     private BusinessServiceImpl businessService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        businessService = new BusinessServiceImpl(userService, businessRepository, categoryRepository,
+                digitalContactRepository, businessMapper, backboneClient, new ContactTypeProvider(backboneClient, 600));
         ReflectionTestUtils.setField(businessService, "initialRoleId", "3165ff6c-cdc3-4cbb-a19f-2252b15be6e2");
 
         when(backboneClient.findAllContactType()).thenReturn(List.of(
@@ -243,7 +237,7 @@ class BusinessServiceImplTest {
                 "email", null, null, null, LocalDateTime.now(), LocalDateTime.now(), false, UUID.randomUUID(), null);
 
         when(businessRepository.findBusinessWithDigitalContactsById(id)).thenReturn(Optional.of(owned(entity)));
-        when(businessMapper.toBusinessTO(entity)).thenReturn(to);
+        when(businessMapper.toBusinessTO(org.mockito.ArgumentMatchers.eq(entity), org.mockito.ArgumentMatchers.anyMap())).thenReturn(to);
 
         ResponseEntity<BusinessTO> response = businessService.findById(id);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -274,7 +268,7 @@ class BusinessServiceImplTest {
                 "email", null, null, null, LocalDateTime.now(), LocalDateTime.now(), false, UUID.randomUUID(), null);
 
         when(businessRepository.findByUserEntityFk(userId)).thenReturn(entities);
-        when(businessMapper.toBusinessTO(entity)).thenReturn(to);
+        when(businessMapper.toBusinessTO(org.mockito.ArgumentMatchers.eq(entity), org.mockito.ArgumentMatchers.anyMap())).thenReturn(to);
 
         ResponseEntity<Set<BusinessTO>> response = businessService.findByUserId(userId);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -305,7 +299,7 @@ class BusinessServiceImplTest {
                 "email", null, null, null, LocalDateTime.now(), LocalDateTime.now(), false, UUID.randomUUID(), null);
 
         when(businessRepository.findByName(name)).thenReturn(Optional.of(entity));
-        when(businessMapper.toBusinessTO(entity)).thenReturn(to);
+        when(businessMapper.toBusinessTO(org.mockito.ArgumentMatchers.eq(entity), org.mockito.ArgumentMatchers.anyMap())).thenReturn(to);
 
         ResponseEntity<BusinessTO> response = businessService.findByName(name);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -556,10 +550,8 @@ class BusinessServiceImplTest {
 
         BusinessEntity existingBusiness = new BusinessEntity();
         existingBusiness.setId(businessId);
-        ContactTypeEntity ct = new ContactTypeEntity();
-        ct.setName(ContactTypeKey.EML.toString());
         com.umdc.directory.jpa.entity.DigitalContactEntity dc = new com.umdc.directory.jpa.entity.DigitalContactEntity();
-        dc.setContactType(ct);
+        dc.setContactTypeFk(UUID.fromString("00000000-0000-0000-0000-000000000011"));
         dc.setContent("old@example.com");
         Set<com.umdc.directory.jpa.entity.DigitalContactEntity> contacts = new HashSet<>();
         contacts.add(dc);
@@ -591,12 +583,8 @@ class BusinessServiceImplTest {
 
         BusinessEntity existingBusiness = new BusinessEntity();
         existingBusiness.setId(businessId);
-        ContactTypeEntity ct = new ContactTypeEntity();
-        ct.setId(emailTypeId);
-        ct.setName(ContactTypeKey.EML.toString());
         com.umdc.directory.jpa.entity.DigitalContactEntity dc = new com.umdc.directory.jpa.entity.DigitalContactEntity();
         dc.setContactTypeFk(emailTypeId);
-        dc.setContactType(ct);
         dc.setContent("same@example.com");
         Set<com.umdc.directory.jpa.entity.DigitalContactEntity> contacts = new HashSet<>();
         contacts.add(dc);
@@ -619,9 +607,7 @@ class BusinessServiceImplTest {
 
         BusinessEntity entity = new BusinessEntity();
         entity.setId(businessId);
-        UserEntity user = new UserEntity();
-        user.setId(userId);
-        entity.setUserFk(user);
+        entity.setUserFk(userId);
 
         try (MockedStatic<JwtUtil> jwtMock = Mockito.mockStatic(JwtUtil.class)) {
             jwtMock.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
@@ -642,9 +628,7 @@ class BusinessServiceImplTest {
 
         BusinessEntity entity = new BusinessEntity();
         entity.setId(businessId);
-        UserEntity user = new UserEntity();
-        user.setId(ownerId);
-        entity.setUserFk(user);
+        entity.setUserFk(ownerId);
 
         try (MockedStatic<JwtUtil> jwtMock = Mockito.mockStatic(JwtUtil.class)) {
             jwtMock.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(tokenUserId);
@@ -690,9 +674,7 @@ class BusinessServiceImplTest {
 
         BusinessEntity entity = new BusinessEntity();
         entity.setId(businessId);
-        UserEntity user = new UserEntity();
-        user.setId(userId);
-        entity.setUserFk(user);
+        entity.setUserFk(userId);
 
         try (MockedStatic<JwtUtil> jwtMock = Mockito.mockStatic(JwtUtil.class)) {
             jwtMock.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);
@@ -718,9 +700,7 @@ class BusinessServiceImplTest {
 
         BusinessEntity entity = new BusinessEntity();
         entity.setId(businessId);
-        UserEntity user = new UserEntity();
-        user.setId(userId);
-        entity.setUserFk(user);
+        entity.setUserFk(userId);
 
         try (MockedStatic<JwtUtil> jwtMock = Mockito.mockStatic(JwtUtil.class)) {
             jwtMock.when(() -> JwtUtil.getUidFromToken(anyString())).thenReturn(userId);

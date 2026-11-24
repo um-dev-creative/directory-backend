@@ -1,10 +1,11 @@
 -- Migration: saved searches and last search of a consumer (RF-08)
 -- Parameters are plain columns (no JSON) so that they can be validated and replayed against /businesses/search, /nearby and /map.
 -- Idempotent: apply by hand (Flyway is not enabled).
+-- user_fk is a plain UUID: users belong to Backbone (schema general); directory never references that schema.
 
 CREATE TABLE IF NOT EXISTS directory_site.saved_search (
     id           UUID         NOT NULL DEFAULT directory_site.uuid_generate_v4(),
-    user_fk      UUID         NOT NULL REFERENCES general."user" (id) ON DELETE CASCADE,
+    user_fk      UUID         NOT NULL,
     name         VARCHAR(80)  NOT NULL,
     q            VARCHAR(100),
     category_id  UUID,
@@ -25,7 +26,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_saved_search_user_name ON directory_site.sa
 
 -- One row per user: the last search the user ran (upsert).
 CREATE TABLE IF NOT EXISTS directory_site.last_search (
-    user_fk     UUID         NOT NULL REFERENCES general."user" (id) ON DELETE CASCADE,
+    user_fk     UUID         NOT NULL,
     q           VARCHAR(100),
     category_id UUID,
     city_id     UUID,

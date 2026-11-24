@@ -25,7 +25,7 @@ public interface BusinessProductRepository extends JpaRepository<BusinessProduct
     Page<BusinessProductEntity> findByBusinessAndProductActive(BusinessEntity business, Boolean productActive, Pageable pageable);
 
     // Number of businesses owned by the user that carry the product
-    @Query("SELECT count(bp) FROM BusinessProductEntity bp WHERE bp.product.id = :productId AND bp.business.userEntityFk.id = :userId")
+    @Query("SELECT count(bp) FROM BusinessProductEntity bp WHERE bp.product.id = :productId AND bp.business.userFk = :userId")
     long countOwnedLinks(@Param("productId") UUID productId, @Param("userId") UUID userId);
 
 }

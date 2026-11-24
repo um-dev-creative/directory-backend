@@ -6,7 +6,6 @@ import com.umdc.directory.constant.FavoriteType;
 import com.umdc.directory.jpa.entity.BusinessEntity;
 import com.umdc.directory.jpa.entity.CampaignEntity;
 import com.umdc.directory.jpa.entity.ProductEntity;
-import com.umdc.directory.jpa.entity.UserEntity;
 import com.umdc.directory.jpa.entity.UserFavoriteEntity;
 import com.umdc.directory.jpa.repository.BusinessRepository;
 import com.umdc.directory.jpa.repository.CampaignRepository;
@@ -52,6 +51,7 @@ public class FavoriteServiceImpl implements FavoriteService {
     private final CampaignRepository campaignRepository;
     private final FavoriteMapper favoriteMapper;
     private final BusinessMapper businessMapper;
+    private final ContactTypeProvider contactTypeProvider;
     private final ProductMapper productMapper;
     private final CampaignMapper campaignMapper;
 
@@ -61,6 +61,7 @@ public class FavoriteServiceImpl implements FavoriteService {
                                CampaignRepository campaignRepository,
                                FavoriteMapper favoriteMapper,
                                BusinessMapper businessMapper,
+                               ContactTypeProvider contactTypeProvider,
                                ProductMapper productMapper,
                                CampaignMapper campaignMapper) {
         this.userFavoriteRepository = userFavoriteRepository;
@@ -69,6 +70,7 @@ public class FavoriteServiceImpl implements FavoriteService {
         this.campaignRepository = campaignRepository;
         this.favoriteMapper = favoriteMapper;
         this.businessMapper = businessMapper;
+        this.contactTypeProvider = contactTypeProvider;
         this.productMapper = productMapper;
         this.campaignMapper = campaignMapper;
     }
@@ -88,22 +90,19 @@ public class FavoriteServiceImpl implements FavoriteService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        UserEntity user = new UserEntity();
-        user.setId(userId);
-
         return switch (type) {
-            case STORE -> processFavorite(user,
+            case STORE -> processFavorite(userId,
                     () -> businessRepository.findById(itemId),
                     UserFavoriteEntity::setBusiness,
-                    () -> userFavoriteRepository.findByUserIdAndBusinessId(user.getId(), itemId));
-            case PRODUCT -> processFavorite(user,
+                    () -> userFavoriteRepository.findByUserIdAndBusinessId(userId, itemId));
+            case PRODUCT -> processFavorite(userId,
                     () -> productRepository.findById(itemId),
                     UserFavoriteEntity::setProduct,
-                    () -> userFavoriteRepository.findByUserIdAndProductId(user.getId(), itemId));
-            case OFFER -> processFavorite(user,
+                    () -> userFavoriteRepository.findByUserIdAndProductId(userId, itemId));
+            case OFFER -> processFavorite(userId,
                     () -> campaignRepository.findById(itemId),
                     UserFavoriteEntity::setCampaign,
-                    () -> userFavoriteRepository.findByUserIdAndCampaignId(user.getId(), itemId));
+                    () -> userFavoriteRepository.findByUserIdAndCampaignId(userId, itemId));
             // Defensive: default case added in case new FavoriteType values are introduced in the future.
         };
     }
@@ -143,9 +142,10 @@ public class FavoriteServiceImpl implements FavoriteService {
         List<BusinessTO> stores = new ArrayList<>();
         List<ProductCreateResponse> products = new ArrayList<>();
         List<OfferTO> offers = new ArrayList<>();
+        var contactTypeNames = contactTypeProvider.names();
         for (UserFavoriteEntity fav : result.getContent()) {
             if (fav.getBusiness() != null) {
-                stores.add(businessMapper.toBusinessTO(fav.getBusiness()));
+                stores.add(businessMapper.toBusinessTO(fav.getBusiness(), contactTypeNames));
             } else if (fav.getProduct() != null) {
                 products.add(productMapper.toProductCreateResponse(fav.getProduct()));
             } else if (fav.getCampaign() != null) {
@@ -290,14 +290,14 @@ public class FavoriteServiceImpl implements FavoriteService {
         if (favorite.isEmpty()) {
             return HttpStatus.NOT_FOUND;
         }
-        UserEntity owner = favorite.get().getUser();
-        if (Objects.isNull(owner) || !userId.equals(owner.getId())) {
+        UUID owner = favorite.get().getUserFk();
+        if (Objects.isNull(owner) || !userId.equals(owner)) {
             return HttpStatus.FORBIDDEN;
         }
         return null;
     }
 
-    private <T> ResponseEntity<FavoriteResponse> processFavorite(UserEntity user,
+    private <T> ResponseEntity<FavoriteResponse> processFavorite(UUID userId,
                                                                  Supplier<Optional<T>> entityFinder,
                                                                  BiConsumer<UserFavoriteEntity, T> setter,
                                                                  Supplier<Optional<UserFavoriteEntity>> existingFinder) {
@@ -318,7 +318,7 @@ public class FavoriteServiceImpl implements FavoriteService {
             previous.setUpdatedAt(LocalDateTime.now());
             return persist(previous, HttpStatus.CREATED);
         }
-        UserFavoriteEntity fav = new UserFavoriteEntity(user);
+        UserFavoriteEntity fav = new UserFavoriteEntity(userId);
         setter.accept(fav, entityOpt.get());
         fav.setCreatedAt(LocalDateTime.now());
         fav.setUpdatedAt(LocalDateTime.now());

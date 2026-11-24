@@ -4,7 +4,6 @@ import com.umdc.directory.jpa.entity.BusinessEntity;
 import com.umdc.directory.jpa.entity.BusinessViewDailyEntity;
 import com.umdc.directory.jpa.entity.BusinessViewDailyId;
 import com.umdc.directory.jpa.entity.CategoryEntity;
-import com.umdc.directory.jpa.entity.UserEntity;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,12 +45,11 @@ class BusinessViewDailyRepositoryTest {
 
     private BusinessEntity business;
     private BusinessEntity other;
-    private UserEntity owner;
+    private UUID owner;
 
     @BeforeEach
     void data() {
-        owner = new UserEntity();
-        em.persist(owner);
+        owner = UUID.randomUUID();
         var category = new CategoryEntity();
         category.setName("Food");
         category.setDescription("Food");
@@ -112,7 +110,7 @@ class BusinessViewDailyRepositoryTest {
 
     @Test
     void theOwnerIdIsReadWithoutLoadingTheBusiness() {
-        assertEquals(owner.getId(), businessRepository.findOwnerId(business.getId()).orElseThrow());
+        assertEquals(owner, businessRepository.findOwnerId(business.getId()).orElseThrow());
         assertTrue(businessRepository.findOwnerId(UUID.randomUUID()).isEmpty());
     }
 

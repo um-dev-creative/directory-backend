@@ -77,12 +77,11 @@ public class BusinessEntity implements Serializable {
 
     /**
      * The user who owns the business.
-     * This field is required and is a many-to-one relationship with the UserEntity.
+     * Plain UUID column: the user lives in Backbone (schema general) and is never mapped here.
      */
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_fk", nullable = false)
-    private UserEntity userEntityFk;
+    @Column(name = "user_fk", nullable = false)
+    private UUID userFk;
 
     @OneToMany(mappedBy = "business")
     private Set<DigitalContactEntity> digitalContacts;
@@ -224,17 +223,17 @@ public class BusinessEntity implements Serializable {
      *
      * @return the user who owns the business
      */
-    public UserEntity getUserFk() {
-        return userEntityFk;
+    public UUID getUserFk() {
+        return userFk;
     }
 
     /**
      * Sets the user who owns the business.
      *
-     * @param userEntityFk the user who owns the business
+     * @param userFk the id of the user who owns the business
      */
-    public void setUserFk(UserEntity userEntityFk) {
-        this.userEntityFk = userEntityFk;
+    public void setUserFk(UUID userFk) {
+        this.userFk = userFk;
     }
 
 

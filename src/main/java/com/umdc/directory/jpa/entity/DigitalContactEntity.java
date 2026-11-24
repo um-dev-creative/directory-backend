@@ -7,7 +7,6 @@ import jakarta.validation.constraints.Size;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Objects;
 import java.util.UUID;
 
 @Entity
@@ -41,10 +40,6 @@ public class DigitalContactEntity implements Serializable {
     @NotNull
     @Column(name = "contact_type_fk", nullable = false)
     private UUID contactTypeFk;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "contact_type_fk", insertable = false, updatable = false)
-    private ContactTypeEntity contactTypeEntity;
 
     public DigitalContactEntity() {
         // Default constructor
@@ -96,17 +91,6 @@ public class DigitalContactEntity implements Serializable {
 
     public void setContactTypeFk(UUID contactTypeFk) {
         this.contactTypeFk = contactTypeFk;
-    }
-
-    public ContactTypeEntity getContactType() {
-        return contactTypeEntity;
-    }
-
-    public void setContactType(ContactTypeEntity contactTypeEntity) {
-        this.contactTypeEntity = contactTypeEntity;
-        if (Objects.nonNull(contactTypeEntity)) {
-            this.contactTypeFk = contactTypeEntity.getId();
-        }
     }
 
 }

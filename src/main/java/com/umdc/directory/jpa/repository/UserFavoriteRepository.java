@@ -23,18 +23,18 @@ public interface UserFavoriteRepository extends JpaRepository<UserFavoriteEntity
     String CAMPAIGN_ID = "campaignId";
 
     // Common JPQL fragments to avoid duplicated literals
-    String Q_USER_PREFIX = "SELECT uf FROM UserFavoriteEntity uf WHERE uf.user.id = :";
+    String Q_USER_PREFIX = "SELECT uf FROM UserFavoriteEntity uf WHERE uf.userFk = :";
 
     // Full JPQL query constants (reuse the common prefix where applicable)
     String Q_FIND_BY_USER = "SELECT uf FROM UserFavoriteEntity uf "
             + "LEFT JOIN FETCH uf.business "
             + "LEFT JOIN FETCH uf.product "
             + "LEFT JOIN FETCH uf.campaign "
-            + "WHERE uf.user.id = :" + USER_ID + " AND uf.active = true";
+            + "WHERE uf.userFk = :" + USER_ID + " AND uf.active = true";
     String BUCKET = "bucket";
     /** Bucket of a favorite: 0 = store, 1 = product, 2 = offer (keeps the stores, products, offers order). */
     String BUCKET_EXPR = "CASE WHEN uf.business IS NOT NULL THEN 0 WHEN uf.product IS NOT NULL THEN 1 ELSE 2 END";
-    String Q_PAGE_WHERE = " WHERE uf.user.id = :" + USER_ID + " AND uf.active = true"
+    String Q_PAGE_WHERE = " WHERE uf.userFk = :" + USER_ID + " AND uf.active = true"
             + " AND (:" + BUCKET + " < 0 OR " + BUCKET_EXPR + " = :" + BUCKET + ")";
     String Q_PAGE_BY_USER = "SELECT uf FROM UserFavoriteEntity uf "
             + "LEFT JOIN FETCH uf.business b "
@@ -44,7 +44,7 @@ public interface UserFavoriteRepository extends JpaRepository<UserFavoriteEntity
     String Q_PAGE_COUNT = "SELECT COUNT(uf) FROM UserFavoriteEntity uf" + Q_PAGE_WHERE;
     String Q_FIND_BY_BUSINESS = "SELECT uf FROM UserFavoriteEntity uf WHERE uf.business.id = :" + BUSINESS_ID;
     String Q_FIND_BY_USER_AND_BUSINESS = Q_USER_PREFIX + USER_ID + " AND uf.business.id = :" + BUSINESS_ID;
-    String Q_COUNT_ACTIVE_BY_USER = "SELECT COUNT(uf) FROM UserFavoriteEntity uf WHERE uf.user.id = :" + USER_ID + " AND uf.active = true";
+    String Q_COUNT_ACTIVE_BY_USER = "SELECT COUNT(uf) FROM UserFavoriteEntity uf WHERE uf.userFk = :" + USER_ID + " AND uf.active = true";
     String Q_FIND_BY_USER_AND_PRODUCT = Q_USER_PREFIX + USER_ID + " AND uf.product.id = :" + PRODUCT_ID;
     String Q_FIND_BY_USER_AND_CAMPAIGN = Q_USER_PREFIX + USER_ID + " AND uf.campaign.id = :" + CAMPAIGN_ID;
 

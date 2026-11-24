@@ -4,7 +4,6 @@ import com.umdc.directory.jpa.entity.BusinessEntity;
 import com.umdc.directory.jpa.entity.CategoryEntity;
 import com.umdc.directory.jpa.entity.CityEntity;
 import com.umdc.directory.jpa.entity.LocationEntity;
-import com.umdc.directory.jpa.entity.UserEntity;
 import com.umdc.directory.jpa.repository.BusinessRepository;
 import com.umdc.directory.jpa.repository.CityRepository;
 import com.umdc.directory.jpa.repository.LocationRepository;
@@ -57,12 +56,11 @@ class BusinessSearchRepositoryTest {
     private BusinessEntity taqueria;
     private BusinessEntity abogado;
     private BusinessEntity sinSede;
-    private UserEntity owner;
+    private UUID owner;
 
     @BeforeEach
     void data() {
-        owner = new UserEntity();
-        em.persist(owner);
+        owner = UUID.randomUUID();
 
         toronto = city("Toronto");
         ottawa = city("Ottawa");

@@ -5,7 +5,6 @@ import com.umdc.directory.api.v1.to.BusinessUpdateRequest;
 import com.umdc.directory.client.backbone.BackboneClient;
 import com.umdc.directory.client.backbone.to.BackboneUserGetResponse;
 import com.umdc.directory.jpa.entity.BusinessEntity;
-import com.umdc.directory.jpa.entity.UserEntity;
 import com.umdc.directory.jpa.repository.BusinessRepository;
 import com.umdc.directory.jpa.repository.CategoryRepository;
 import com.umdc.directory.jpa.repository.DigitalContactRepository;
@@ -49,16 +48,15 @@ class BusinessOwnerChecksTest {
         backboneClient = mock(BackboneClient.class);
         businessMapper = mock(BusinessMapper.class);
         service = new BusinessServiceImpl(mock(UserService.class), businessRepository, mock(CategoryRepository.class),
-                mock(DigitalContactRepository.class), businessMapper, backboneClient);
+                mock(DigitalContactRepository.class), businessMapper, backboneClient,
+                new ContactTypeProvider(backboneClient, 600));
     }
 
     private BusinessEntity ownedBusiness() {
         var entity = new BusinessEntity();
         entity.setId(businessId);
         entity.setName("Old");
-        var user = new UserEntity();
-        user.setId(ownerId);
-        entity.setUserFk(user);
+        entity.setUserFk(ownerId);
         return entity;
     }
 

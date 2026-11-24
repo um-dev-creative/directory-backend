@@ -32,12 +32,10 @@ class UserFavoriteEntityTest {
     @DisplayName("User association")
     void userAssociation() {
         UserFavoriteEntity entity = new UserFavoriteEntity();
-        UserEntity user = new UserEntity();
         UUID id = UUID.randomUUID();
-        user.setId(id);
-        entity.setUser(user);
-        assertEquals(user, entity.getUser());
-        assertEquals(id, entity.getUser().getId());
+        entity.setUserFk(id);
+        assertEquals(id, entity.getUserFk());
+        assertEquals(id, new UserFavoriteEntity(id).getUserFk());
     }
 
     @Test

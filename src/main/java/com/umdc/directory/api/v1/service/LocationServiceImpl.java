@@ -199,7 +199,7 @@ public class LocationServiceImpl implements LocationService {
             return new Access<>(null, error(HttpStatus.NOT_FOUND, DirectoryAppConstants.BUSINESS_NOT_FOUND));
         }
         var owner = business.get().getUserFk();
-        if (Objects.isNull(owner) || !userId.equals(owner.getId())) {
+        if (Objects.isNull(owner) || !userId.equals(owner)) {
             return new Access<>(null, error(HttpStatus.FORBIDDEN, "Only the owner of the business can change its locations"));
         }
         return new Access<>(business.get(), null);

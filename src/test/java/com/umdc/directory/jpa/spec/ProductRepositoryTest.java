@@ -1,11 +1,11 @@
 package com.umdc.directory.jpa.spec;
 
+import java.util.UUID;
 import com.umdc.directory.jpa.entity.BusinessEntity;
 import com.umdc.directory.jpa.entity.BusinessProductEntity;
 import com.umdc.directory.jpa.entity.BusinessProductEntityId;
 import com.umdc.directory.jpa.entity.CategoryEntity;
 import com.umdc.directory.jpa.entity.ProductEntity;
-import com.umdc.directory.jpa.entity.UserEntity;
 import com.umdc.directory.jpa.repository.BusinessProductRepository;
 import com.umdc.directory.jpa.repository.BusinessRepository;
 import jakarta.persistence.EntityManager;
@@ -44,8 +44,8 @@ class ProductRepositoryTest {
     @Autowired
     private BusinessProductRepository repository;
 
-    private UserEntity owner;
-    private UserEntity stranger;
+    private UUID owner;
+    private UUID stranger;
     private BusinessEntity business;
     private ProductEntity active;
     private ProductEntity inactive;
@@ -53,10 +53,8 @@ class ProductRepositoryTest {
 
     @BeforeEach
     void data() {
-        owner = new UserEntity();
-        em.persist(owner);
-        stranger = new UserEntity();
-        em.persist(stranger);
+        owner = UUID.randomUUID();
+        stranger = UUID.randomUUID();
         var category = new CategoryEntity();
         category.setName("Food");
         category.setDescription("Food");
@@ -133,7 +131,7 @@ class ProductRepositoryTest {
     @Test
     @DisplayName("countOwnedLinks counts only the businesses of the user")
     void ownership() {
-        assertEquals(1, repository.countOwnedLinks(active.getId(), owner.getId()));
-        assertEquals(0, repository.countOwnedLinks(active.getId(), stranger.getId()));
+        assertEquals(1, repository.countOwnedLinks(active.getId(), owner));
+        assertEquals(0, repository.countOwnedLinks(active.getId(), stranger));
     }
 }

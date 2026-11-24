@@ -8,7 +8,6 @@ import com.umdc.directory.constant.DirectoryAppConstants;
 import com.umdc.directory.jpa.entity.BusinessEntity;
 import com.umdc.directory.jpa.entity.CityEntity;
 import com.umdc.directory.jpa.entity.LocationEntity;
-import com.umdc.directory.jpa.entity.UserEntity;
 import com.umdc.directory.jpa.repository.BusinessRepository;
 import com.umdc.directory.jpa.repository.CityRepository;
 import com.umdc.directory.jpa.repository.LocationRepository;
@@ -63,11 +62,9 @@ class LocationServiceImplTest {
     @BeforeEach
     void setUp() {
         service = new LocationServiceImpl(locationRepository, businessRepository, cityRepository, locationMapper);
-        var owner = new UserEntity();
-        owner.setId(ownerId);
         business = new BusinessEntity();
         business.setId(businessId);
-        business.setUserFk(owner);
+        business.setUserFk(ownerId);
         city = new CityEntity();
         city.setId(cityId);
         city.setName("Toronto");
