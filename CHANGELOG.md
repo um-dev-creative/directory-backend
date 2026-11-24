@@ -39,6 +39,16 @@
 All notable changes to this project will be documented in this file.
 This project adheres (loosely) to "Keep a Changelog" and follows semantic versioning where practical.
 
+## [Unreleased] - 2026-11-23 (F3-B search: open_now and distance_m)
+
+### Added
+- `GET /api/v1/businesses/search` items gain the optional `open_now` (true when some location is open now, from its opening hours in the business time zone; `null` when no location has hours) and `distance_m` (metres to the nearest location with coordinates, same haversine as `nearby`; `null` without `lat`/`lng`).
+- Optional query params `open_now=true` (only businesses open now), `lat` + `lng` (together) and `sort=name|distance`, validated by `GeoSearchValidator.searchGeo` (`400` with `message-error`).
+- A page is enriched with three batch queries (locations, opening hours, time zones) whatever the page size: no N+1. With `open_now=true` or `sort=distance` up to 1000 candidates (by name) are examined in memory and paged.
+- `LocationOpeningHoursRepository.findByLocationIdIn`; `OpeningHoursServiceImpl.zoneOf(TimezoneEntity)` is now reusable.
+- The endpoint stays public (no `session-token`). New fields are additive: existing clients are unaffected.
+- Guides: `docs/user-guide/f3-search-open-now.md`, `docs/technical/f3-search-open-now.md` (Mermaid diagrams).
+
 ## [Unreleased] - 2026-11-23 (F2-A products: edit, deactivate, price, image)
 
 ### Added

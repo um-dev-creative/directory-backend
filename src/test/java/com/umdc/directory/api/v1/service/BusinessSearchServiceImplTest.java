@@ -7,7 +7,11 @@ import com.umdc.directory.jpa.entity.BusinessEntity;
 import com.umdc.directory.jpa.entity.CategoryEntity;
 import com.umdc.directory.jpa.entity.LocationEntity;
 import com.umdc.directory.jpa.repository.BusinessRepository;
+import com.umdc.directory.jpa.entity.LocationOpeningHoursEntity;
+import com.umdc.directory.jpa.entity.TimezoneEntity;
+import com.umdc.directory.jpa.repository.LocationOpeningHoursRepository;
 import com.umdc.directory.jpa.repository.LocationRepository;
+import com.umdc.directory.jpa.repository.TimezoneRepository;
 import com.umdc.directory.mapper.LocationMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,15 +25,23 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 
+import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.times;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,11 +54,19 @@ class BusinessSearchServiceImplTest {
     @Mock
     private LocationMapper locationMapper;
 
+    @Mock
+    private LocationOpeningHoursRepository hoursRepository;
+    @Mock
+    private TimezoneRepository timezoneRepository;
+
+    /// 2026-11-23 is a Monday; 15:00Z is 10:00 in Toronto (EST) and 16:00 in Madrid.
+    private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-11-23T15:00:00Z"), ZoneOffset.UTC);
+
     private BusinessSearchServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        service = new BusinessSearchServiceImpl(businessRepository, locationRepository, locationMapper);
+        service = new BusinessSearchServiceImpl(businessRepository, locationRepository, locationMapper, hoursRepository, timezoneRepository, CLOCK);
     }
 
     private static BusinessEntity business(String name) {
@@ -76,7 +96,7 @@ class BusinessSearchServiceImplTest {
             assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
             assertEquals(DirectoryAppConstants.SEARCH_INVALID_PAGINATION, response.getHeaders().getFirst(DirectoryAppConstants.MESSAGE_ERROR_HEADER));
         }
-        verifyNoInteractions(businessRepository, locationRepository);
+        verifyNoInteractions(businessRepository, locationRepository, hoursRepository, timezoneRepository);
     }
 
     @Test
@@ -124,5 +144,233 @@ class BusinessSearchServiceImplTest {
         assertEquals("Food", items.get(0).categoryName());
         assertTrue(items.get(0).verified());
         assertEquals("https://img/x.png", items.get(0).profileImageRef());
+    }
+
+    // ---- open_now, distance_m, sort ----
+
+    private static LocationEntity located(BusinessEntity business, String lat, String lng) {
+        var l = location(business);
+        l.setId(UUID.randomUUID());
+        if (lat != null) {
+            l.setLatitude(new BigDecimal(lat));
+            l.setLongitude(new BigDecimal(lng));
+        }
+        return l;
+    }
+
+    private static LocationOpeningHoursEntity hours(LocationEntity location, int day, String from, String to, boolean closed) {
+        var h = new LocationOpeningHoursEntity();
+        h.setLocationFk(location.getId());
+        h.setDayOfWeek(day);
+        h.setOpensAt(from == null ? null : LocalTime.parse(from));
+        h.setClosesAt(to == null ? null : LocalTime.parse(to));
+        h.setClosed(closed);
+        return h;
+    }
+
+    private static TimezoneEntity zone(String name) {
+        var t = new TimezoneEntity();
+        t.setId(UUID.randomUUID());
+        t.setName(name);
+        return t;
+    }
+
+    private void page(BusinessEntity... businesses) {
+        when(businessRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(businesses), org.springframework.data.domain.PageRequest.of(0, 10), businesses.length));
+    }
+
+    @Test
+    void openNowIsComputedInTheTimeZoneOfTheBusinessAndNullWithoutHours() {
+        var toronto = business("Toronto");   // Monday 09:30-17:00 local: open at 10:00 EST
+        var madrid = business("Madrid");     // Monday 09:30-17:00 local: 16:00 local is open too, so use a 08:00-15:00 slot: closed
+        var noHours = business("NoHours");
+        var noZone = business("NoZone");     // default zone
+        var tz1 = zone("America/Toronto");
+        var tz2 = zone("Europe/Madrid");
+        toronto.setTimezoneFk(tz1.getId());
+        madrid.setTimezoneFk(tz2.getId());
+        var lt = located(toronto, null, null);
+        var lm = located(madrid, null, null);
+        var ln = located(noHours, null, null);
+        var lz = located(noZone, null, null);
+        page(toronto, madrid, noHours, noZone);
+        when(locationRepository.findByBusinessIdIn(any())).thenReturn(List.of(lt, lm, ln, lz));
+        when(hoursRepository.findByLocationIdIn(any())).thenReturn(List.of(
+                hours(lt, 1, "09:30", "17:00", false), hours(lm, 1, "08:00", "15:00", false), hours(lz, 1, null, null, true)));
+        when(timezoneRepository.findAllById(any())).thenReturn(List.of(tz1, tz2));
+
+        var items = List.copyOf(service.search(null, null, null, null, null, null, null, null, null, null).getBody().data());
+
+        assertEquals(Boolean.TRUE, items.get(0).openNow());
+        assertEquals(Boolean.FALSE, items.get(1).openNow());
+        assertNull(items.get(2).openNow());
+        assertEquals(Boolean.FALSE, items.get(3).openNow());
+        assertNull(items.get(0).distanceM());
+    }
+
+    @Test
+    void aBusinessWithAnyOpenLocationIsOpen() {
+        var b = business("Two");
+        var closed = located(b, null, null);
+        var open = located(b, null, null);
+        page(b);
+        when(locationRepository.findByBusinessIdIn(any())).thenReturn(List.of(closed, open));
+        when(hoursRepository.findByLocationIdIn(any())).thenReturn(List.of(hours(closed, 1, null, null, true), hours(open, 1, "09:00", "23:59", false)));
+        var item = service.search(null, null, null, null, null, null, null, null, null, null).getBody().data().iterator().next();
+        assertEquals(Boolean.TRUE, item.openNow());
+    }
+
+    @Test
+    void anOffsetTimeZoneIsUsedWhenItsNameIsNotAnIanaId() {
+        var b = business("Offset");
+        var tz = zone("not-a-zone");
+        tz.setUtcOffset(java.time.Duration.ofHours(-5));
+        b.setTimezoneFk(tz.getId());
+        var l = located(b, null, null);
+        page(b);
+        when(locationRepository.findByBusinessIdIn(any())).thenReturn(List.of(l));
+        when(hoursRepository.findByLocationIdIn(any())).thenReturn(List.of(hours(l, 1, "10:00", "11:00", false)));
+        when(timezoneRepository.findAllById(any())).thenReturn(List.of(tz));
+        var item = service.search(null, null, null, null, null, null, null, null, null, null).getBody().data().iterator().next();
+        assertEquals(Boolean.TRUE, item.openNow());
+    }
+
+    @Test
+    void aWholePageIsLoadedWithOneQueryPerKindNotOnePerBusiness() {
+        var list = new java.util.ArrayList<BusinessEntity>();
+        var locations = new java.util.ArrayList<LocationEntity>();
+        var slots = new java.util.ArrayList<LocationOpeningHoursEntity>();
+        var tz = zone("America/Toronto");
+        for (int i = 0; i < 10; i++) {
+            var b = business("B" + i);
+            b.setTimezoneFk(tz.getId());
+            var l = located(b, "43.65", "-79.38");
+            list.add(b);
+            locations.add(l);
+            slots.add(hours(l, 1, "09:00", "17:00", false));
+        }
+        page(list.toArray(new BusinessEntity[0]));
+        when(locationRepository.findByBusinessIdIn(any())).thenReturn(locations);
+        when(hoursRepository.findByLocationIdIn(any())).thenReturn(slots);
+        when(timezoneRepository.findAllById(any())).thenReturn(List.of(tz));
+
+        var response = service.search(null, null, null, null, null, null, null, "43.65", "-79.38", null);
+
+        assertEquals(10, response.getBody().data().size());
+        verify(businessRepository, times(1)).findAll(any(Specification.class), any(Pageable.class));
+        verify(locationRepository, times(1)).findByBusinessIdIn(any());
+        verify(hoursRepository, times(1)).findByLocationIdIn(any());
+        verify(timezoneRepository, times(1)).findAllById(any());
+        verify(hoursRepository, never()).findByLocationId(any());
+        verify(hoursRepository, never()).findTimezoneOfBusiness(any());
+        verifyNoMoreInteractions(businessRepository, locationRepository, hoursRepository, timezoneRepository);
+    }
+
+    @Test
+    void distanceIsTheNearestLocationInMetres() {
+        var b = business("Near");
+        var far = located(b, "43.70", "-79.38");
+        var near = located(b, "43.651", "-79.38");
+        var noCoords = located(b, null, null);
+        var none = business("None");
+        var lnone = located(none, null, null);
+        page(b, none);
+        when(locationRepository.findByBusinessIdIn(any())).thenReturn(List.of(far, near, noCoords, lnone));
+
+        var items = List.copyOf(service.search(null, null, null, null, null, null, null, "43.65", "-79.38", null).getBody().data());
+
+        assertEquals(111L, items.get(0).distanceM(), 2);
+        assertNull(items.get(1).distanceM());
+        assertEquals(0d, BusinessSearchServiceImpl.haversineM(10, 10, 10, 10));
+        assertEquals(111_195d, BusinessSearchServiceImpl.haversineM(0, 0, 1, 0), 5);
+    }
+
+    @Test
+    void sortByDistanceOrdersNearestFirstAndPagesInMemory() {
+        var far = business("A-far");
+        var near = business("B-near");
+        var unknown = business("C-unknown");
+        var lf = located(far, "44.0", "-79.38");
+        var ln = located(near, "43.66", "-79.38");
+        var lu = located(unknown, null, null);
+        when(businessRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(far, near, unknown)));
+        when(locationRepository.findByBusinessIdIn(any())).thenReturn(List.of(lf, ln, lu));
+
+        var first = service.search(null, null, null, null, 1, 2, null, "43.65", "-79.38", "DISTANCE").getBody();
+        assertEquals(3, first.totalCount());
+        assertEquals(2, first.totalPages());
+        assertEquals(List.of("B-near", "A-far"), first.data().stream().map(i -> i.name()).toList());
+        var second = service.search(null, null, null, null, 2, 2, null, "43.65", "-79.38", "distance").getBody();
+        assertEquals(List.of("C-unknown"), second.data().stream().map(i -> i.name()).toList());
+        var beyond = service.search(null, null, null, null, 9, 2, null, "43.65", "-79.38", "distance").getBody();
+        assertTrue(beyond.data().isEmpty());
+        var captor = ArgumentCaptor.forClass(Pageable.class);
+        verify(businessRepository, times(3)).findAll(any(Specification.class), captor.capture());
+        assertEquals(BusinessSearchServiceImpl.MAX_CANDIDATES, captor.getValue().getPageSize());
+    }
+
+    @Test
+    void openNowTrueKeepsOnlyOpenBusinessesAndCountsThem() {
+        var open = business("Open");
+        var closed = business("Closed");
+        var none = business("None");
+        var lo = located(open, null, null);
+        var lc = located(closed, null, null);
+        var ln = located(none, null, null);
+        when(businessRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(open, closed, none)));
+        when(locationRepository.findByBusinessIdIn(any())).thenReturn(List.of(lo, lc, ln));
+        when(hoursRepository.findByLocationIdIn(any())).thenReturn(List.of(hours(lo, 1, "09:00", "20:00", false), hours(lc, 1, "01:00", "02:00", false)));
+
+        var body = service.search(null, null, null, null, null, null, true, null, null, null).getBody();
+
+        assertEquals(1, body.totalCount());
+        assertEquals(List.of("Open"), body.data().stream().map(i -> i.name()).toList());
+        assertEquals(Boolean.TRUE, body.data().iterator().next().openNow());
+    }
+
+    @Test
+    void openNowFalseIsNoFilter() {
+        page(business("A"));
+        var body = service.search(null, null, null, null, null, null, false, null, null, null).getBody();
+        assertEquals(1, body.totalCount());
+        var captor = ArgumentCaptor.forClass(Pageable.class);
+        verify(businessRepository).findAll(any(Specification.class), captor.capture());
+        assertEquals(10, captor.getValue().getPageSize());
+    }
+
+    @Test
+    void openNowWithNoCandidatesIsAnEmptyPage() {
+        when(businessRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(Page.empty());
+        var body = service.search(null, null, null, null, null, null, true, null, null, null).getBody();
+        assertEquals(0, body.totalCount());
+        assertTrue(body.data().isEmpty());
+        verifyNoInteractions(locationRepository, hoursRepository, timezoneRepository);
+    }
+
+    @Test
+    void invalidGeoParametersAreA400WithTheReason() {
+        for (String[] args : new String[][]{{"43", null, null}, {null, "-79", null}, {"x", "1", null}, {"91", "1", null}, {"1", "181", null},
+                {null, null, "distance"}, {"1", "1", "size"}}) {
+            var response = service.search(null, null, null, null, null, null, null, args[0], args[1], args[2]);
+            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+            assertTrue(response.getHeaders().getFirst(DirectoryAppConstants.MESSAGE_ERROR_HEADER) != null);
+        }
+        verifyNoInteractions(businessRepository, locationRepository, hoursRepository, timezoneRepository);
+    }
+
+    @Test
+    void sortByNameIsAcceptedWithOrWithoutAPoint() {
+        page(business("A"));
+        assertEquals(HttpStatus.OK, service.search(null, null, null, null, null, null, null, null, null, "name").getStatusCode());
+        assertEquals(HttpStatus.OK, service.search(null, null, null, null, null, null, null, "1", "1", "name").getStatusCode());
+    }
+
+    @Test
+    void theOldSixArgumentSearchDelegates() {
+        page(business("A"));
+        assertEquals(HttpStatus.OK, service.search(null, null, null, null, null, null).getStatusCode());
+        assertEquals(HttpStatus.NOT_IMPLEMENTED, new BusinessSearchService() { }.search(null, null, null, null, null, null).getStatusCode());
     }
 }
