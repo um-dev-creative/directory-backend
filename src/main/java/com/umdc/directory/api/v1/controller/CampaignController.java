@@ -28,17 +28,33 @@ public class CampaignController implements CampaignApi {
     }
 
     @Override
-    public ResponseEntity<CampaignTO> getById(UUID id) {
-        return campaignService.find(id);
+    public ResponseEntity<CampaignTO> getById(UUID id, String sessionToken) {
+        return campaignService.find(id, sessionToken);
     }
 
     @Override
-    public ResponseEntity<CampaignListResponse> listCampaigns(Integer page, Integer perPage, String sort, Map<String, String> filters) {
-        return campaignService.list(page, perPage, sort, filters);
+    public ResponseEntity<CampaignListResponse> listCampaigns(Integer page, Integer perPage, String sort,
+                                                              Map<String, String> filters, String sessionToken) {
+        return campaignService.list(page, perPage, sort, filters, sessionToken);
     }
 
     @Override
     public ResponseEntity<CampaignUpdateResponse> update(UUID id, CampaignUpdateRequest request, String sessionToken) {
         return campaignService.update(id, request, sessionToken);
+    }
+
+    @Override
+    public ResponseEntity<CampaignTO> deactivate(UUID id, String sessionToken) {
+        return campaignService.deactivate(id, sessionToken);
+    }
+
+    @Override
+    public ResponseEntity<CampaignTO> reactivate(UUID id, String sessionToken) {
+        return campaignService.reactivate(id, sessionToken);
+    }
+
+    @Override
+    public ResponseEntity<CampaignTO> publish(UUID id, String sessionToken) {
+        return campaignService.publish(id, sessionToken);
     }
 }

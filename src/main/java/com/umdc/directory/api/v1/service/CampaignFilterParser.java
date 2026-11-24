@@ -1,5 +1,9 @@
 package com.umdc.directory.api.v1.service;
 
+import com.umdc.directory.constant.CampaignStatus;
+import com.umdc.directory.constant.CampaignType;
+import com.umdc.directory.constant.DirectoryAppConstants;
+
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -38,6 +42,26 @@ public class CampaignFilterParser {
 
     public Boolean parseActive(Map<String, String> filters) {
         return CampaignFilterParserUtils.parseBoolean(filters == null ? null : filters.get("active"));
+    }
+
+    /// Lifecycle status filter (`status`); null when absent, IllegalArgumentException when not a status.
+    public CampaignStatus parseStatus(Map<String, String> filters) {
+        String raw = filters == null ? null : filters.get("status");
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        return CampaignStatus.parse(raw)
+                .orElseThrow(() -> new IllegalArgumentException(DirectoryAppConstants.CAMPAIGN_STATUS_INVALID));
+    }
+
+    /// Type filter (`type`), normalised to the enum name; null when absent, IllegalArgumentException when invalid.
+    public String parseType(Map<String, String> filters) {
+        String raw = filters == null ? null : filters.get("type");
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        return CampaignType.parse(raw)
+                .orElseThrow(() -> new IllegalArgumentException(DirectoryAppConstants.CAMPAIGN_TYPE_INVALID)).name();
     }
 
     // Date filter parsers now return Instant

@@ -34,8 +34,16 @@ public record CampaignUpdateRequest(
         @Size(max = 2500, message = "terms must not exceed 2500 characters")
         String terms,
         @JsonFormat(pattern = DateUtil.PATTERN_DATE_TIME_T)
-        LocalDateTime lastUpdate
+        LocalDateTime lastUpdate,
+        String type
 ) {
+    /// Constructor without `type`, kept for existing callers.
+    public CampaignUpdateRequest(String title, String description, LocalDateTime startDate, LocalDateTime endDate,
+                                 UUID categoryId, UUID businessId, Boolean active, BigDecimal discount, String terms,
+                                 LocalDateTime lastUpdate) {
+        this(title, description, startDate, endDate, categoryId, businessId, active, discount, terms, lastUpdate, null);
+    }
+
     @AssertTrue(message = "startDate must be before or equal to endDate")
     @JsonIgnore
     public boolean isStartBeforeOrEqualEnd() {

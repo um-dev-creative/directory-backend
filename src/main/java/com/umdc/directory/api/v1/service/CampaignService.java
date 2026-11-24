@@ -89,4 +89,47 @@ public interface CampaignService {
     default ResponseEntity<CampaignUpdateResponse> update(UUID id, CampaignUpdateRequest request, String token) {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
+
+    /**
+     * Lists campaigns as seen by the caller: the public sees scheduled and active campaigns only; the owner of a
+     * business also sees its draft, paused and expired campaigns. Extra filters: {@code status}, {@code type}.
+     * <p>Answers as {@link #list(Integer, Integer, String, Map)}; an invalid token is treated as no token.</p>
+     * @param token optional session token
+     */
+    default ResponseEntity<CampaignListResponse> list(Integer page, Integer perPage, String sort,
+                                                      Map<String, String> filters, String token) {
+        return list(page, perPage, sort, filters);
+    }
+
+    /**
+     * Finds a campaign as seen by the caller: 404 when it is hidden from consumers (draft, paused, expired) and the
+     * caller does not own its business.
+     * @param token optional session token
+     */
+    default ResponseEntity<CampaignTO> find(UUID id, String token) {
+        return find(id);
+    }
+
+    /**
+     * Deactivates (pauses) a campaign. 200 with the campaign; 401, 403, 404; 409 when the status does not allow it
+     * (only ACTIVE and SCHEDULED campaigns can be paused).
+     */
+    default ResponseEntity<CampaignTO> deactivate(UUID id, String token) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    }
+
+    /**
+     * Reactivates a paused campaign. 200 with the campaign; 401, 403, 404; 409 when it is not PAUSED.
+     */
+    default ResponseEntity<CampaignTO> reactivate(UUID id, String token) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    }
+
+    /**
+     * Publishes a draft (makes it active). 200 with the campaign; 401, 403, 404; 409 when it is not a draft or its
+     * end date has passed.
+     */
+    default ResponseEntity<CampaignTO> publish(UUID id, String token) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    }
 }
