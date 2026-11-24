@@ -62,6 +62,20 @@
 All notable changes to this project will be documented in this file.
 This project adheres (loosely) to "Keep a Changelog" and follows semantic versioning where practical.
 
+## [Unreleased] - 2026-11-23 (API contract: Phase 4)
+
+### Changed
+- `src/main/resources/api/index.yaml` documents Phase 4: business verification and moderation (`POST /businesses/{businessId}/verification/request` 202, `.../verification/confirm` 204, `GET .../moderation`, `POST .../moderation/approve` and `reject` for the admin role, `403` otherwise) with the `BusinessModeration` and `VerificationConfirmRequest` schemas; the optional `session-token` of `GET /businesses/{businessId}` and `GET /businesses/user/{userId}` (businesses not approved are visible only to their owner); `403` of `PATCH /businesses/{businessId}` when the body `id` is another user's.
+- Internationalisation: the `Accept-Language` parameter (`en`, `es`, `fr-CA`) and the `Content-Language` header are defined in `components` and referenced from the category endpoints; the API description states that they apply to `message` and `message-error` everywhere; new schema `CategoryGetResponse` with `locale`.
+- Auth and security: `POST /auth/session-token` answers `401` for an invalid Backbone token; legacy `POST /auth/token` may answer `403` when `umdc.auth.alias-token.enabled=false`; `503`/`429` from Mercury failures on `POST /auth/*`, `POST /users` and `POST /user-register`; CORS `403` note (`UMDC_CORS_ALLOWED_ORIGINS`) in the API description.
+- `GET /businesses/search`: `open_now=true` and `sort=distance` no longer have a result cap (evaluated in the database, exact `total_count`); the Phase 3 description is updated.
+
+### Added
+- Guides: `docs/user-guide/api-contract-f4.md`, `docs/technical/api-contract-f4.md` (Mermaid diagrams).
+
+### Notes
+- Documentation only: no code, schema or configuration change.
+
 ## [Unreleased] - 2026-11-23 (F4-D internationalisation: es, en, fr-CA)
 
 ### Added

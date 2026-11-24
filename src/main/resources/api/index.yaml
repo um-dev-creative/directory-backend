@@ -12,6 +12,12 @@ info:
 
     - **Errors:** when an endpoint explains a `400`/`5xx`, the reason is in the `message-error` response header.
 
+    - **Language:** send `Accept-Language` (`en`, `es`, `fr-CA`; `fr` maps to `fr-CA`; default `en`). Every response carries `Content-Language`,
+    and the texts of the `message` and `message-error` headers are translated on every endpoint.
+
+    - **CORS:** a cross-origin request needs an allowed origin (`UMDC_CORS_ALLOWED_ORIGINS`); otherwise it is answered `403`. Same-origin requests
+    and requests without `Origin` are not affected.
+
     - **Documentation endpoints:** Swagger UI and `/v3/api-docs` are only open when `umdc.docs.enabled=true` (dev and test); otherwise they answer
     403. This file is the maintained contract.'
 servers:
@@ -20,6 +26,7 @@ paths:
   /api/v1/auth/session-token:
     post:
       summary: Generate Session-Token
+      description: The Backbone token in `session-token-bkd` is validated with Backbone before a session token is issued; an invalid one is `401`.
       parameters:
       - name: session-token-bkd
         in: header
@@ -79,6 +86,10 @@ paths:
               schema:
                 type: string
               example: keep-alive
+        '401':
+          description: The Backbone token sent in `session-token-bkd` is invalid, missing, has no `uid` or Backbone cannot validate it
+        '503':
+          description: Mercury is not available (or is throttling, with `Retry-After`); the reason is in `message-error`
         '429':
           $ref: '#/components/responses/TooManyRequests'
       tags:
@@ -100,6 +111,7 @@ paths:
   /api/v1/auth/token:
     post:
       summary: Generate Token Manual
+      description: Legacy endpoint. It answers `403` with `message-error` when `umdc.auth.alias-token.enabled=false` (default `true`, contract unchanged).
       parameters:
       - name: session-token-bkd
         in: header
@@ -159,6 +171,8 @@ paths:
               schema:
                 type: string
               example: keep-alive
+        '503':
+          description: Mercury is not available (or is throttling, with `Retry-After`); the reason is in `message-error`
         '429':
           $ref: '#/components/responses/TooManyRequests'
       tags:
@@ -241,7 +255,7 @@ paths:
           type: string
         example: '{{directorySessionTokenName}}'
         required: false
-        description: Public read; the token is not needed by this endpoint.
+        description: Optional. A business that is not approved (moderation on) is visible only to its owner; for anyone else it is `404`.
       responses:
         '200':
           description: Business found
@@ -317,9 +331,9 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
-          description: The user is not the owner of the business
+          description: The user is not the owner of the business, or the body `id` is another user's (the business cannot be reassigned); the reason is in `message-error`
         '404':
-          description: Business, category or user not found
+          description: Business or category not found
         '500':
           $ref: '#/components/responses/InternalError'
         '429':
@@ -352,7 +366,7 @@ paths:
         required: false
         schema:
           type: string
-        description: Public read; the token is not needed by this endpoint.
+        description: Optional. Businesses that are not approved (moderation on) are listed only when the caller is that user.
       responses:
         '200':
           description: Businesses of the user
@@ -616,6 +630,7 @@ paths:
     get:
       summary: Get Categories
       parameters:
+      - $ref: '#/components/parameters/AcceptLanguage'
       - name: session-token
         in: header
         schema:
@@ -628,7 +643,16 @@ paths:
         example: '{{backboneSessionToken}}'
       responses:
         '200':
-          description: All categories
+          description: All categories, names localised for `Accept-Language`
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CategoryGetResponse'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
         '500':
           $ref: '#/components/responses/InternalError'
         '429':
@@ -640,6 +664,7 @@ paths:
     get:
       summary: Find Category by ID
       parameters:
+      - $ref: '#/components/parameters/AcceptLanguage'
       - name: session-token
         in: header
         schema:
@@ -647,7 +672,14 @@ paths:
         example: '{{directorySessionTokenName}}'
       responses:
         '200':
-          description: Category found
+          description: Category found, name localised for `Accept-Language`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryGetResponse'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -668,6 +700,7 @@ paths:
     get:
       summary: Find Category by parent ID
       parameters:
+      - $ref: '#/components/parameters/AcceptLanguage'
       - name: session-token
         in: header
         required: false
@@ -682,7 +715,16 @@ paths:
         example: '{{backboneSessionToken}}'
       responses:
         '200':
-          description: Child categories
+          description: Child categories, names localised for `Accept-Language`
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CategoryGetResponse'
+          headers:
+            Content-Language:
+              $ref: '#/components/headers/ContentLanguage'
         '400':
           description: Invalid parent id
         '404':
@@ -1089,6 +1131,8 @@ paths:
           description: Alias or email already exists
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '503':
+          description: Mercury is not available or is throttling (`Retry-After`); the reason is in `message-error`
       tags:
       - v1
       - users
@@ -1389,6 +1433,8 @@ paths:
           description: User not found or invalid verification code
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '503':
+          description: Mercury is not available or is throttling (`Retry-After`); the reason is in `message-error`
       tags:
       - v1
       - user-register
@@ -1471,8 +1517,8 @@ paths:
       summary: Search businesses by city, category and text
       description: Public (no session-token needed). Paginated (page is 1-based, per_page 1..100, default 10). Filters are combined with AND;
         results are ordered by name, or by distance with `sort=distance` (needs `lat` and `lng`). category_id includes its sub-categories; city
-        is ignored when city_id is sent. `open_now=true` and `sort=distance` are resolved over the first 1000 matches (by name) and `total_count`
-        is the number kept. Phase 3 is additive; old clients ignore the new item fields.
+        is ignored when city_id is sent. `open_now=true` and `sort=distance` are evaluated in the database over all matches (no result cap) and
+        `total_count` is exact. Phase 3 is additive; old clients ignore the new item fields.
       parameters:
       - name: city_id
         in: query
@@ -3185,12 +3231,232 @@ paths:
               $ref: '#/components/headers/MessageError'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+  /api/v1/businesses/{businessId}/verification/request:
+    parameters:
+    - name: businessId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    post:
+      summary: Send the ownership verification code
+      description: Owner only. Sends a 9-digit code to the owner's e-mail through Mercury (never in the answer). One e-mail per minute.
+      parameters:
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '202':
+          description: The code was queued
+        '401':
+          description: Missing or invalid `session-token`
+        '403':
+          description: The caller is not the owner
+        '404':
+          description: Business not found
+        '409':
+          description: The owner has no e-mail
+        '503':
+          description: Mercury is not available (the reason is in `message-error`; `429` also covers a Mercury throttle, with `Retry-After`)
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      tags:
+      - v1
+      - business-moderation
+  /api/v1/businesses/{businessId}/verification/confirm:
+    parameters:
+    - name: businessId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    post:
+      summary: Confirm the ownership verification code
+      description: Owner only. Marks the business as verified. The code lasts 15 minutes and allows 5 wrong tries (then `429`).
+      parameters:
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationConfirmRequest'
+      responses:
+        '204':
+          description: Verified
+        '400':
+          description: Wrong or malformed code
+        '401':
+          description: Missing or invalid `session-token`
+        '403':
+          description: The caller is not the owner
+        '404':
+          description: Business not found
+        '409':
+          description: No code is pending
+        '410':
+          description: The code expired
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      tags:
+      - v1
+      - business-moderation
+  /api/v1/businesses/{businessId}/moderation:
+    parameters:
+    - name: businessId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    get:
+      summary: Moderation status of a business
+      description: Owner only. Status PENDING, APPROVED or REJECTED and whether the ownership was verified. Works with moderation on or off.
+      parameters:
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          description: The status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessModeration'
+        '401':
+          description: Missing or invalid `session-token`
+        '403':
+          description: The caller is not the owner
+        '404':
+          description: Business not found
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      tags:
+      - v1
+      - business-moderation
+  /api/v1/businesses/{businessId}/moderation/approve:
+    parameters:
+    - name: businessId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    post:
+      summary: Approve a business
+      description: Makes the business public. Only the admin role (`umdc.moderation.admin-role`, default `LH_ADMIN`) read from the session token; any other caller is `403`.
+      parameters:
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          description: Approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessModeration'
+        '401':
+          description: Missing or invalid `session-token`
+        '403':
+          description: The caller is not a moderator
+        '404':
+          description: Business not found
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      tags:
+      - v1
+      - business-moderation
+  /api/v1/businesses/{businessId}/moderation/reject:
+    parameters:
+    - name: businessId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    post:
+      summary: Reject a business
+      description: Hides the business from the public. Only the admin role (`umdc.moderation.admin-role`); any other caller is `403`.
+      parameters:
+      - name: session-token
+        in: header
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          description: Rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessModeration'
+        '401':
+          description: Missing or invalid `session-token`
+        '403':
+          description: The caller is not a moderator
+        '404':
+          description: Business not found
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      tags:
+      - v1
+      - business-moderation
 components:
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
+  parameters:
+    AcceptLanguage:
+      name: Accept-Language
+      in: header
+      required: false
+      description: Preferred language, `en` (default), `es` or `fr-CA` (`fr` maps to `fr-CA`). Accepted by every endpoint; it localises the `message` and
+        `message-error` headers everywhere and the category names. Unknown values fall back to `en`.
+      schema:
+        type: string
+        enum:
+        - en
+        - es
+        - fr-CA
+      example: es
   headers:
+    ContentLanguage:
+      description: Language of the response (`en`, `es` or `fr-CA`). Sent on every response, whether or not the endpoint lists it.
+      schema:
+        type: string
+        enum:
+        - en
+        - es
+        - fr-CA
     MessageError:
       description: Reason of the failure when the endpoint explains it
       schema: &id005
@@ -3236,6 +3502,60 @@ components:
               retryAfterSeconds:
                 type: integer
   schemas:
+    CategoryGetResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: Name in the request language, or the base name when there is no translation
+        description:
+          type: string
+        categoryParentId:
+          type: string
+          format: uuid
+          nullable: true
+        lastUpdate:
+          type: string
+          format: date-time
+        createdDate:
+          type: string
+          format: date-time
+        active:
+          type: boolean
+        locale:
+          type: string
+          enum:
+          - en
+          - es
+          - fr-CA
+          description: Language applied to `name` (the request language). Optional, omitted when not applicable.
+    BusinessModeration:
+      type: object
+      properties:
+        businessId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+          - PENDING
+          - APPROVED
+          - REJECTED
+        verified:
+          type: boolean
+          description: True once the ownership verification code was confirmed
+    VerificationConfirmRequest:
+      type: object
+      required:
+      - code
+      properties:
+        code:
+          type: string
+          description: Code of 9 digits received by e-mail
+          example: <code>
     BusinessCreateRequest:
       type: object
       properties:
@@ -3923,3 +4243,4 @@ tags:
 - name: saved-searches
 - name: favorite-lists
 - name: business-events
+- name: business-moderation
