@@ -45,6 +45,16 @@ This project adheres (loosely) to "Keep a Changelog" and follows semantic versio
 ### Notes
 - `src/main/resources/api/index.yaml` is not updated here; the endpoint list is in the technical guide.
 
+## [Unreleased] - 2026-11-23 (F3-C: geo route quotas)
+
+### Added
+- Dedicated rate limit buckets for `POST /api/v1/geocode` (default 10/min, external provider cost), `GET /api/v1/businesses/map` and `GET /api/v1/businesses/nearby` (default 60/min each), keyed by the session-token user id when present, otherwise by client IP. Properties `umdc.ratelimit.geocode-per-minute`, `map-per-minute`, `nearby-per-minute` (env `UMDC_RATELIMIT_GEOCODE_PER_MINUTE`, `UMDC_RATELIMIT_MAP_PER_MINUTE`, `UMDC_RATELIMIT_NEARBY_PER_MINUTE`); 0 disables a bucket. Rejected requests get `429` with `Retry-After` and the `message` header and never reach the service or the geocoding provider.
+- `InMemoryRateLimitStore` has a hard cap on live buckets (default 100000) so eviction is bounded.
+- Guides: `docs/user-guide/f3-geo-quotas.md`, `docs/technical/f3-geo-quotas.md`.
+
+### Changed
+- All `429` responses of the rate limit filter now also carry the `message` header. Existing constructors and global IP/user buckets are unchanged.
+
 ## [Unreleased] - 2026-11-23 (API contract: Phase 0 and Phase 1)
 
 ### Changed
