@@ -114,6 +114,22 @@ class GeoSearchValidatorTest {
     }
 
     @Test
+    void filtersParsesIdsAndText() {
+        var id = java.util.UUID.randomUUID();
+        var f = GeoSearchValidator.filters(id.toString(), null, "  pizza ");
+        assertEquals(id, f.categoryId());
+        assertNull(f.cityId());
+        assertEquals("pizza", f.text());
+        assertNull(GeoSearchValidator.filters(null, null, " ").text());
+    }
+
+    @Test
+    void filtersRejectsBadIdsAndLongText() {
+        assertEquals("city_id must be a UUID", assertThrows(GeoSearchException.class, () -> GeoSearchValidator.filters(null, "x", null)).getMessage());
+        assertTrue(assertThrows(GeoSearchException.class, () -> GeoSearchValidator.filters(null, null, "a".repeat(101))).getMessage().startsWith("q must"));
+    }
+
+    @Test
     void theUtilityClassCannotBeInstantiated() throws Exception {
         var ctor = GeoSearchValidator.class.getDeclaredConstructor();
         ctor.setAccessible(true);

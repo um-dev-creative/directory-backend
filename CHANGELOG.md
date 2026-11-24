@@ -202,6 +202,19 @@ This project adheres (loosely) to "Keep a Changelog" and follows semantic versio
 
 ### Notes
 - Flyway is **not** configured in this project (no dependency, no properties), so the scripts are applied manually; no `V1` exists. No Java, test or runtime configuration changes.
+## [Unreleased] - 2026-11-23 (F2-C saved searches and last search)
+
+### Added
+- Saved searches (RF-08) for the signed-in consumer under `/api/v1/users/me`: `POST`, `GET`, `PATCH /{id}` (rename), `DELETE /{id}` and `GET /{id}/replay` on `/saved-searches`, which returns the endpoint (`/businesses/search`, `/nearby` or `/map`) and query parameters to rerun the search.
+- Last search per user: `GET` and `PUT /api/v1/users/me/last-search` (upsert).
+- Limit of 20 saved searches per user (`SavedSearchConstants.MAX_PER_USER`), unique names ignoring case, ownership by the `uid` of the `session-token` (another user's id answers `404`, no token answers `401`), reasons in the `message-error` header.
+- Parameters (`q`, `category_id`, `city_id`, `city`, `lat`, `lng`, `radius_m`, `bbox`, `sort`) are validated with `GeoSearchValidator`; new additive `GeoSearchValidator.filters(...)`.
+- Migration script `V7__create_saved_search.sql` (`saved_search`, `last_search`; not applied by this change, Flyway stays off).
+- Guides: `docs/user-guide/f2-saved-searches.md`, `docs/technical/f2-saved-searches.md`.
+
+### Notes
+- `favorite_list` is not part of this change. `api/index.yaml` is updated separately.
+
 ## [Unreleased] - 2026-11-23 (F1-B location opening hours)
 
 ### Added
