@@ -5,12 +5,16 @@ import com.umdc.directory.api.v1.to.CategoryCreateResponse;
 import com.umdc.directory.api.v1.to.CategoryGetResponse;
 import com.umdc.directory.api.v1.to.PaginatedResponse;
 import com.umdc.directory.jpa.entity.CategoryEntity;
+import com.umdc.directory.i18n.SupportedLocales;
+import com.umdc.directory.jpa.entity.CategoryTranslationEntity;
 import com.umdc.directory.jpa.repository.CategoryRepository;
+import com.umdc.directory.jpa.repository.CategoryTranslationRepository;
 import com.umdc.directory.mapper.CategoryMapper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,7 +24,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 // Service implementation for category-related operations.
 //
@@ -34,23 +41,41 @@ public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
+    private final CategoryTranslationRepository translationRepository;
 
     // Constructs a new CategoryServiceImpl with the specified repository and mapper.
     //
     // @param categoryRepository the repository to use for category operations
     // @param categoryMapper     the mapper to use for category operations
     // @see CategoryRepository
+    // @param translationRepository translated names of the categories
     // @see CategoryMapper
-    public CategoryServiceImpl(CategoryRepository categoryRepository, CategoryMapper categoryMapper) {
+    public CategoryServiceImpl(CategoryRepository categoryRepository, CategoryMapper categoryMapper,
+                               CategoryTranslationRepository translationRepository) {
         this.categoryRepository = categoryRepository;
         this.categoryMapper = categoryMapper;
+        this.translationRepository = translationRepository;
+    }
+
+    // Answers each category with its name in the request locale (Accept-Language, resolved by the I18nFilter) and the
+    // `locale` field; a category without translation keeps its base name.
+    private List<CategoryGetResponse> localize(Collection<CategoryGetResponse> items) {
+        String tag = SupportedLocales.tag(LocaleContextHolder.getLocale());
+        List<UUID> ids = items.stream().map(CategoryGetResponse::id).filter(java.util.Objects::nonNull).toList();
+        Map<UUID, String> names = ids.isEmpty() ? Map.of()
+                : translationRepository.findByCategoryFkInAndLocale(ids, tag).stream()
+                .collect(Collectors.toMap(CategoryTranslationEntity::getCategoryFk, CategoryTranslationEntity::getName,
+                        (first, second) -> first));
+        return items.stream()
+                .map(item -> item.localized(item.id() == null ? item.name() : names.getOrDefault(item.id(), item.name()), tag))
+                .toList();
     }
 
     @Override
     public ResponseEntity<CategoryGetResponse> find(@NotNull UUID categoryId) {
         var categoryEntity = categoryRepository.findFirstById(categoryId);
         return categoryEntity.map(entity ->
-                        ResponseEntity.ok(categoryMapper.toCategoryGetResponse(entity)))
+                        ResponseEntity.ok(localize(List.of(categoryMapper.toCategoryGetResponse(entity))).get(0)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -85,7 +110,7 @@ public class CategoryServiceImpl implements CategoryService {
             Page<CategoryEntity> categoryPage = categoryRepository.findByCategoryParentFk(categoryEntity, pageable);
 
             // Map entities to responses
-            Collection<CategoryGetResponse> items = categoryMapper.toCategoryGetResponse(categoryPage.getContent());
+            Collection<CategoryGetResponse> items = localize(categoryMapper.toCategoryGetResponse(categoryPage.getContent()));
 
             logger.info("Successfully retrieved {} categories for parent ID: {} (page: {}, size: {}, total: {})",
                        categoryPage.getNumberOfElements(), parentId, page, size, categoryPage.getTotalElements());
@@ -108,7 +133,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public ResponseEntity<Collection<CategoryGetResponse>> findAll() {
-        return ResponseEntity.ok(categoryMapper.toCategoryGetResponse(categoryRepository.findAll()));
+        return ResponseEntity.ok(localize(categoryMapper.toCategoryGetResponse(categoryRepository.findAll())));
     }
 
     @Override

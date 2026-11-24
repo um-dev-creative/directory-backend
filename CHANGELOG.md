@@ -52,6 +52,16 @@
 All notable changes to this project will be documented in this file.
 This project adheres (loosely) to "Keep a Changelog" and follows semantic versioning where practical.
 
+## [Unreleased] - 2026-11-23 (F4-D internationalisation: es, en, fr-CA)
+
+### Added
+- Locale resolution from `Accept-Language` (`en` default, `es`, `fr-CA`; any `fr-*` resolves to `fr-CA`, unknown languages fall back to `en`) by `I18nFilter`, which answers the resolved locale in the `Content-Language` response header.
+- Central translation of the `message` and `message-error` response headers: the existing English texts are translated through the bundles `src/main/resources/i18n/messages.properties`, `messages_es.properties` and `messages_fr_CA.properties` (key = `msg.` + normalised English text, numbers passed as `{0}`, `{1}`). No service was edited; unknown messages pass through unchanged (including the `429` text of the rate limiter).
+- `MessageTranslatorTest` fails when an English key lacks its es or fr-CA entry (or the placeholders differ) or when a known constant message has no entry, and prints a warning list for new header literals without entry.
+- Migration `V16__category_translation.sql` (idempotent): `directory_site.category_translation (category_fk, locale, name)` with unique `(category_fk, locale)`. The Spanish and fr-CA seed is left commented: category names are not in the repository.
+- `GET /api/v1/categories`, `/categories/{id}` and `/categories/parent/{id}` return the category name in the request locale, falling back to the base name, plus the additive field `locale`. All existing fields are unchanged.
+- Guides: `docs/user-guide/p4-i18n.md`, `docs/technical/p4-i18n.md` (Mermaid diagrams).
+
 ## [Unreleased] - 2026-11-23 (F3-B search: open_now and distance_m)
 
 ### Added
