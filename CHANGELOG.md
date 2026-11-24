@@ -113,6 +113,20 @@ This project adheres (loosely) to "Keep a Changelog" and follows semantic versio
 ### Notes
 - Documentation only: no code, schema or configuration change. The Phase 1 endpoints exist in the contract before they exist in `development`.
 - `PUT /favorites/{id}` is a `PATCH` in the code and the contract follows the code.
+## [Unreleased] - 2026-11-23 (F4-E: search evaluated in SQL)
+
+### Changed
+- `GET /api/v1/businesses/search` with `open_now=true` or `sort=distance` no longer examines only the first 1000 businesses: the filter and the order run in the database (haversine order by nearest location, opening hours compared with the local day and time of each time zone) with limit/offset paging, and `total_count` is exact. No contract change; requests without these parameters behave as before.
+- The search log line no longer holds the city, the ids, the text or the coordinates, only counts and flags.
+
+### Added
+- `SearchRankingSpecifications` (`openAt`, `orderByDistance`), `BusinessSearchSqlTest` (equivalence with `OpeningHoursEvaluator`, no cap, query count, log content).
+- Migration `V17__location_coordinate_checks.sql`: `CHECK` latitude -90..90 and longitude -180..180 on `directory_site.location` (`NOT VALID`, idempotent, `VALIDATE` guidance in the script). The Canada box stays in the application.
+- Guides: `docs/user-guide/p4-search-sql.md`, `docs/technical/p4-search-sql.md`.
+
+### Removed
+- `BusinessSearchServiceImpl.MAX_CANDIDATES` (1000).
+
 ## [Unreleased] - 2026-11-23 (F3-D: SonarQube workflow)
 
 ### Fixed
