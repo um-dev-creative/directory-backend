@@ -1,5 +1,6 @@
 package com.umdc.directory.api.v1.service;
 
+import com.umdc.directory.security.SessionTokenVerifier;
 import com.umdc.directory.api.v1.to.BusinessEventRequestTO;
 import com.umdc.directory.api.v1.to.BusinessEventSummaryTO;
 import com.umdc.directory.constant.BusinessEventType;
@@ -9,7 +10,6 @@ import com.umdc.directory.jpa.entity.BusinessEventDailyId;
 import com.umdc.directory.jpa.repository.BusinessEventDailyRepository;
 import com.umdc.directory.jpa.repository.BusinessRepository;
 import com.umdc.directory.jpa.repository.CampaignRepository;
-import com.umdc.directory.util.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,16 +41,28 @@ public class BusinessEventServiceImpl implements BusinessEventService {
     private final BusinessRepository businessRepository;
     private final CampaignRepository campaignRepository;
     private final Clock clock;
+    private final SessionTokenVerifier sessionTokenVerifier;
+
+    public BusinessEventServiceImpl(BusinessEventDailyRepository eventRepository, BusinessRepository businessRepository,
+                                    CampaignRepository campaignRepository) {
+        this(eventRepository, businessRepository, campaignRepository, Clock.systemUTC(), SessionTokenVerifier.unverified());
+    }
 
     @Autowired
     public BusinessEventServiceImpl(BusinessEventDailyRepository eventRepository, BusinessRepository businessRepository,
-                                    CampaignRepository campaignRepository) {
-        this(eventRepository, businessRepository, campaignRepository, Clock.systemUTC());
+                                    CampaignRepository campaignRepository, SessionTokenVerifier sessionTokenVerifier) {
+        this(eventRepository, businessRepository, campaignRepository, Clock.systemUTC(), sessionTokenVerifier);
     }
 
     /// For tests: the day is taken from the clock (always read in UTC).
     BusinessEventServiceImpl(BusinessEventDailyRepository eventRepository, BusinessRepository businessRepository,
                              CampaignRepository campaignRepository, Clock clock) {
+        this(eventRepository, businessRepository, campaignRepository, clock, SessionTokenVerifier.unverified());
+    }
+
+    BusinessEventServiceImpl(BusinessEventDailyRepository eventRepository, BusinessRepository businessRepository,
+                             CampaignRepository campaignRepository, Clock clock, SessionTokenVerifier sessionTokenVerifier) {
+        this.sessionTokenVerifier = Objects.requireNonNullElseGet(sessionTokenVerifier, SessionTokenVerifier::unverified);
         this.eventRepository = eventRepository;
         this.businessRepository = businessRepository;
         this.campaignRepository = campaignRepository;
@@ -76,7 +88,7 @@ public class BusinessEventServiceImpl implements BusinessEventService {
         if (campaignId != null && !campaignRepository.existsByIdAndBusinessFk_Id(campaignId, businessId)) {
             return error(HttpStatus.NOT_FOUND, DirectoryAppConstants.CAMPAIGN_NOT_FOUND);
         }
-        var actor = JwtUtil.getUidFromToken(token);
+        var actor = sessionTokenVerifier.uid(token);
         if (actor != null && actor.equals(owner.get())) {
             return ResponseEntity.noContent().build();
         }
@@ -131,7 +143,7 @@ public class BusinessEventServiceImpl implements BusinessEventService {
 
     /// @return empty when the token's user owns the business, else the status to answer: 401, 404 or 403
     private Optional<HttpStatus> ownerCheck(UUID businessId, String token) {
-        var caller = JwtUtil.getUidFromToken(token);
+        var caller = sessionTokenVerifier.uid(token);
         if (Objects.isNull(caller)) {
             return Optional.of(HttpStatus.UNAUTHORIZED);
         }

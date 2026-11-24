@@ -1,5 +1,6 @@
 package com.umdc.directory.api.v1.service;
 
+import com.umdc.directory.security.SessionTokenVerifier;
 import com.umdc.directory.api.v1.to.FavoriteListDetailTO;
 import com.umdc.directory.api.v1.to.FavoriteListItemRequest;
 import com.umdc.directory.api.v1.to.FavoriteListItemTO;
@@ -14,12 +15,12 @@ import com.umdc.directory.jpa.entity.FavoriteListItemEntity;
 import com.umdc.directory.jpa.repository.FavoriteListItemRepository;
 import com.umdc.directory.jpa.repository.FavoriteListRepository;
 import com.umdc.directory.jpa.repository.UserFavoriteRepository;
-import com.umdc.directory.util.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -40,10 +41,20 @@ public class FavoriteListServiceImpl implements FavoriteListService {
     private final FavoriteListRepository listRepository;
     private final FavoriteListItemRepository itemRepository;
     private final UserFavoriteRepository favoriteRepository;
+    private final SessionTokenVerifier sessionTokenVerifier;
 
     public FavoriteListServiceImpl(FavoriteListRepository listRepository,
                                    FavoriteListItemRepository itemRepository,
                                    UserFavoriteRepository favoriteRepository) {
+        this(listRepository, itemRepository, favoriteRepository, SessionTokenVerifier.unverified());
+    }
+
+    @Autowired
+    public FavoriteListServiceImpl(FavoriteListRepository listRepository,
+                                   FavoriteListItemRepository itemRepository,
+                                   UserFavoriteRepository favoriteRepository,
+                                   SessionTokenVerifier sessionTokenVerifier) {
+        this.sessionTokenVerifier = Objects.requireNonNullElseGet(sessionTokenVerifier, SessionTokenVerifier::unverified);
         this.listRepository = listRepository;
         this.itemRepository = itemRepository;
         this.favoriteRepository = favoriteRepository;
@@ -52,7 +63,7 @@ public class FavoriteListServiceImpl implements FavoriteListService {
     /// Not transactional on purpose: a unique-index violation must be answered with 409 (see FavoriteServiceImpl).
     @Override
     public ResponseEntity<FavoriteListTO> create(String sessionToken, FavoriteListNameRequest request) {
-        var userId = JwtUtil.getUidFromToken(sessionToken);
+        var userId = sessionTokenVerifier.uid(sessionToken);
         if (Objects.isNull(userId)) {
             return unauthorized();
         }
@@ -86,7 +97,7 @@ public class FavoriteListServiceImpl implements FavoriteListService {
     @Override
     @Transactional(readOnly = true)
     public ResponseEntity<FavoriteListsResponse> list(String sessionToken) {
-        var userId = JwtUtil.getUidFromToken(sessionToken);
+        var userId = sessionTokenVerifier.uid(sessionToken);
         if (Objects.isNull(userId)) {
             return unauthorized();
         }
@@ -105,7 +116,7 @@ public class FavoriteListServiceImpl implements FavoriteListService {
     @Override
     @Transactional(readOnly = true)
     public ResponseEntity<FavoriteListDetailTO> get(String sessionToken, UUID id, int page, int size) {
-        var userId = JwtUtil.getUidFromToken(sessionToken);
+        var userId = sessionTokenVerifier.uid(sessionToken);
         if (Objects.isNull(userId)) {
             return unauthorized();
         }
@@ -127,7 +138,7 @@ public class FavoriteListServiceImpl implements FavoriteListService {
 
     @Override
     public ResponseEntity<FavoriteListTO> rename(String sessionToken, UUID id, FavoriteListNameRequest request) {
-        var userId = JwtUtil.getUidFromToken(sessionToken);
+        var userId = sessionTokenVerifier.uid(sessionToken);
         if (Objects.isNull(userId)) {
             return unauthorized();
         }
@@ -157,7 +168,7 @@ public class FavoriteListServiceImpl implements FavoriteListService {
     @Override
     @Transactional
     public ResponseEntity<Void> delete(String sessionToken, UUID id) {
-        var userId = JwtUtil.getUidFromToken(sessionToken);
+        var userId = sessionTokenVerifier.uid(sessionToken);
         if (Objects.isNull(userId)) {
             return unauthorized();
         }
@@ -172,7 +183,7 @@ public class FavoriteListServiceImpl implements FavoriteListService {
 
     @Override
     public ResponseEntity<FavoriteListItemTO> addItem(String sessionToken, UUID id, FavoriteListItemRequest request) {
-        var userId = JwtUtil.getUidFromToken(sessionToken);
+        var userId = sessionTokenVerifier.uid(sessionToken);
         if (Objects.isNull(userId)) {
             return unauthorized();
         }
@@ -212,7 +223,7 @@ public class FavoriteListServiceImpl implements FavoriteListService {
     @Override
     @Transactional
     public ResponseEntity<Void> removeItem(String sessionToken, UUID id, UUID favoriteId) {
-        var userId = JwtUtil.getUidFromToken(sessionToken);
+        var userId = sessionTokenVerifier.uid(sessionToken);
         if (Objects.isNull(userId)) {
             return unauthorized();
         }
